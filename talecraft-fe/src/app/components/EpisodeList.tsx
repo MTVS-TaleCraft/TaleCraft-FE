@@ -1,19 +1,29 @@
 import React from 'react';
 
 interface Episode {
-  id: number;
+  episodeId: number;
   title: string;
   episodeNumber: number;
   date: string;
 }
 
 interface EpisodeListProps {
-  episodes: Episode[];
+  episodes?: Episode[];
   totalEpisodes: number;
 }
 
-const EpisodeList: React.FC<EpisodeListProps> = ({ episodes, totalEpisodes }) => {
-  return (
+const EpisodeList: React.FC<EpisodeListProps> = ({
+                                                     episodes=[],
+                                                     totalEpisodes=0 }) => {
+    if (episodes.length === 0) {
+        return (
+            <div className="text-center text-gray-600 py-8">
+                에피소드가 없습니다.
+            </div>
+        );
+    }
+
+    return (
     <div className="mt-6">
       {/* 에피소드 헤더 */}
       <div className="bg-black text-white p-3 rounded mb-4">
@@ -28,7 +38,7 @@ const EpisodeList: React.FC<EpisodeListProps> = ({ episodes, totalEpisodes }) =>
       {/* 에피소드 목록 */}
       <div className="space-y-3">
         {episodes.map((episode) => (
-          <div key={episode.id} className="flex gap-3">
+          <div key={episode.episodeId} className="flex gap-3">
             {/* 에피소드 표지 */}
             <div className="w-16 h-20 bg-purple-400 rounded flex items-center justify-center text-white text-xs font-semibold">
               표지

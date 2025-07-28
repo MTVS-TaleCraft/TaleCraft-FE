@@ -3,25 +3,41 @@ import React from 'react';
 interface NovelDetailProps {
   title: string;
   author: string;
-  synopsis: string;
+  summary: string;
   tags: string[];
   bookmarkCount: number;
   commentCount: number;
+  titleImage?: string;
 }
 
 const NovelDetail: React.FC<NovelDetailProps> = ({
   title,
   author,
-  synopsis,
+  summary,
   tags,
   bookmarkCount,
-  commentCount
+  commentCount,
+  titleImage
 }) => {
   return (
     <div className="flex gap-4 mb-6">
       {/* 표지 */}
-      <div className="w-32 h-48 bg-purple-400 rounded flex items-center justify-center text-white text-sm font-semibold">
-        표지
+      <div className="w-32 h-48 bg-purple-400 rounded flex items-center justify-center text-white text-sm font-semibold overflow-hidden">
+        {titleImage ? (
+          <img 
+            src={titleImage} 
+            alt={title}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              target.style.display = 'none';
+              target.nextElementSibling?.classList.remove('hidden');
+            }}
+          />
+        ) : null}
+        <div className={`${titleImage ? 'hidden' : ''} w-full h-full flex items-center justify-center`}>
+          표지
+        </div>
       </div>
       
       {/* 작품 정보 */}
@@ -47,7 +63,7 @@ const NovelDetail: React.FC<NovelDetailProps> = ({
         
         {/* 소설 줄거리 */}
         <div className="bg-yellow-200 p-3 rounded mb-3">
-          <p className="text-sm">{synopsis}</p>
+          <p className="text-sm">{summary}</p>
           <button className="text-xs text-blue-600 mt-2">더보기</button>
         </div>
         
@@ -57,13 +73,7 @@ const NovelDetail: React.FC<NovelDetailProps> = ({
             <span className="text-sm">태그</span>
             <button className="text-xs text-blue-600">더보기</button>
           </div>
-          <div className="flex flex-wrap gap-1 mt-2">
-            {tags.map((tag, index) => (
-              <span key={index} className="bg-gray-200 px-2 py-1 rounded text-xs">
-                {tag}
-              </span>
-            ))}
-          </div>
+
         </div>
       </div>
     </div>

@@ -7,10 +7,10 @@ import NovelDetail from '../../components/NovelDetail';
 import EpisodeList from '../../components/EpisodeList';
 
 interface Novel {
-  id: number;
+  novelId: number;
   title: string;
   author: string;
-  synopsis: string;
+  summary: string;
   tags: string[];
   bookmarkCount: number;
   commentCount: number;
@@ -18,7 +18,7 @@ interface Novel {
 }
 
 interface Episode {
-  id: number;
+  episodeId: number;
   title: string;
   episodeNumber: number;
   date: string;
@@ -47,9 +47,9 @@ const NovelPage: React.FC = () => {
           // 에피소드 데이터는 별도로 가져와야 할 수도 있음
           // 임시로 더미 데이터 사용
           setEpisodes([
-            { id: 1, title: '첫 번째 에피소드', episodeNumber: 1, date: '2024-01-01' },
-            { id: 2, title: '두 번째 에피소드', episodeNumber: 2, date: '2024-01-08' },
-            { id: 3, title: '세 번째 에피소드', episodeNumber: 3, date: '2024-01-15' },
+            { episodeId: 1, title: '첫 번째 에피소드', episodeNumber: 1, date: '2024-01-01' },
+            { episodeId: 2, title: '두 번째 에피소드', episodeNumber: 2, date: '2024-01-08' },
+            { episodeId: 3, title: '세 번째 에피소드', episodeNumber: 3, date: '2024-01-15' },
           ]);
         } else if (response.status === 401) {
           setError('로그인이 필요합니다.');
@@ -122,10 +122,11 @@ const NovelPage: React.FC = () => {
         <NovelDetail
           title={novel.title}
           author={novel.author}
-          synopsis={novel.synopsis}
+          summary={novel.summary}
           tags={novel.tags}
           bookmarkCount={novel.bookmarkCount}
           commentCount={novel.commentCount}
+          titleImage={novel.titleImage}
         />
         
         {/* 에피소드 목록 */}

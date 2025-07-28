@@ -6,16 +6,21 @@ export async function GET(request: NextRequest) {
     const page = searchParams.get('page') || '0';
     const pageSize = searchParams.get('pageSize') || '10';
 
-    // 쿠키에서 JWT 토큰 가져오기
+    // 쿠키에서 JWT 토큰 가져오기 (선택적)
     const token = request.cookies.get('jwt_token')?.value;
 
-    // 백엔드 서버로 작품 목록 요청 전달 (JWT 토큰 포함)
+    // 백엔드 서버로 작품 목록 요청 전달 (JWT 토큰이 있으면 포함)
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
     const backendResponse = await fetch(`http://localhost:8081/api/novels?page=${page}&pageSize=${pageSize}`, {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token && { 'Authorization': `Bearer ${token}` }),
-      },
+      headers,
     });
 
     const backendData = await backendResponse.json();

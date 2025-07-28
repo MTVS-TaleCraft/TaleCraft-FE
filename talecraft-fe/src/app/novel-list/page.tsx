@@ -4,10 +4,9 @@ import React, { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import GenreFilter from '../components/GenreFilter';
 import NovelCard from '../components/NovelCard';
-import Link from 'next/link';
 
 interface Novel {
-  id: number;
+  novelId: number;
   title: string;
   author: string;
   genre: string;
@@ -32,7 +31,6 @@ const NovelListPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const fetchNovels = async (page: number = 0) => {
     setLoading(true);
@@ -43,14 +41,11 @@ const NovelListPage: React.FC = () => {
       const data: NovelListResponse = await response.json();
 
       if (response.ok) {
+        console.log(data.novelList);
         setNovels(data.novelList);
         setCurrentPage(data.page);
         setTotalPages(data.totalPages);
         setTotalElements(data.totalElements);
-        setIsLoggedIn(true);
-      } else if (response.status === 401) {
-        setError('로그인이 필요합니다.');
-        setIsLoggedIn(false);
       } else {
         setError('작품 목록을 불러오는데 실패했습니다.');
       }
@@ -81,24 +76,6 @@ const NovelListPage: React.FC = () => {
         <main className="p-4">
           <div className="flex items-center justify-center h-64">
             <div className="text-lg text-gray-600">작품 목록을 불러오는 중...</div>
-          </div>
-        </main>
-      </div>
-    );
-  }
-
-  if (error && !isLoggedIn) {
-    return (
-      <div className="min-h-screen bg-white">
-        <Header title="작품 목록" />
-        <main className="p-4">
-          <div className="text-center">
-            <div className="text-red-600 mb-4">{error}</div>
-            <Link href="/auth-test">
-              <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-                로그인하기
-              </button>
-            </Link>
           </div>
         </main>
       </div>
@@ -143,8 +120,8 @@ const NovelListPage: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
               {filteredNovels.map((novel) => (
                 <NovelCard
-                  key={novel.id}
-                  id={novel.id}
+                  key={novel.novelId}
+                  id={novel.novelId}
                   title={novel.title}
                   author={novel.author}
                   genre={novel.genre}
