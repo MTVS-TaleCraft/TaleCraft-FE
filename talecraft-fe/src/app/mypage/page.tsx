@@ -154,9 +154,11 @@ export default function MyPage() {
   return (
     <div className="min-h-screen bg-gray-100">
       {/* 헤더 */}
-      <div className="bg-blue-500 text-white p-4">
-        <div className="flex justify-between items-center">
-          <h1 className="text-xl font-bold">마이 페이지</h1>
+      <header className="bg-blue-400 text-white p-4 shadow-md">
+        <div className="flex justify-between items-center w-full">
+          <Link href="/">
+            <h1 className="text-xl font-bold cursor-pointer hover:text-blue-200 transition-colors">TaleCraft</h1>
+          </Link>
           <button
             onClick={handleLogout}
             className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
@@ -164,7 +166,7 @@ export default function MyPage() {
             로그아웃
           </button>
         </div>
-      </div>
+      </header>
 
       {/* 메인 콘텐츠 */}
       <div className="max-w-2xl mx-auto p-6">

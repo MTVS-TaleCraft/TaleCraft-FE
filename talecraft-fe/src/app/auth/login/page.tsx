@@ -49,11 +49,13 @@ export default function LoginPage() {
           <h1 className="text-2xl font-bold text-gray-800">로그인</h1>
         </div>
 
-        {/* 사이트 로그인 버튼 */}
+        {/* 사이트 로그인 배너 */}
         <div className="mb-6">
-          <button className="w-full bg-blue-400 text-white py-2 px-4 rounded hover:bg-blue-500 transition-colors">
-            사이트 로그인
-          </button>
+          <Link href="/">
+            <div className="w-full bg-gradient-to-r from-blue-400 to-purple-500 text-white py-4 px-6 rounded-lg text-center cursor-pointer hover:from-blue-500 hover:to-purple-600 transition-colors">
+              <h2 className="text-2xl font-bold">TaleCraft</h2>
+            </div>
+          </Link>
         </div>
 
         {/* 로그인 폼 */}
@@ -96,19 +98,19 @@ export default function LoginPage() {
         {/* 하단 버튼들 */}
         <div className="mt-6 flex space-x-2">
           <Link href="/auth/find-userid" className="flex-1">
-            <button className="w-full bg-black text-white py-2 px-4 rounded border-2 border-purple-500 hover:bg-gray-800 transition-colors">
+            <button className="w-full h-10 bg-black text-white py-2 px-4 rounded hover:bg-gray-800 transition-colors text-sm">
               아이디 찾기
             </button>
           </Link>
           
           <Link href="/auth/find-password" className="flex-1">
-            <button className="w-full bg-black text-white py-2 px-4 rounded hover:bg-gray-800 transition-colors">
+            <button className="w-full h-10 bg-black text-white py-2 px-4 rounded hover:bg-gray-800 transition-colors text-sm">
               비밀번호 찾기
             </button>
           </Link>
           
           <Link href="/auth/signup" className="flex-1">
-            <button className="w-full bg-black text-white py-2 px-4 rounded hover:bg-gray-800 transition-colors">
+            <button className="w-full h-10 bg-black text-white py-2 px-4 rounded hover:bg-gray-800 transition-colors text-sm">
               회원가입
             </button>
           </Link>
