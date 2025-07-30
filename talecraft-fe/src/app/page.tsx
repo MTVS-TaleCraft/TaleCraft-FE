@@ -24,6 +24,7 @@ export default function HomePage() {
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [userInfo, setUserInfo] = useState<{userId: string, userName: string, email: string, authorityId: string} | null>(null)
 
   useEffect(() => {
     checkLoginStatus()
@@ -32,8 +33,47 @@ export default function HomePage() {
 
   const checkLoginStatus = () => {
     const token = localStorage.getItem("token")
-    setIsLoggedIn(!!token)
+    const isLoggedInStatus = !!token
+    setIsLoggedIn(isLoggedInStatus)
     setIsLoading(false)
+    
+    // 로그인 상태가 변경되면 사용자 정보 가져오기
+    if (isLoggedInStatus) {
+      fetchUserInfo()
+    }
+  }
+
+  const fetchUserInfo = async () => {
+    try {
+      const token = localStorage.getItem("token")
+      if (!token) {
+        console.log("토큰이 없습니다.")
+        return
+      }
+
+      console.log("사용자 정보를 가져오는 중... 토큰:", token.substring(0, 20) + "...")
+      
+      const response = await fetch("http://localhost:8081/api/auth/profile", {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      })
+
+      console.log("응답 상태:", response.status, response.statusText)
+
+      if (response.ok) {
+        const data = await response.json()
+        console.log("받은 사용자 정보:", data)
+        console.log("authorityId:", data.authorityId, "타입:", typeof data.authorityId)
+        setUserInfo(data)
+      } else {
+        const errorText = await response.text()
+        console.error("서버 오류:", response.status, errorText)
+      }
+    } catch (error) {
+      console.error("사용자 정보를 가져오는데 실패했습니다:", error)
+    }
   }
 
   const fetchNovels = async () => {
@@ -179,6 +219,11 @@ export default function HomePage() {
                   <span className="sr-only">검색</span>
                 </Button>
               )}
+              {isLoggedIn && userInfo && (
+                <span className="text-sm font-medium">
+                  안녕하세요, {userInfo.userName}님!
+                </span>
+              )}
               <Button 
                 variant="ghost" 
                 size="icon" 
@@ -254,34 +299,80 @@ export default function HomePage() {
             <div className="w-16 h-16 bg-gray-300 rounded-full mb-4 flex items-center justify-center">
               <div className="w-12 h-12 bg-gray-600 rounded-full"></div>
             </div>
-            <button 
-              className="text-black font-semibold text-lg"
-              onClick={() => {
-                setIsSidebarOpen(false)
-                router.push('/auth/login')
-              }}
-            >
-              로그인
-            </button>
+            {isLoggedIn && userInfo ? (
+              <div className="text-center">
+                <p className="text-black font-semibold text-lg">{userInfo.userName}</p>
+                <p className="text-black text-sm">{userInfo.email}</p>
+              </div>
+            ) : (
+              <button 
+                className="text-black font-semibold text-lg"
+                onClick={() => {
+                  setIsSidebarOpen(false)
+                  router.push('/auth/login')
+                }}
+              >
+                로그인
+              </button>
+            )}
           </div>
 
           {/* 메뉴 버튼들 */}
           <div className="space-y-4">
-            <button className="w-full bg-black text-white py-3 px-4 rounded-lg hover:bg-gray-800 transition-colors">
-              작품등록
-            </button>
-            <button className="w-full bg-black text-white py-3 px-4 rounded-lg hover:bg-gray-800 transition-colors">
-              내 작품 목록
-            </button>
-            <button 
-              className="w-full bg-black text-white py-3 px-4 rounded-lg hover:bg-gray-800 transition-colors"
-              onClick={() => {
-                setIsSidebarOpen(false)
-                router.push('/mypage')
-              }}
-            >
-              마이페이지
-            </button>
+            {isLoggedIn ? (
+              <>
+                <button className="w-full bg-black text-white py-3 px-4 rounded-lg hover:bg-gray-800 transition-colors">
+                  작품등록
+                </button>
+                <button className="w-full bg-black text-white py-3 px-4 rounded-lg hover:bg-gray-800 transition-colors">
+                  내 작품 목록
+                </button>
+                <button 
+                  className="w-full bg-black text-white py-3 px-4 rounded-lg hover:bg-gray-800 transition-colors"
+                  onClick={() => {
+                    setIsSidebarOpen(false)
+                    router.push('/mypage')
+                  }}
+                >
+                  마이페이지
+                </button>
+                {userInfo?.authorityId === "3" && (
+                  <button 
+                    className="w-full bg-black text-white py-3 px-4 rounded-lg hover:bg-gray-800 transition-colors"
+                    onClick={() => {
+                      setIsSidebarOpen(false)
+                      router.push('/admin')
+                    }}
+                  >
+                    관리자 페이지
+                  </button>
+                )}
+                {/* 디버깅용 로그 */}
+                {console.log("사이드바 - userInfo:", userInfo, "authorityId:", userInfo?.authorityId, "isAdmin:", userInfo?.authorityId === "3")}
+                <button 
+                  className="w-full bg-red-500 text-white py-3 px-4 rounded-lg hover:bg-red-600 transition-colors"
+                  onClick={() => {
+                    localStorage.removeItem('token')
+                    setIsLoggedIn(false)
+                    setUserInfo(null)
+                    setIsSidebarOpen(false)
+                    router.push('/')
+                  }}
+                >
+                  로그아웃
+                </button>
+              </>
+            ) : (
+              <button 
+                className="w-full bg-black text-white py-3 px-4 rounded-lg hover:bg-gray-800 transition-colors"
+                onClick={() => {
+                  setIsSidebarOpen(false)
+                  router.push('/auth/login')
+                }}
+              >
+                로그인
+              </button>
+            )}
           </div>
         </div>
       </div>
