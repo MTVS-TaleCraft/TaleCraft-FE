@@ -111,17 +111,11 @@ export default function AdminPage() {
           <div className="bg-white p-6 rounded-lg shadow-md">
             <h2 className="text-xl font-semibold mb-4">작품 관리</h2>
             <p className="text-gray-600 mb-4">전체 작품 목록 및 신고 처리</p>
-            <button className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors">
+            <button 
+              onClick={() => router.push('/admin/novels')}
+              className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors"
+            >
               작품 목록 보기
-            </button>
-          </div>
-
-          {/* 문의 관리 */}
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-xl font-semibold mb-4">문의 관리</h2>
-            <p className="text-gray-600 mb-4">사용자 문의 내역 확인</p>
-            <button className="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600 transition-colors">
-              문의 내역 보기
             </button>
           </div>
 
