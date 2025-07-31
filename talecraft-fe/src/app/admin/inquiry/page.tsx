@@ -36,7 +36,7 @@ export default function AdminInquiryPage() {
         return;
       }
 
-      const response = await fetch('http://localhost:8081/api/auth/profile', {
+      const response = await fetch('/api/auth/profile', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -71,7 +71,7 @@ export default function AdminInquiryPage() {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:8081/api/inquiry/send', {
+      const response = await fetch('/api/inquiry/send', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

@@ -89,7 +89,7 @@ export default function HomePage() {
       const token = localStorage.getItem("token")
       if (!token) return
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"}/api/auth/profile`, {
+      const response = await fetch('/api/auth/profile', {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -111,7 +111,7 @@ export default function HomePage() {
     try {
       setIsLoading(true)
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"}/api/novels`)
+      const response = await fetch('/api/novels')
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)

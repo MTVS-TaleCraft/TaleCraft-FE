@@ -43,7 +43,7 @@ export default function MessagesPage() {
       const token = localStorage.getItem("token")
       if (!token) return
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"}/api/auth/profile`, {
+      const response = await fetch('/api/auth/profile', {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -66,7 +66,7 @@ export default function MessagesPage() {
       if (!token) return
 
       // 받은 쪽지 조회
-      const receivedResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"}/api/messages/received`, {
+      const receivedResponse = await fetch('/api/messages/received', {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -79,7 +79,7 @@ export default function MessagesPage() {
       }
 
       // 보낸 쪽지 조회
-      const sentResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"}/api/messages/sent`, {
+      const sentResponse = await fetch('/api/messages/sent', {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -102,7 +102,7 @@ export default function MessagesPage() {
       const token = localStorage.getItem("token")
       if (!token) return
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"}/api/messages/${type}/${messageId}`, {
+      const response = await fetch(`/api/messages/${type}/${messageId}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,

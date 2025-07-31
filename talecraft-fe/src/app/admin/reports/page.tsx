@@ -46,7 +46,7 @@ export default function ReportManagementPage() {
         return;
       }
 
-      const response = await fetch('http://localhost:8081/api/auth/profile', {
+      const response = await fetch('/api/auth/profile', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -80,7 +80,7 @@ export default function ReportManagementPage() {
   const fetchReports = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:8081/api/reports/unviewed', {
+      const response = await fetch('/api/reports/unviewed', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',

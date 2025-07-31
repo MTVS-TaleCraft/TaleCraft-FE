@@ -125,7 +125,7 @@ export default function UserDetailPage() {
         return;
       }
 
-      const response = await fetch('http://localhost:8081/api/auth/profile', {
+      const response = await fetch('/api/auth/profile', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -159,7 +159,7 @@ export default function UserDetailPage() {
   const fetchUserDetail = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:8081/api/auth/profile?targetUserId=${userId}`, {
+      const response = await fetch(`/api/auth/profile?targetUserId=${userId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -259,7 +259,7 @@ export default function UserDetailPage() {
     }
 
     try {
-      const response = await fetch('http://localhost:8081/api/auth/profile', {
+      const response = await fetch('/api/auth/profile', {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,

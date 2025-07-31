@@ -26,7 +26,7 @@ export default function FindUserIdPage() {
     }
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081'}/api/auth/find-userid`, {
+      const response = await fetch('/api/auth/find-userid', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

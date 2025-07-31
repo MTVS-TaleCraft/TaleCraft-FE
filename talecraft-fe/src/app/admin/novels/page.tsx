@@ -45,7 +45,7 @@ export default function AdminNovelsPage() {
         return;
       }
 
-      const response = await fetch('http://localhost:8081/api/auth/profile', {
+      const response = await fetch('/api/auth/profile', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -76,7 +76,7 @@ export default function AdminNovelsPage() {
   const fetchNovels = async () => {
     try {
       console.log('작품 목록을 가져오는 중...');
-      const response = await fetch('http://localhost:8081/api/novels');
+      const response = await fetch('/api/novels');
       
       if (response.ok) {
         const data = await response.json();
@@ -87,7 +87,7 @@ export default function AdminNovelsPage() {
           const novelsWithReports = await Promise.all(
             data.novelList.map(async (novel: Novel) => {
               try {
-                const reportResponse = await fetch(`http://localhost:8081/api/reports/novels/${novel.novelId}/count`);
+                const reportResponse = await fetch(`/api/reports/novels/${novel.novelId}/count`);
                 let reportCount = 0;
                 
                 if (reportResponse.ok) {

@@ -42,7 +42,7 @@ export default function UserManagementPage() {
         return;
       }
 
-      const response = await fetch('http://localhost:8081/api/auth/profile', {
+      const response = await fetch('/api/auth/profile', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -76,7 +76,7 @@ export default function UserManagementPage() {
   const fetchUsers = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:8081/api/auth/profile/users', {
+      const response = await fetch('/api/auth/profile/users', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',

@@ -31,7 +31,7 @@ export default function ComposeMessagePage() {
       const token = localStorage.getItem("token")
       if (!token) return
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"}/api/auth/profile`, {
+      const response = await fetch('/api/auth/profile', {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -61,7 +61,7 @@ export default function ComposeMessagePage() {
       const token = localStorage.getItem("token")
       if (!token) return
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"}/api/messages/send`, {
+      const response = await fetch('/api/messages/send', {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
