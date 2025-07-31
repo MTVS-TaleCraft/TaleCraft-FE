@@ -242,7 +242,7 @@ export default function UserDetailPage() {
     if (!user) return;
 
     const token = localStorage.getItem('token');
-    const updateData: any = {
+    const updateData: Record<string, string> = {
       targetUserId: userId // 관리자가 변경할 사용자 ID
     };
 

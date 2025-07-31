@@ -23,7 +23,7 @@ export default function MessageDetailPage() {
   
   const [message, setMessage] = useState<Message | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [userInfo, setUserInfo] = useState<any>(null)
+  const [userInfo, setUserInfo] = useState<Record<string, string | number | boolean> | null>(null)
 
   useEffect(() => {
     checkLoginStatus()

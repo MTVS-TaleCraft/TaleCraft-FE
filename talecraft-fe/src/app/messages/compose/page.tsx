@@ -11,7 +11,7 @@ export default function ComposeMessagePage() {
   const [messageTitle, setMessageTitle] = useState("")
   const [description, setDescription] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const [userInfo, setUserInfo] = useState<any>(null)
+  const [userInfo, setUserInfo] = useState<Record<string, string | number | boolean> | null>(null)
 
   useEffect(() => {
     checkLoginStatus()

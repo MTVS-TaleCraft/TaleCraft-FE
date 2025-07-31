@@ -22,7 +22,7 @@ export default function MessagesPage() {
   const [receivedMessages, setReceivedMessages] = useState<Message[]>([])
   const [activeTab, setActiveTab] = useState<"received" | "sent">("received")
   const [isLoading, setIsLoading] = useState(true)
-  const [userInfo, setUserInfo] = useState<any>(null)
+  const [userInfo, setUserInfo] = useState<Record<string, string | number | boolean> | null>(null)
 
   useEffect(() => {
     checkLoginStatus()

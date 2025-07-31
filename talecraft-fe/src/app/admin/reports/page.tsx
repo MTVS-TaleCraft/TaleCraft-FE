@@ -143,12 +143,12 @@ export default function ReportManagementPage() {
           ]);
         } else {
           // 백엔드 데이터를 프론트엔드 형식으로 변환
-          const formattedReports = data.map((report: any) => ({
+          const formattedReports = data.map((report: Record<string, string | number | boolean>) => ({
             id: `comment_${report.commentReportId}`,
             reportTag: report.reportTag,
             reportingUser: report.reportUser,
             reportedUser: report.reportedUser,
-            reportDate: report.reportDate ? new Date(report.reportDate).toLocaleDateString() : "날짜 없음",
+            reportDate: typeof report.reportDate === 'string' ? new Date(report.reportDate).toLocaleDateString() : "날짜 없음",
             reportContent: report.description,
             processingStatus: report.isView ? "처리 완료" : "처리 전",
             type: "comment"
