@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Header from '../components/Header';
+import { API_BASE_URL } from '../../config/api';
 
 interface MyNovel {
   novelId: number;
@@ -26,7 +27,7 @@ const MyNovelsPage: React.FC = () => {
   const [filterType, setFilterType] = useState<'all' | 'bookmarked' | 'my'>('my');
 
   const fetchMyNovelsFromApi = async () => {
-    const res = await fetch('/api/novels/my', { method: 'GET', cache: 'no-store' });
+    const res = await fetch(`/api/novels/my`, { method: 'GET', cache: 'no-store' });
     if (!res.ok) throw new Error('작품 목록을 불러오는데 실패했습니다.');
     return res.json();
   };
@@ -68,7 +69,7 @@ const MyNovelsPage: React.FC = () => {
 
   const handleWriteEpisode = (novelId: number) => {
     // 화 쓰기 페이지로 이동
-    console.log('화 쓰기:', novelId);
+    window.location.href = `/episode-create?novelId=${novelId}`;
   };
 
   const filteredNovels = novels.filter(novel =>

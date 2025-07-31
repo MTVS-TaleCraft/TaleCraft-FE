@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { API_BASE_URL } from '../../config/api';
 
 export default function AuthTestPage() {
   const [activeTab, setActiveTab] = useState<'signup' | 'login'>('signup');
@@ -25,7 +26,7 @@ export default function AuthTestPage() {
     setMessage('');
 
     try {
-      const response = await fetch('/api/auth/signup', {
+      const response = await fetch(`/api/auth/signup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -54,7 +55,7 @@ export default function AuthTestPage() {
     setMessage('');
 
     try {
-      const response = await fetch('/api/auth/login', {
+      const response = await fetch(`/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

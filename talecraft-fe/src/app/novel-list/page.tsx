@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import GenreFilter from '../components/GenreFilter';
 import NovelCard from '../components/NovelCard';
+import { API_BASE_URL } from '../../config/api';
 
 interface Novel {
   novelId: number;
@@ -37,7 +38,7 @@ const NovelListPage: React.FC = () => {
     setError('');
 
     try {
-      const response = await fetch(`/api/novels?page=${page}&pageSize=12`);
+      const response = await fetch(`/api/novels`);
       const data: NovelListResponse = await response.json();
 
       if (response.ok) {

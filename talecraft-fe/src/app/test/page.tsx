@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../../config/api';
 
 export default function TestPage() {
   const [showForm, setShowForm] = useState(false);
@@ -19,7 +20,7 @@ export default function TestPage() {
   useEffect(() => {
     const checkLoginStatus = async () => {
       try {
-        const response = await fetch('/api/novels/add', {
+        const response = await fetch(`/api/novels/add`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -52,7 +53,7 @@ export default function TestPage() {
     setMessage('');
 
     try {
-      const response = await fetch('/api/novels/add', {
+      const response = await fetch(`/api/novels/add`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

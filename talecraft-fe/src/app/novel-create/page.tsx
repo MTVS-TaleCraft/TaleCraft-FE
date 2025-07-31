@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Header from '../components/Header';
+import { API_BASE_URL } from '../../config/api';
 
 const NovelCreatePage: React.FC = () => {
   const [title, setTitle] = useState('');
@@ -10,6 +11,7 @@ const NovelCreatePage: React.FC = () => {
   const [availability, setAvailability] = useState<'PUBLIC' | 'PARTIAL' | 'PRIVATE'>('PUBLIC');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -23,18 +25,51 @@ const NovelCreatePage: React.FC = () => {
     setMessage('');
 
     try {
+
+      const selectedFile = titleImage;
+      if (!selectedFile) return;
+      // 1. 백엔드에서 presigned URL 및 public URL 받기
+      const res = await fetch(`/api/s3/presigned-url`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ fileName: selectedFile.name }),
+      });
+      const { presignedUrl, publicUrl } = await res.json(); 
+      console.log(presignedUrl);
+      console.log(selectedFile.type);
+      // 2. presignedUrl에 PUT 요청으로 이미지 S3에 업로드
+      const uploadRes = await fetch(presignedUrl, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': selectedFile.type, // 예: image/png
+        },
+        body: selectedFile,
+      });
+      console.log(uploadRes);
+      if (!uploadRes.ok) {
+        alert('S3 업로드 실패');
+        return;
+      }
+      // 3. 업로드된 이미지 URL을 DB에 저장 (선택 사항)
+      // → 또는 바로 상태 업데이트 / 미리보기 등에 활용 가능
+      console.log('업로드 완료! 공개 URL:', publicUrl);
+
+      // 예: 서버에 DB 저장 요청
+      
       const requestData = {
         title,
         summary,
         availability,
-        // titleImage는 현재 파일 업로드 기능이 없으므로 제외
+        titleImage : publicUrl
       };
-
-      const response = await fetch('/api/novels/add', {
+      console.log(requestData);
+      const response = await fetch(`/api/novels/add`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify(requestData),
       });
 

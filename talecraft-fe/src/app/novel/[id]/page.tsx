@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import Header from '../../components/Header';
 import NovelDetail from '../../components/NovelDetail';
 import EpisodeList from '../../components/EpisodeList';
+import { API_BASE_URL } from '../../../config/api';
 
 interface Novel {
   novelId: number;
@@ -39,22 +40,25 @@ const NovelPage: React.FC = () => {
       setError('');
 
       try {
-        const response = await fetch(`/api/novels/${novelId}`);
-        const data = await response.json();
-
-        if (response.ok) {
-          setNovel(data);
-          // 에피소드 데이터는 별도로 가져와야 할 수도 있음
-          // 임시로 더미 데이터 사용
+        const novelResponse = await fetch(`/api/novels/${novelId}`, {
+          credentials: 'include'
+        });
+        const novelData = await novelResponse.json();
+        const episodeResponse = await fetch(`/api/novels/${novelId}/episodes`, {
+          credentials: 'include'
+        });
+        const episodeData = await episodeResponse.json();
+        if (novelResponse.ok) {
+          setNovel(novelData);
+      
           setEpisodes([
-            { episodeId: 1, title: '첫 번째 에피소드', episodeNumber: 1, date: '2024-01-01' },
-            { episodeId: 2, title: '두 번째 에피소드', episodeNumber: 2, date: '2024-01-08' },
-            { episodeId: 3, title: '세 번째 에피소드', episodeNumber: 3, date: '2024-01-15' },
+           episodeData
           ]);
-        } else if (response.status === 401) {
+        } else if (novelResponse.status === 401||episodeResponse.status === 401) {
           setError('로그인이 필요합니다.');
         } else {
-          setError(data.message || '작품 정보를 불러오는데 실패했습니다.');
+          setError(novelData.message || '작품 정보를 불러오는데 실패했습니다.');
+          setError(episodeData.message || '에피소드 정보를 불러오는데 실패했습니다.');
         }
       } catch (error) {
         setError('네트워크 오류가 발생했습니다.');
@@ -130,10 +134,21 @@ const NovelPage: React.FC = () => {
         />
         
         {/* 에피소드 목록 */}
-        <EpisodeList
-          episodes={episodes}
-          totalEpisodes={episodes.length}
-        />
+        <div>
+          {episodes.map((ep) => (
+            <div key={ep.episodeId} style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
+              <div style={{ flex: 1 }}>
+                {ep.title}
+              </div>
+              <button
+                style={{ background: '#222', color: '#fff', borderRadius: 4, padding: '4px 12px' }}
+                onClick={() => window.location.href = `/episode-view/${ep.episodeId}`}
+              >
+                화 읽기
+              </button>
+            </div>
+          ))}
+        </div>
       </main>
     </div>
   );
