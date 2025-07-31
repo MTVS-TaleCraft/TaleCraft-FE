@@ -35,7 +35,7 @@ export default function FindPasswordPage() {
     }
 
     try {
-      const response = await fetch('/api/auth/find-password', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081'}/api/auth/find-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -35,7 +35,7 @@ export default function MyPage() {
         return;
       }
 
-      const response = await fetch('/api/auth/profile', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081'}/api/auth/profile`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -66,7 +66,7 @@ export default function MyPage() {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/auth/profile', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081'}/api/auth/profile`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -106,7 +106,7 @@ export default function MyPage() {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/auth/profile', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081'}/api/auth/profile`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,
