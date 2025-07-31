@@ -24,8 +24,17 @@ export default function MyPage() {
   const router = useRouter();
 
   useEffect(() => {
-    fetchUserInfo();
+    checkLoginStatus();
   }, []);
+
+  const checkLoginStatus = () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      router.push('/auth/login');
+      return;
+    }
+    fetchUserInfo();
+  };
 
   const fetchUserInfo = async () => {
     try {
