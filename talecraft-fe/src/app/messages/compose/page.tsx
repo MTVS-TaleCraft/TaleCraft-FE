@@ -99,7 +99,7 @@ export default function ComposeMessagePage() {
               variant="ghost"
               size="icon"
               className="text-white hover:bg-blue-500"
-              onClick={() => router.back()}
+              onClick={() => router.push("/messages")}
             >
               <ArrowLeft className="w-5 h-5" />
             </Button>
@@ -178,7 +178,7 @@ export default function ComposeMessagePage() {
               type="button"
               variant="outline"
               className="flex-1"
-              onClick={() => router.back()}
+              onClick={() => router.push("/messages")}
               disabled={isLoading}
             >
               취소

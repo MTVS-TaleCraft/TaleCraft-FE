@@ -21,6 +21,8 @@ export default function MyPage() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const [withdrawPassword, setWithdrawPassword] = useState('');
   const router = useRouter();
 
   useEffect(() => {
@@ -149,6 +151,37 @@ export default function MyPage() {
     router.push('/auth/login');
   };
 
+  const handleWithdraw = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsUpdating(true);
+    setError('');
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/user/withdraw', {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        localStorage.removeItem('token');
+        alert('회원탈퇴가 완료되었습니다.');
+        router.push('/auth/login');
+      } else {
+        setError(data.error || '회원탈퇴에 실패했습니다.');
+      }
+    } catch (error) {
+      setError('네트워크 오류가 발생했습니다.');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
@@ -230,7 +263,10 @@ export default function MyPage() {
 
           {/* 회원 탈퇴 버튼 */}
           <div className="mt-8 text-center">
-            <button className="px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">
+            <button 
+              onClick={() => setShowWithdrawModal(true)}
+              className="px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+            >
               회원 탈퇴
             </button>
           </div>
@@ -320,6 +356,39 @@ export default function MyPage() {
                     setCurrentPassword('');
                     setNewPassword('');
                     setConfirmPassword('');
+                  }}
+                  className="flex-1 px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
+                >
+                  취소
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 회원탈퇴 모달 */}
+      {showWithdrawModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg w-full max-w-md">
+            <h3 className="text-lg font-bold mb-4 text-red-600">회원탈퇴</h3>
+            <p className="text-gray-600 mb-4">
+              정말로 탈퇴하시겠습니까? 이 작업은 되돌릴 수 없습니다.
+            </p>
+            <form onSubmit={handleWithdraw}>
+              <div className="flex space-x-2">
+                <button
+                  type="submit"
+                  disabled={isUpdating}
+                  className="flex-1 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors disabled:opacity-50"
+                >
+                  {isUpdating ? '처리 중...' : '탈퇴'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowWithdrawModal(false);
+                    setWithdrawPassword('');
                   }}
                   className="flex-1 px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
                 >

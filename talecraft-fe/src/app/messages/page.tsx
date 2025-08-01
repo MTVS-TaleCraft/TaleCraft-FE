@@ -142,13 +142,11 @@ export default function MessagesPage() {
           <div className="flex items-center space-x-4">
             <Button
               variant="ghost"
-              size="icon"
-              className="text-white hover:bg-blue-500"
-              onClick={() => router.back()}
+              className="text-white hover:bg-blue-500 text-xl font-bold"
+              onClick={() => router.push("/")}
             >
-              <ArrowLeft className="w-5 h-5" />
+              TaleCraft
             </Button>
-            <h1 className="text-xl font-bold">쪽지함</h1>
           </div>
                                                                                        <button
                className="bg-transparent border border-white text-white px-4 py-2 rounded-md hover:bg-white hover:text-blue-500 transition-colors"

@@ -44,6 +44,7 @@ export default function HomePage() {
   const [isDragging, setIsDragging] = useState(false)
   const [dragStartX, setDragStartX] = useState(0)
   const [dragCurrentX, setDragCurrentX] = useState(0)
+  const [autoSlideInterval, setAutoSlideInterval] = useState<NodeJS.Timeout | null>(null)
 
   const navigationItems = [
     { label: "베스트", value: "best" },
@@ -56,6 +57,32 @@ export default function HomePage() {
     checkLoginStatus()
     fetchNovels()
   }, [])
+
+  // 자동 슬라이드 기능
+  useEffect(() => {
+    if (novels.length === 0) return
+
+    // 기존 인터벌 정리
+    if (autoSlideInterval) {
+      clearInterval(autoSlideInterval)
+    }
+
+    // 새로운 자동 슬라이드 인터벌 설정 (5초마다)
+    const interval = setInterval(() => {
+      if (!isAnimating && !isDragging) {
+        handleNavigation("left")
+      }
+    }, 5000)
+
+    setAutoSlideInterval(interval)
+
+    // 컴포넌트 언마운트 시 인터벌 정리
+    return () => {
+      if (interval) {
+        clearInterval(interval)
+      }
+    }
+  }, [novels.length, isAnimating, isDragging])
 
   // Initialize carousel items with stable IDs
   useEffect(() => {
@@ -135,6 +162,12 @@ export default function HomePage() {
 
       setIsAnimating(true)
 
+      // 자동 슬라이드 일시정지
+      if (autoSlideInterval) {
+        clearInterval(autoSlideInterval)
+        setAutoSlideInterval(null)
+      }
+
       // Update positions immediately for smooth animation
       setCarouselItems((prev) =>
         prev.map((item) => ({
@@ -152,14 +185,32 @@ export default function HomePage() {
         }
         setTimeout(() => setIsAnimating(false), 100)
       }, 200)
+
+      // 10초 후 자동 슬라이드 재시작
+      setTimeout(() => {
+        if (novels.length > 0) {
+          const interval = setInterval(() => {
+            if (!isAnimating && !isDragging) {
+              handleNavigation("left")
+            }
+          }, 5000)
+          setAutoSlideInterval(interval)
+        }
+      }, 10000)
     },
-    [isAnimating, novels.length, currentIndex],
+    [isAnimating, novels.length, currentIndex, autoSlideInterval],
   )
 
   const handleIndicatorClick = (index: number) => {
     if (isAnimating || index === currentIndex || novels.length === 0) return
 
     setIsAnimating(true)
+
+    // 자동 슬라이드 일시정지
+    if (autoSlideInterval) {
+      clearInterval(autoSlideInterval)
+      setAutoSlideInterval(null)
+    }
 
     // 모든 경우에 동일한 애니메이션 적용
     setCarouselItems((prev) =>
@@ -174,6 +225,18 @@ export default function HomePage() {
       setCurrentIndex(index)
       setTimeout(() => setIsAnimating(false), 100)
     }, 200)
+
+    // 10초 후 자동 슬라이드 재시작
+    setTimeout(() => {
+      if (novels.length > 0) {
+        const interval = setInterval(() => {
+          if (!isAnimating && !isDragging) {
+            handleNavigation("left")
+          }
+        }, 5000)
+        setAutoSlideInterval(interval)
+      }
+    }, 10000)
   }
 
   const handleLogout = () => {
@@ -203,6 +266,13 @@ export default function HomePage() {
   // 드래그 이벤트 핸들러들
   const handleMouseDown = (e: React.MouseEvent) => {
     if (isAnimating || novels.length === 0) return
+    
+    // 자동 슬라이드 일시정지
+    if (autoSlideInterval) {
+      clearInterval(autoSlideInterval)
+      setAutoSlideInterval(null)
+    }
+    
     setIsDragging(true)
     setDragStartX(e.clientX)
     setDragCurrentX(e.clientX)
@@ -236,6 +306,13 @@ export default function HomePage() {
 
   const handleTouchStart = (e: React.TouchEvent) => {
     if (isAnimating || novels.length === 0) return
+    
+    // 자동 슬라이드 일시정지
+    if (autoSlideInterval) {
+      clearInterval(autoSlideInterval)
+      setAutoSlideInterval(null)
+    }
+    
     setIsDragging(true)
     setDragStartX(e.touches[0].clientX)
     setDragCurrentX(e.touches[0].clientX)

@@ -78,12 +78,12 @@ export default function MessageDetailPage() {
         setMessage(data)
       } else {
         alert("쪽지를 찾을 수 없습니다.")
-        router.push("/messages")
+        router.replace("/messages")
       }
     } catch (error) {
       console.error("Failed to fetch message:", error)
       alert("쪽지 조회에 실패했습니다.")
-      router.push("/messages")
+      router.replace("/messages")
     } finally {
       setIsLoading(false)
     }
@@ -106,7 +106,8 @@ export default function MessageDetailPage() {
 
       if (response.ok) {
         alert("쪽지가 삭제되었습니다.")
-        router.push("/messages")
+        // 삭제 후 쪽지함으로 이동
+        router.replace("/messages")
       } else {
         alert("쪽지 삭제에 실패했습니다.")
       }
@@ -114,6 +115,11 @@ export default function MessageDetailPage() {
       console.error("Failed to delete message:", error)
       alert("쪽지 삭제에 실패했습니다.")
     }
+  }
+
+  const handleGoBack = () => {
+    // 뒤로가기 시 쪽지함으로 이동
+    router.push("/messages")
   }
 
   if (isLoading) {
@@ -132,7 +138,7 @@ export default function MessageDetailPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <p className="text-gray-600">쪽지를 찾을 수 없습니다.</p>
-          <Button className="mt-4" onClick={() => router.push("/messages")}>
+          <Button className="mt-4" onClick={() => router.replace("/messages")}>
             쪽지함으로 돌아가기
           </Button>
         </div>
@@ -150,7 +156,7 @@ export default function MessageDetailPage() {
               variant="ghost"
               size="icon"
               className="text-white hover:bg-blue-500"
-              onClick={() => router.back()}
+              onClick={handleGoBack}
             >
               <ArrowLeft className="w-5 h-5" />
             </Button>
@@ -202,7 +208,7 @@ export default function MessageDetailPage() {
             <Button
               variant="outline"
               className="flex-1"
-              onClick={() => router.push("/messages")}
+              onClick={() => router.replace("/messages")}
             >
               목록으로
             </Button>
