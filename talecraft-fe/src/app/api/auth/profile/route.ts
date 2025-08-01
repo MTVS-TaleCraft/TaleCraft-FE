@@ -2,38 +2,23 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
   try {
-    const token = request.headers.get('authorization')?.replace('Bearer ', '');
-    
-    if (!token) {
-      return NextResponse.json(
-        { error: '인증 토큰이 필요합니다.' },
-        { status: 401 }
-      );
-    }
-
-    // 백엔드 API 호출
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081'}/api/auth/profile`, {
+    const response = await fetch(`${process.env.BACKEND_URL || 'http://localhost:8081'}/api/auth/profile`, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
+        'Cookie': request.headers.get('cookie') || '',
       },
     });
 
     const data = await response.json();
-
-    if (response.ok) {
-      return NextResponse.json(data);
-    } else {
-      return NextResponse.json(
-        { error: data.error || '사용자 정보 조회에 실패했습니다.' },
-        { status: response.status }
-      );
-    }
+    
+    return NextResponse.json(data, {
+      status: response.status,
+    });
   } catch (error) {
     console.error('Profile API error:', error);
     return NextResponse.json(
-      { error: '서버 오류가 발생했습니다.' },
+      { error: '사용자 정보를 불러올 수 없습니다.' },
       { status: 500 }
     );
   }
@@ -41,41 +26,59 @@ export async function GET(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
-    const token = request.headers.get('authorization')?.replace('Bearer ', '');
-    
-    if (!token) {
-      return NextResponse.json(
-        { error: '인증 토큰이 필요합니다.' },
-        { status: 401 }
-      );
-    }
-
     const body = await request.json();
-
-    // 백엔드 API 호출
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081'}/api/auth/profile`, {
+    
+    const response = await fetch(`${process.env.BACKEND_URL || 'http://localhost:8081'}/api/auth/profile`, {
       method: 'PATCH',
       headers: {
-        'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
+        'Cookie': request.headers.get('cookie') || '',
       },
       body: JSON.stringify(body),
     });
 
     const data = await response.json();
-
-    if (response.ok) {
-      return NextResponse.json(data);
-    } else {
-      return NextResponse.json(
-        { error: data.error || '프로필 수정에 실패했습니다.' },
-        { status: response.status }
-      );
-    }
+    
+    return NextResponse.json(data, {
+      status: response.status,
+    });
   } catch (error) {
     console.error('Profile update API error:', error);
     return NextResponse.json(
-      { error: '서버 오류가 발생했습니다.' },
+      { error: '사용자 정보 업데이트에 실패했습니다.' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const response = await fetch(`${process.env.BACKEND_URL || 'http://localhost:8081'}/api/auth/logout`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Cookie': request.headers.get('cookie') || '',
+      },
+    });
+
+    const data = await response.json();
+    
+    // 백엔드에서 설정한 쿠키를 그대로 전달
+    const responseHeaders = new Headers();
+    response.headers.forEach((value, key) => {
+      if (key.toLowerCase() === 'set-cookie') {
+        responseHeaders.append('Set-Cookie', value);
+      }
+    });
+
+    return NextResponse.json(data, {
+      status: response.status,
+      headers: responseHeaders,
+    });
+  } catch (error) {
+    console.error('Logout API error:', error);
+    return NextResponse.json(
+      { error: '로그아웃 중 오류가 발생했습니다.' },
       { status: 500 }
     );
   }

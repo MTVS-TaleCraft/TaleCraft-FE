@@ -103,45 +103,51 @@ export default function HomePage() {
 
   const checkLoginStatus = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"}/api/auth/profile`, {
+      const response = await fetch('/api/auth/profile', {
         credentials: 'include',
         headers: {
           "Content-Type": "application/json",
         },
-      })
-      
-      const isLoggedInStatus = response.ok
-      setIsLoggedIn(isLoggedInStatus)
-      setIsLoading(false)
+      });
 
-      if (isLoggedInStatus) {
-        fetchUserInfo()
+      if (response.ok) {
+        const data = await response.json();
+        setUserInfo(data);
+        setIsLoggedIn(true);
+      } else {
+        setIsLoggedIn(false);
+        setUserInfo(null);
       }
     } catch (error) {
-      setIsLoggedIn(false)
-      setIsLoading(false)
+      console.error('로그인 상태 확인 오류:', error);
+      setIsLoggedIn(false);
+      setUserInfo(null);
     }
-  }
+  };
 
   const fetchUserInfo = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"}/api/auth/profile`, {
+      const response = await fetch('/api/auth/profile', {
         credentials: 'include',
         headers: {
           "Content-Type": "application/json",
         },
-      })
+      });
 
       if (response.ok) {
-        const data = await response.json()
-        setUserInfo(data)
+        const data = await response.json();
+        setUserInfo(data);
+        setIsLoggedIn(true);
       } else {
-        console.error("Failed to fetch user info:", response.status)
+        setIsLoggedIn(false);
+        setUserInfo(null);
       }
     } catch (error) {
-      console.error("Error fetching user info:", error)
+      console.error('사용자 정보 가져오기 오류:', error);
+      setIsLoggedIn(false);
+      setUserInfo(null);
     }
-  }
+  };
 
   const fetchNovels = async () => {
     try {

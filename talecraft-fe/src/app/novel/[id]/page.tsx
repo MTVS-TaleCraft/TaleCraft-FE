@@ -21,8 +21,9 @@ interface Novel {
 interface Episode {
   episodeId: number;
   title: string;
-  episodeNumber: number;
-  date: string;
+  view: number;
+  note: string;
+  createDate: string | null;
 }
 
 const NovelPage: React.FC = () => {
@@ -52,8 +53,8 @@ const NovelPage: React.FC = () => {
           setNovel(novelData);
       
           // episodeData가 유효한 에피소드 데이터인지 확인
-          if (episodeData && episodeData.episodeId) {
-            setEpisodes([episodeData]);
+          if (episodeData && episodeData.episodesList && Array.isArray(episodeData.episodesList)) {
+            setEpisodes(episodeData.episodesList);
           } else {
             setEpisodes([]);
           }
@@ -154,7 +155,7 @@ const NovelPage: React.FC = () => {
                     <div className="flex-1">
                       <div className="font-medium text-gray-900 mb-1">{ep.title}</div>
                       <div className="text-sm text-gray-500">
-                        {ep.episodeNumber}화 • {ep.date}
+                        조회수: {ep.view} • {ep.createDate ? new Date(ep.createDate).toLocaleDateString() : '날짜 없음'}
                       </div>
                     </div>
                     <button

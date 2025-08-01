@@ -7,10 +7,9 @@ interface Episode {
   episodeId: number;
   title: string;
   content: string;
-  authorNote?: string;
-  novelTitle: string;
-  author: string;
-  episodeNumber: number;
+  note: string;
+  createDate: string | null;
+  novelId: number;
 }
 
 const EpisodeViewPage = () => {
@@ -25,44 +24,28 @@ const EpisodeViewPage = () => {
 
   // Mock data for demonstration
   useEffect(() => {
-    const mockEpisode: Episode = {
-      episodeId: parseInt(episodeId),
-      title: "제 1화 - 새로운 시작",
-      content: `안녕하세요. 오늘도 좋은 하루 되세요.
-
-첫 번째 에피소드입니다. 이곳에서 소설의 본문이 시작됩니다.
-
-"어디선가 들려오는 소리에 고개를 들었다."
-
-주인공은 창밖을 바라보며 깊은 한숨을 내쉬었다. 오늘도 평범한 하루가 시작되는 것 같았다.
-
-하지만 그 순간, 문득 이상한 느낌이 들었다. 마치 누군가가 자신을 지켜보고 있는 것 같은 기분이었다.
-
-"누구세요?"
-
-아무도 대답하지 않았다. 조용한 방 안에는 자신의 목소리만이 울렸다.
-
-그때였다. 갑자기 창밖에서 이상한 빛이 번쩍였다. 주인공은 놀라서 창가로 다가갔다.
-
-창밖을 보니, 평소와는 다른 풍경이 펼쳐져 있었다. 마치 다른 세계에 온 것 같은 기분이었다.
-
-"이게 꿈인가?"
-
-자신의 볼을 꼬집어보았다. 아프다. 꿈이 아니었다.
-
-이제 주인공의 새로운 모험이 시작될 것이다. 과연 어떤 일들이 기다리고 있을까?
-
-다음 에피소드에서 계속...`,
-      authorNote: "안녕하세요! 첫 번째 에피소드를 올렸습니다. 앞으로 재미있는 이야기로 찾아뵙겠습니다. 많은 관심과 사랑 부탁드려요!",
-      novelTitle: "이상한 세계로의 초대",
-      author: "작가님",
-      episodeNumber: 1
+    const fetchEpisode = async () => {
+      try {
+        const response = await fetch(`/api/novels/1/episodes/${episodeId}`, {
+          credentials: 'include'
+        });
+        
+        if (response.ok) {
+          const episodeData = await response.json();
+          setEpisode(episodeData);
+        } else {
+          console.error('Failed to fetch episode:', response.status);
+        }
+      } catch (error) {
+        console.error('Error fetching episode:', error);
+      } finally {
+        setLoading(false);
+      }
     };
-    
-    setTimeout(() => {
-      setEpisode(mockEpisode);
-      setLoading(false);
-    }, 500);
+
+    if (episodeId) {
+      fetchEpisode();
+    }
   }, [episodeId]);
 
   const handleFontSizeChange = (increase: boolean) => {
@@ -123,7 +106,7 @@ const EpisodeViewPage = () => {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
               <div style={{ fontSize: 14, color: '#666', marginBottom: 4 }}>
-                {episode.novelTitle} - {episode.author}
+                {episode.novelId} - {episode.title}
               </div>
               <div style={{ fontSize: 18, fontWeight: 600 }}>
                 {episode.title}
@@ -180,7 +163,7 @@ const EpisodeViewPage = () => {
           </div>
 
           {/* Author's Note */}
-          {episode.authorNote && (
+          {episode.note && (
             <div style={{ 
               background: '#f8f9fa', 
               borderLeft: '4px solid #007bff',
@@ -201,7 +184,7 @@ const EpisodeViewPage = () => {
                 color: '#666',
                 lineHeight: 1.6
               }}>
-                {episode.authorNote}
+                {episode.note}
               </div>
             </div>
           )}

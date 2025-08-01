@@ -1,9 +1,8 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { setAuthToken } from '@/utils/cookies';
 
 export default function LoginPage() {
   const [userId, setUserId] = useState('');
@@ -11,6 +10,8 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get('redirect') || '/';
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,25 +19,33 @@ export default function LoginPage() {
     setError('');
 
     try {
+      console.log('로그인 요청:', { userId, password });
+      
       const response = await fetch('/api/auth/login', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ userId, password }),
       });
 
+      console.log('로그인 응답 상태:', response.status);
       const data = await response.json();
+      console.log('로그인 응답 데이터:', data);
 
       if (response.ok) {
-        // 로그인 성공 시 토큰을 쿠키에 저장
-        setAuthToken(data.token);
-        router.push('/'); // 메인 페이지로 이동
+        // 백엔드에서 이미 쿠키를 설정했으므로 프론트엔드에서 중복 설정하지 않음
+        // 쿠키가 브라우저에 설정되는 데 시간이 걸리므로 잠시 기다린 후 이동
+        setTimeout(() => {
+          router.push(redirectTo); // 원래 가려던 페이지로 이동
+        }, 100);
       } else {
         setError(data.error || '로그인에 실패했습니다.');
       }
     } catch (error) {
-      setError('네트워크 오류가 발생했습니다.');
+      console.error('로그인 오류:', error);
+      setError('로그인 중 오류가 발생했습니다.');
     } finally {
       setIsLoading(false);
     }

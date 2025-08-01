@@ -27,7 +27,14 @@ const MyNovelsPage: React.FC = () => {
   const [filterType, setFilterType] = useState<'all' | 'bookmarked' | 'my'>('my');
 
   const fetchMyNovelsFromApi = async () => {
-    const res = await fetch(`/api/novels/my`, { method: 'GET', cache: 'no-store' });
+    const res = await fetch(`/api/novels/my`, { 
+      method: 'GET', 
+      cache: 'no-store',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
     if (!res.ok) throw new Error('작품 목록을 불러오는데 실패했습니다.');
     return res.json();
   };

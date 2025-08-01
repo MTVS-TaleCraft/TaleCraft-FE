@@ -43,10 +43,10 @@ export default function MyPage() {
       if (response.ok) {
         fetchUserInfo();
       } else {
-        router.push('/auth/login');
+        router.push('/auth/login?redirect=/mypage');
       }
     } catch (error) {
-      router.push('/auth/login');
+      router.push('/auth/login?redirect=/mypage');
     }
   };
 
@@ -66,11 +66,11 @@ export default function MyPage() {
       } else {
         setError('사용자 정보를 불러올 수 없습니다.');
         if (response.status === 401) {
-          router.push('/auth/login');
+          router.push('/auth/login?redirect=/mypage');
         }
       }
     } catch (error) {
-      setError('네트워크 오류가 발생했습니다.');
+      setError('사용자 정보를 불러오는 중 오류가 발생했습니다.');
     } finally {
       setIsLoading(false);
     }
@@ -150,15 +150,30 @@ export default function MyPage() {
     }
   };
 
-  const handleLogout = () => {
-    removeAuthToken();
-    router.push('/auth/login');
+  const handleLogout = async () => {
+    try {
+      const response = await fetch('/api/auth/profile', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        router.push('/');
+      } else {
+        console.error('로그아웃 실패');
+      }
+    } catch (error) {
+      console.error('로그아웃 오류:', error);
+    }
   };
 
-  const handleWithdraw = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsUpdating(true);
-    setError('');
+  const handleWithdraw = async () => {
+    if (!confirm('정말로 탈퇴하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
+      return;
+    }
 
     try {
       const response = await fetch('/api/user/withdraw', {
@@ -169,19 +184,16 @@ export default function MyPage() {
         },
       });
 
-      const data = await response.json();
-
       if (response.ok) {
-        removeAuthToken();
-        alert('회원탈퇴가 완료되었습니다.');
-        router.push('/auth/login');
+        alert('회원 탈퇴가 완료되었습니다.');
+        router.push('/');
       } else {
-        setError(data.error || '회원탈퇴에 실패했습니다.');
+        const data = await response.json();
+        alert(data.message || '회원 탈퇴에 실패했습니다.');
       }
     } catch (error) {
-      setError('네트워크 오류가 발생했습니다.');
-    } finally {
-      setIsUpdating(false);
+      console.error('회원 탈퇴 오류:', error);
+      alert('회원 탈퇴 중 오류가 발생했습니다.');
     }
   };
 
@@ -267,7 +279,7 @@ export default function MyPage() {
           {/* 회원 탈퇴 버튼 */}
           <div className="mt-8 text-center">
             <button 
-              onClick={() => setShowWithdrawModal(true)}
+              onClick={handleWithdraw}
               className="px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
             >
               회원 탈퇴

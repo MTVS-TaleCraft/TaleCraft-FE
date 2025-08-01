@@ -1,0 +1,10 @@
+{
+  "env": {
+    "BACKEND_URL": "@backend-url"
+  },
+  "build": {
+    "env": {
+      "BACKEND_URL": "@backend-url"
+    }
+  }
+} 
