@@ -23,15 +23,9 @@ export default function AdminPage() {
 
   const checkAuth = async () => {
     try {
-      const token = getAuthToken();
-      if (!token) {
-        router.push('/auth/login');
-        return;
-      }
-
       const response = await fetch('http://localhost:8081/api/auth/profile', {
+        credentials: 'include',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });

@@ -101,25 +101,33 @@ export default function HomePage() {
     setCarouselItems(items)
   }, [novels, currentIndex])
 
-  const checkLoginStatus = () => {
-    const token = getAuthToken()
-    const isLoggedInStatus = !!token
-    setIsLoggedIn(isLoggedInStatus)
-    setIsLoading(false)
+  const checkLoginStatus = async () => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"}/api/auth/profile`, {
+        credentials: 'include',
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+      
+      const isLoggedInStatus = response.ok
+      setIsLoggedIn(isLoggedInStatus)
+      setIsLoading(false)
 
-    if (isLoggedInStatus) {
-      fetchUserInfo()
+      if (isLoggedInStatus) {
+        fetchUserInfo()
+      }
+    } catch (error) {
+      setIsLoggedIn(false)
+      setIsLoading(false)
     }
   }
 
   const fetchUserInfo = async () => {
     try {
-      const token = getAuthToken()
-      if (!token) return
-
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"}/api/auth/profile`, {
+        credentials: 'include',
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       })

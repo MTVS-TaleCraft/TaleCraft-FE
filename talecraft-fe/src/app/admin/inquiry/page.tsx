@@ -30,15 +30,9 @@ export default function AdminInquiryPage() {
 
   const checkAuth = async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        router.push('/auth/login');
-        return;
-      }
-
       const response = await fetch('http://localhost:8081/api/auth/profile', {
+        credentials: 'include',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
@@ -70,11 +64,10 @@ export default function AdminInquiryPage() {
     setIsSubmitting(true);
 
     try {
-      const token = localStorage.getItem('token');
       const response = await fetch('http://localhost:8081/api/inquiry/send', {
         method: 'POST',
+        credentials: 'include',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -99,7 +92,7 @@ export default function AdminInquiryPage() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
+    removeAuthToken();
     router.push('/auth/login');
   };
 

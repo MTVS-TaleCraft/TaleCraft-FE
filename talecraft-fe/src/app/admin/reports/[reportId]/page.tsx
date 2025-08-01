@@ -35,15 +35,9 @@ export default function ReportDetailPage() {
 
   const checkAuth = async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        router.push('/auth/login');
-        return;
-      }
-
       const response = await fetch('http://localhost:8081/api/auth/profile', {
+        credentials: 'include',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
@@ -74,13 +68,12 @@ export default function ReportDetailPage() {
 
   const fetchReportDetail = async () => {
     try {
-      const token = localStorage.getItem('token');
       // reportId에서 comment_ 접두사 제거하여 실제 ID 추출
       const actualReportId = reportId.replace('comment_', '');
       
       const response = await fetch(`http://localhost:8081/api/reports/comments/${actualReportId}`, {
+        credentials: 'include',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });

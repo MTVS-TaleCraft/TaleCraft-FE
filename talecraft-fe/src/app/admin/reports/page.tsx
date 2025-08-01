@@ -40,15 +40,9 @@ export default function ReportManagementPage() {
 
   const checkAuth = async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        router.push('/auth/login');
-        return;
-      }
-
       const response = await fetch('http://localhost:8081/api/auth/profile', {
+        credentials: 'include',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
@@ -79,10 +73,9 @@ export default function ReportManagementPage() {
 
   const fetchReports = async () => {
     try {
-      const token = localStorage.getItem('token');
       const response = await fetch('http://localhost:8081/api/reports/unviewed', {
+        credentials: 'include',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
