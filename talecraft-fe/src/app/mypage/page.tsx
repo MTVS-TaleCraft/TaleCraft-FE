@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { getAuthToken, removeAuthToken } from '@/utils/cookies';
 import Link from 'next/link';
 
 interface UserInfo {
@@ -30,7 +31,7 @@ export default function MyPage() {
   }, []);
 
   const checkLoginStatus = () => {
-    const token = localStorage.getItem('token');
+    const token = getAuthToken();
     if (!token) {
       router.push('/auth/login');
       return;
@@ -40,7 +41,7 @@ export default function MyPage() {
 
   const fetchUserInfo = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = getAuthToken();
       if (!token) {
         router.push('/auth/login');
         return;
@@ -76,7 +77,7 @@ export default function MyPage() {
     setError('');
 
     try {
-      const token = localStorage.getItem('token');
+      const token = getAuthToken();
       const response = await fetch('/api/auth/profile', {
         method: 'PATCH',
         headers: {
@@ -116,7 +117,7 @@ export default function MyPage() {
     }
 
     try {
-      const token = localStorage.getItem('token');
+      const token = getAuthToken();
       const response = await fetch('/api/auth/profile', {
         method: 'PATCH',
         headers: {
@@ -147,7 +148,7 @@ export default function MyPage() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
+    removeAuthToken();
     router.push('/auth/login');
   };
 
@@ -157,7 +158,7 @@ export default function MyPage() {
     setError('');
 
     try {
-      const token = localStorage.getItem('token');
+      const token = getAuthToken();
       const response = await fetch('/api/user/withdraw', {
         method: 'DELETE',
         headers: {
@@ -169,7 +170,7 @@ export default function MyPage() {
       const data = await response.json();
 
       if (response.ok) {
-        localStorage.removeItem('token');
+        removeAuthToken();
         alert('회원탈퇴가 완료되었습니다.');
         router.push('/auth/login');
       } else {

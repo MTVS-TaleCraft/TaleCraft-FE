@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { ArrowLeft, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { getAuthToken } from "@/utils/cookies"
 
 interface Message {
   messageId: number
@@ -30,7 +31,7 @@ export default function MessagesPage() {
   }, [])
 
   const checkLoginStatus = () => {
-    const token = localStorage.getItem("token")
+    const token = getAuthToken()
     if (!token) {
       router.push("/auth/login")
       return
@@ -40,7 +41,7 @@ export default function MessagesPage() {
 
   const fetchUserInfo = async () => {
     try {
-      const token = localStorage.getItem("token")
+      const token = getAuthToken()
       if (!token) return
 
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"}/api/auth/profile`, {
@@ -62,7 +63,7 @@ export default function MessagesPage() {
   const fetchMessages = async () => {
     try {
       setIsLoading(true)
-      const token = localStorage.getItem("token")
+      const token = getAuthToken()
       if (!token) return
 
       // 받은 쪽지 조회
@@ -99,7 +100,7 @@ export default function MessagesPage() {
 
   const handleDeleteMessage = async (messageId: number, type: "received" | "sent") => {
     try {
-      const token = localStorage.getItem("token")
+      const token = getAuthToken()
       if (!token) return
 
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"}/api/messages/${type}/${messageId}`, {

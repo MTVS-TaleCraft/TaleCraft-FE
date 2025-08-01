@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { getAuthToken, removeAuthToken } from '@/utils/cookies';
 
 interface UserInfo {
   userId: string;
@@ -22,7 +23,7 @@ export default function AdminPage() {
 
   const checkAuth = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = getAuthToken();
       if (!token) {
         router.push('/auth/login');
         return;
@@ -79,7 +80,7 @@ export default function AdminPage() {
             <span className="text-sm">관리자: {userInfo?.userName}</span>
             <button 
               onClick={() => {
-                localStorage.removeItem('token');
+                removeAuthToken();
                 router.push('/auth/login');
               }}
               className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded transition-colors"

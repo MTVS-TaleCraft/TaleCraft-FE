@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { Search, Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { getAuthToken, removeAuthToken } from "@/utils/cookies"
 
 interface Novel {
   novelId: number
@@ -101,7 +102,7 @@ export default function HomePage() {
   }, [novels, currentIndex])
 
   const checkLoginStatus = () => {
-    const token = localStorage.getItem("token")
+    const token = getAuthToken()
     const isLoggedInStatus = !!token
     setIsLoggedIn(isLoggedInStatus)
     setIsLoading(false)
@@ -113,7 +114,7 @@ export default function HomePage() {
 
   const fetchUserInfo = async () => {
     try {
-      const token = localStorage.getItem("token")
+      const token = getAuthToken()
       if (!token) return
 
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"}/api/auth/profile`, {
@@ -240,7 +241,7 @@ export default function HomePage() {
   }
 
   const handleLogout = () => {
-    localStorage.removeItem("token")
+    removeAuthToken()
     setIsLoggedIn(false)
     setUserInfo(null)
   }
@@ -611,7 +612,7 @@ export default function HomePage() {
               <>
                 <button
                   className="w-full bg-black text-white py-3 px-4 rounded-lg hover:bg-gray-800 transition-colors"
-                  onClick={() => handleNavigation2("/novels/create")}
+                  onClick={() => handleNavigation2("/novel-create")}
                 >
                   작품등록
                 </button>

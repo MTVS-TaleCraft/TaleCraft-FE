@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { setAuthToken } from '@/utils/cookies';
 
 export default function LoginPage() {
   const [userId, setUserId] = useState('');
@@ -28,8 +29,8 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (response.ok) {
-        // 로그인 성공 시 토큰 저장
-        localStorage.setItem('token', data.token);
+        // 로그인 성공 시 토큰을 쿠키에 저장
+        setAuthToken(data.token);
         router.push('/'); // 메인 페이지로 이동
       } else {
         setError(data.error || '로그인에 실패했습니다.');
