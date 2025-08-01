@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { getAuthToken, removeAuthToken } from '@/utils/cookies';
 import Link from 'next/link';
 
 interface UserInfo {
@@ -29,27 +30,32 @@ export default function MyPage() {
     checkLoginStatus();
   }, []);
 
-  const checkLoginStatus = () => {
-    const token = localStorage.getItem('token');
-    if (!token) {
+  const checkLoginStatus = async () => {
+    try {
+      const response = await fetch('/api/auth/profile', {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (response.ok) {
+        fetchUserInfo();
+      } else {
+        router.push('/auth/login');
+      }
+    } catch (error) {
       router.push('/auth/login');
-      return;
     }
-    fetchUserInfo();
   };
 
   const fetchUserInfo = async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        router.push('/auth/login');
-        return;
-      }
-
       const response = await fetch('/api/auth/profile', {
         method: 'GET',
+        credentials: 'include',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
@@ -76,11 +82,10 @@ export default function MyPage() {
     setError('');
 
     try {
-      const token = localStorage.getItem('token');
       const response = await fetch('/api/auth/profile', {
         method: 'PATCH',
+        credentials: 'include',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -116,11 +121,10 @@ export default function MyPage() {
     }
 
     try {
-      const token = localStorage.getItem('token');
       const response = await fetch('/api/auth/profile', {
         method: 'PATCH',
+        credentials: 'include',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -147,7 +151,7 @@ export default function MyPage() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
+    removeAuthToken();
     router.push('/auth/login');
   };
 
@@ -157,11 +161,10 @@ export default function MyPage() {
     setError('');
 
     try {
-      const token = localStorage.getItem('token');
       const response = await fetch('/api/user/withdraw', {
         method: 'DELETE',
+        credentials: 'include',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
@@ -169,7 +172,7 @@ export default function MyPage() {
       const data = await response.json();
 
       if (response.ok) {
-        localStorage.removeItem('token');
+        removeAuthToken();
         alert('회원탈퇴가 완료되었습니다.');
         router.push('/auth/login');
       } else {

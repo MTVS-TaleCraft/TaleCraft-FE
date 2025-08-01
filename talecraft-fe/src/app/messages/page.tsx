@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { ArrowLeft, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { getAuthToken } from "@/utils/cookies"
 
 interface UserInfo {
   userId: string;
@@ -36,23 +37,30 @@ export default function MessagesPage() {
     fetchMessages()
   }, [])
 
-  const checkLoginStatus = () => {
-    const token = localStorage.getItem("token")
-    if (!token) {
+  const checkLoginStatus = async () => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"}/api/auth/profile`, {
+        credentials: 'include',
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+      
+      if (response.ok) {
+        fetchUserInfo()
+      } else {
+        router.push("/auth/login")
+      }
+    } catch (error) {
       router.push("/auth/login")
-      return
     }
-    fetchUserInfo()
   }
 
   const fetchUserInfo = async () => {
     try {
-      const token = localStorage.getItem("token")
-      if (!token) return
-
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"}/api/auth/profile`, {
+        credentials: 'include',
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       })
@@ -69,13 +77,11 @@ export default function MessagesPage() {
   const fetchMessages = async () => {
     try {
       setIsLoading(true)
-      const token = localStorage.getItem("token")
-      if (!token) return
 
       // 받은 쪽지 조회
       const receivedResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"}/api/messages/received`, {
+        credentials: 'include',
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       })
@@ -87,8 +93,8 @@ export default function MessagesPage() {
 
       // 보낸 쪽지 조회
       const sentResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"}/api/messages/sent`, {
+        credentials: 'include',
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       })
@@ -106,13 +112,10 @@ export default function MessagesPage() {
 
   const handleDeleteMessage = async (messageId: number, type: "received" | "sent") => {
     try {
-      const token = localStorage.getItem("token")
-      if (!token) return
-
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"}/api/messages/${type}/${messageId}`, {
         method: "DELETE",
+        credentials: 'include',
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       })

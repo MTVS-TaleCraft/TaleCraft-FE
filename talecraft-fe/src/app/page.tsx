@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { Search, Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { getAuthToken, removeAuthToken } from "@/utils/cookies"
 
 interface Novel {
   novelId: number
@@ -100,25 +101,33 @@ export default function HomePage() {
     setCarouselItems(items)
   }, [novels, currentIndex])
 
-  const checkLoginStatus = () => {
-    const token = localStorage.getItem("token")
-    const isLoggedInStatus = !!token
-    setIsLoggedIn(isLoggedInStatus)
-    setIsLoading(false)
+  const checkLoginStatus = async () => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"}/api/auth/profile`, {
+        credentials: 'include',
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+      
+      const isLoggedInStatus = response.ok
+      setIsLoggedIn(isLoggedInStatus)
+      setIsLoading(false)
 
-    if (isLoggedInStatus) {
-      fetchUserInfo()
+      if (isLoggedInStatus) {
+        fetchUserInfo()
+      }
+    } catch (error) {
+      setIsLoggedIn(false)
+      setIsLoading(false)
     }
   }
 
   const fetchUserInfo = async () => {
     try {
-      const token = localStorage.getItem("token")
-      if (!token) return
-
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"}/api/auth/profile`, {
+        credentials: 'include',
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       })
@@ -240,7 +249,7 @@ export default function HomePage() {
   }
 
   const handleLogout = () => {
-    localStorage.removeItem("token")
+    removeAuthToken()
     setIsLoggedIn(false)
     setUserInfo(null)
   }

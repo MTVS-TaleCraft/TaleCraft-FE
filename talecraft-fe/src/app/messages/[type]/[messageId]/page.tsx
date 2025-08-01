@@ -48,12 +48,9 @@ export default function MessageDetailPage() {
 
   const fetchUserInfo = async () => {
     try {
-      const token = localStorage.getItem("token")
-      if (!token) return
-
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"}/api/auth/profile`, {
+        credentials: 'include',
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       })
@@ -70,12 +67,10 @@ export default function MessageDetailPage() {
   const fetchMessage = async () => {
     try {
       setIsLoading(true)
-      const token = localStorage.getItem("token")
-      if (!token) return
 
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"}/api/messages/${type}/${messageId}`, {
+        credentials: 'include',
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       })
@@ -100,13 +95,10 @@ export default function MessageDetailPage() {
     if (!confirm("정말로 이 쪽지를 삭제하시겠습니까?")) return
 
     try {
-      const token = localStorage.getItem("token")
-      if (!token) return
-
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"}/api/messages/${type}/${messageId}`, {
         method: "DELETE",
+        credentials: 'include',
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       })

@@ -119,15 +119,9 @@ export default function UserDetailPage() {
 
   const checkAuth = async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        router.push('/auth/login');
-        return;
-      }
-
       const response = await fetch('http://localhost:8081/api/auth/profile', {
+        credentials: 'include',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
@@ -158,10 +152,9 @@ export default function UserDetailPage() {
 
   const fetchUserDetail = async () => {
     try {
-      const token = localStorage.getItem('token');
       const response = await fetch(`http://localhost:8081/api/auth/profile?targetUserId=${userId}`, {
+        credentials: 'include',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
