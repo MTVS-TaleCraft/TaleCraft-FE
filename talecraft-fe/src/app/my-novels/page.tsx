@@ -39,7 +39,12 @@ const MyNovelsPage: React.FC = () => {
       try {
         const data = await fetchMyNovelsFromApi();
         // data.novelList를 MyNovel[] 형태로 변환
-        const novels: MyNovel[] = data.novelList.map((novel: any) => ({
+        const novels: MyNovel[] = data.novelList.map((novel: {
+          novelId: number;
+          title: string;
+          userId: string;
+          titleImage?: string;
+        }) => ({
           novelId: novel.novelId,
           title: novel.title,
           userId: novel.userId,

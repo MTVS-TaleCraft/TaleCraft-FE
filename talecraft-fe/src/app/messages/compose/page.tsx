@@ -5,13 +5,20 @@ import { useRouter } from "next/navigation"
 import { ArrowLeft, Send } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
+interface UserInfo {
+  userId: string;
+  userName: string;
+  email: string;
+  authorityId: string;
+}
+
 export default function ComposeMessagePage() {
   const router = useRouter()
   const [receiver, setReceiver] = useState("")
   const [messageTitle, setMessageTitle] = useState("")
   const [description, setDescription] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const [userInfo, setUserInfo] = useState<any>(null)
+  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
 
   useEffect(() => {
     checkLoginStatus()
