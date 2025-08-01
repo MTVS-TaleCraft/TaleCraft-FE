@@ -1,8 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
-import Header from '../components/Header';
+import React, { useState, useEffect, useRef } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 
 interface NovelInfo {
   novelId: number;
@@ -11,27 +10,52 @@ interface NovelInfo {
   episodeCount: number;
 }
 
+const getSessionKey = (novelId: string | null) => `episode-create-draft-${novelId}`;
+
 const EpisodeCreatePage: React.FC = () => {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const novelId = searchParams.get('novelId');
-  
+
+  const [novelTitle, setNovelTitle] = useState<string>('');
+  const [novelTitleLoading, setNovelTitleLoading] = useState(false);
   const [novelInfo, setNovelInfo] = useState<NovelInfo | null>(null);
   const [episodeTitle, setEpisodeTitle] = useState('');
   const [episodeContent, setEpisodeContent] = useState('');
   const [characterCount, setCharacterCount] = useState(0);
-  const [currentScene, setCurrentScene] = useState(1);
-  const [scenes, setScenes] = useState<string[]>(['']);
+  const [saving, setSaving] = useState(false);
+  const [preview, setPreview] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const [isNotice, setIsNotice] = useState(false);
+  const contentRef = useRef<HTMLTextAreaElement>(null);
 
-  // 작품 정보 가져오기
+  // Fetch novel title from backend
   useEffect(() => {
     if (novelId) {
-      // 실제로는 API에서 작품 정보를 가져와야 함
-      setNovelInfo({
-        novelId: parseInt(novelId),
-        title: '트위터 더 블루 버드',
-        userId: '김메타',
-        episodeCount: 1
-      });
+      setNovelTitleLoading(true);
+      fetch(`/api/novels/${novelId}`, { credentials: 'include' })
+        .then(res => res.json())
+        .then(data => {
+          setNovelTitle(data.title || '');
+        })
+        .catch(() => setNovelTitle(''))
+        .finally(() => setNovelTitleLoading(false));
+    }
+  }, [novelId]);
+
+  // 세션 임시저장 불러오기
+  useEffect(() => {
+    if (novelId) {
+      const key = getSessionKey(novelId);
+      const saved = sessionStorage.getItem(key);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          setEpisodeTitle(parsed.title || '');
+          setEpisodeContent(parsed.content || '');
+          setIsNotice(parsed.isNotice || false);
+        } catch {}
+      }
     }
   }, [novelId]);
 
@@ -40,242 +64,359 @@ const EpisodeCreatePage: React.FC = () => {
     setCharacterCount(episodeContent.length);
   }, [episodeContent]);
 
-  const handleSavePrivate = () => {
-    console.log('비공개 저장');
+  // 자동 높이조절
+  useEffect(() => {
+    if (contentRef.current) {
+      contentRef.current.style.height = 'auto';
+      contentRef.current.style.height = contentRef.current.scrollHeight + 'px';
+    }
+  }, [episodeContent]);
+
+  // 임시저장 (sessionStorage)
+  const handleTempSave = () => {
+    if (!novelId) return;
+    const key = getSessionKey(novelId);
+    sessionStorage.setItem(key, JSON.stringify({ 
+      title: episodeTitle, 
+      content: episodeContent, 
+      isNotice: isNotice 
+    }));
+    setMessage('임시 저장 완료! (이 브라우저에서만 유지)');
   };
 
-  const handleSavePublic = () => {
-    console.log('공개 저장');
+  // 공개 저장 (API)
+  const handleSave = async () => {
+    if (!novelId) return;
+    
+    // 제목과 내용이 비어있으면 저장하지 않음
+    if (!episodeTitle.trim() || !episodeContent.trim()) {
+      setMessage('제목과 내용을 모두 입력해주세요.');
+      return;
+    }
+    
+    setSaving(true);
+    setMessage(null);
+    
+    const requestBody = {
+      title: episodeTitle.trim(),
+      content: episodeContent.trim(),
+      isNotice: isNotice,
+    };
+    
+    console.log('Sending request body:', requestBody);
+    
+    try {
+      const response = await fetch(`/api/novels/${novelId}/episodes`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(requestBody),
+      });
+      
+      console.log('Response status:', response.status);
+      
+      const data = await response.json();
+      console.log('Response data:', data);
+      
+      if (response.ok) {
+        setMessage('공개 저장 완료!');
+        setEpisodeTitle('');
+        setEpisodeContent('');
+        setIsNotice(false);
+        // 공개 저장 성공 시 임시저장 삭제
+        const key = getSessionKey(novelId);
+        sessionStorage.removeItem(key);
+        setTimeout(() => {
+          window.location.href = '/my-novels';
+        }, 1000);
+      } else {
+        setMessage(data.error || '저장에 실패했습니다.');
+      }
+    } catch (e) {
+      console.error('Error during save:', e);
+      setMessage('네트워크 오류가 발생했습니다.');
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleCreateNewEpisode = () => {
-    console.log('새 회차 생성');
+  const handlePreview = () => {
+    setPreview(true);
   };
 
-  const handleGenerateIllustration = () => {
-    console.log('소설 삽화 생성');
+  const handleClosePreview = () => {
+    setPreview(false);
   };
 
-  const handleDirectInput = () => {
-    console.log('글 직접입력');
-  };
-
-  const handleGenerateNextScene = () => {
-    console.log('다음 씬 생성');
-  };
-
-  const handleGenerateStory = () => {
-    console.log('스토리 생성');
-  };
-
-  if (!novelInfo) {
+  if (novelTitleLoading) {
     return (
-      <div className="min-h-screen bg-gray-100">
-        <Header title="회차 작성" />
-        <div className="flex items-center justify-center h-64">
-          <div className="text-lg text-gray-600">작품 정보를 불러오는 중...</div>
-        </div>
+      <div style={{ minHeight: '100vh', background: '#f8f9fa', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ fontSize: 18, color: '#666' }}>작품 제목을 불러오는 중...</div>
+      </div>
+    );
+  }
+
+  if (!novelId || !novelTitle) {
+    return (
+      <div style={{ minHeight: '100vh', background: '#f8f9fa', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ fontSize: 18, color: '#666' }}>작품 정보를 찾을 수 없습니다.</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <Header title="회차 작성" />
-      
-      <div className="flex h-screen">
-        {/* 왼쪽 사이드바 */}
-        <div className="w-80 bg-gray-800 text-white p-4 flex flex-col">
-          {/* 상단 정보 */}
-          <div className="mb-6">
-            <div className="flex items-center gap-2 mb-4">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-              <span className="font-semibold">Qizac</span>
-            </div>
-            
-            <div className="space-y-2">
-              <div className="text-sm">Lv.1 김메타</div>
-              <div className="text-sm text-red-400">보유코인: 0c</div>
-              <div className="text-sm">보유포인트: 3950p</div>
-            </div>
+    <div style={{ background: '#f8f9fa', minHeight: '100vh' }}>
+      {/* Sticky Top Bar */}
+      <div style={{
+        position: 'sticky',
+        top: 0,
+        zIndex: 100,
+        background: '#fff',
+        borderBottom: '1px solid #e9ecef',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
+        padding: '0 0',
+      }}>
+        <div style={{
+          maxWidth: 900,
+          margin: '0 auto',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          height: 64,
+          padding: '0 32px',
+        }}>
+          <div>
+            <div style={{ fontSize: 15, color: '#888', marginBottom: 2 }}>{novelTitle}</div>
+            <div style={{ fontSize: 22, fontWeight: 700 }}>새 회차 작성</div>
           </div>
-
-          {/* 등장인물 */}
-          <div className="mb-6">
-            <div className="flex items-center gap-2 mb-2">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
-              </svg>
-              <span className="text-sm font-medium">등장인물</span>
-            </div>
-            <div className="ml-6">
-              <div className="flex items-center gap-1 text-sm text-gray-300">
-                <span>▶</span>
-                <span>김트윗</span>
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          {/* 회차 리스트 */}
-          <div className="mb-6">
-            <div className="flex items-center gap-2 mb-2">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              <span className="text-sm font-medium">회차 리스트</span>
-            </div>
-            <div className="ml-6 space-y-2">
-              <div className="text-sm text-gray-300">작품 정보 수정</div>
-              <div className="text-sm text-gray-300">작품 삭제</div>
-              <div className="text-sm text-gray-300">+ 새로운 회차쓰기</div>
-              <div className="text-sm text-gray-300">1화</div>
-            </div>
-          </div>
-        </div>
-
-        {/* 메인 콘텐츠 */}
-        <div className="flex-1 bg-white flex flex-col">
-          {/* 헤더 */}
-          <div className="p-6 border-b border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">{novelInfo.title}</h1>
-                <p className="text-lg text-gray-600">{novelInfo.episodeCount + 1}화</p>
-              </div>
-              
-              <div className="flex items-center gap-4">
-                <span className="text-sm text-gray-500">글자수({characterCount}자)</span>
-                <button
-                  onClick={handleCreateNewEpisode}
-                  className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50"
-                >
-                  새 회차 생성
-                </button>
-                <button
-                  onClick={handleSavePrivate}
-                  className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50"
-                >
-                  비공개 저장
-                </button>
-                <button
-                  onClick={handleSavePublic}
-                  className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50"
-                >
-                  공개 저장
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* 콘텐츠 영역 */}
-          <div className="flex-1 p-6">
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                회차 제목
-              </label>
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <input
-                type="text"
-                value={episodeTitle}
-                onChange={(e) => setEpisodeTitle(e.target.value)}
-                placeholder="회차 제목을 입력하세요"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                type="checkbox"
+                id="isNotice"
+                checked={isNotice}
+                onChange={(e) => setIsNotice(e.target.checked)}
+                style={{ width: 16, height: 16 }}
               />
-            </div>
-            
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                내용
+              <label htmlFor="isNotice" style={{ fontSize: 14, color: '#666', cursor: 'pointer' }}>
+                공지
               </label>
-              <textarea
-                value={episodeContent}
-                onChange={(e) => setEpisodeContent(e.target.value)}
-                placeholder="내용을 입력하세요"
-                className="w-full h-96 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-              />
-            </div>
-
-            {/* 씬 표시 */}
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <div className="text-sm font-medium text-gray-700 mb-2">#씬{currentScene}</div>
-              <div className="text-sm text-gray-600">
-                우측 메뉴에서 다음 씬을 생성해주세요.
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* 오른쪽 사이드바 */}
-        <div className="w-80 bg-gray-800 text-white p-4 flex flex-col">
-          {/* 삽화 생성 */}
-          <div className="mb-6">
-            <div className="flex items-center gap-2 mb-3">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              <span className="text-sm font-medium">삽화 생성</span>
             </div>
             <button
-              onClick={handleGenerateIllustration}
-              className="w-full px-4 py-2 bg-orange-500 text-white rounded-lg text-sm font-medium hover:bg-orange-600"
+              onClick={handleTempSave}
+              disabled={saving}
+              style={{
+                background: '#fff',
+                border: '1px solid #ddd',
+                borderRadius: 6,
+                padding: '10px 20px',
+                fontWeight: 600,
+                color: '#666',
+                cursor: saving ? 'not-allowed' : 'pointer',
+                fontSize: 15
+              }}
             >
-              소설 삽화 생성하기+
+              임시저장
             </button>
-          </div>
-
-          {/* 씬 생성 */}
-          <div className="mb-6">
-            <div className="flex items-center gap-2 mb-3">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              <span className="text-sm font-medium">씬 생성</span>
-            </div>
-            <div className="space-y-2">
-              <button
-                onClick={handleDirectInput}
-                className="w-full px-4 py-2 bg-orange-500 text-white rounded-lg text-sm font-medium hover:bg-orange-600"
-              >
-                글 직접입력하기+
-              </button>
-              <div className="flex gap-2">
-                <button
-                  onClick={handleGenerateNextScene}
-                  className="flex-1 px-4 py-2 bg-orange-500 text-white rounded-lg text-sm font-medium hover:bg-orange-600"
-                >
-                  다음 씬 생성하기+
-                </button>
-                <button
-                  onClick={handleDirectInput}
-                  className="px-4 py-2 bg-gray-600 text-white rounded-lg text-sm font-medium hover:bg-gray-700"
-                >
-                  직접 입력
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* 스토리 생성 */}
-          <div className="mb-6">
-            <div className="flex items-center gap-2 mb-3">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              <span className="text-sm font-medium">스토리 생성</span>
-            </div>
             <button
-              onClick={handleGenerateStory}
-              className="w-full px-4 py-2 bg-orange-500 text-white rounded-lg text-sm font-medium hover:bg-orange-600"
+              onClick={handlePreview}
+              style={{
+                background: '#f8f9fa',
+                border: '1px solid #007bff',
+                borderRadius: 6,
+                padding: '10px 20px',
+                fontWeight: 600,
+                color: '#007bff',
+                cursor: 'pointer',
+                fontSize: 15
+              }}
             >
-              스토리 생성하기+
+              미리보기
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              style={{
+                background: '#007bff',
+                border: 'none',
+                borderRadius: 6,
+                padding: '10px 24px',
+                fontWeight: 600,
+                color: '#fff',
+                cursor: saving ? 'not-allowed' : 'pointer',
+                fontSize: 15
+              }}
+            >
+              공개 저장
             </button>
           </div>
         </div>
       </div>
+
+      {/* Main Content */}
+      <div style={{
+        maxWidth: 900,
+        margin: '32px auto 0 auto',
+        display: 'flex',
+        alignItems: 'flex-start',
+        gap: 32,
+        position: 'relative',
+      }}>
+        {/* Editor */}
+        <div style={{ flex: 1, background: '#fff', borderRadius: 12, boxShadow: '0 2px 12px rgba(0,0,0,0.06)', padding: '40px 36px', minHeight: 600 }}>
+          {message && (
+            <div style={{ marginBottom: 16, color: message.includes('완료') ? '#28a745' : '#dc3545', fontWeight: 600 }}>{message}</div>
+          )}
+          <div style={{ marginBottom: 32 }}>
+            <input
+              type="text"
+              value={episodeTitle}
+              onChange={e => setEpisodeTitle(e.target.value)}
+              placeholder="회차 제목을 입력하세요"
+              style={{
+                width: '100%',
+                fontSize: 22,
+                fontWeight: 600,
+                border: 'none',
+                borderBottom: '2px solid #e9ecef',
+                outline: 'none',
+                padding: '8px 0',
+                marginBottom: 8,
+                background: 'transparent',
+              }}
+              maxLength={100}
+            />
+            <div style={{ fontSize: 13, color: '#bbb', textAlign: 'right' }}>{episodeTitle.length}/100</div>
+          </div>
+          <div style={{ marginBottom: 24 }}>
+            <textarea
+              ref={contentRef}
+              value={episodeContent}
+              onChange={e => setEpisodeContent(e.target.value)}
+              placeholder="소설 본문을 입력하세요. (엔터로 줄바꿈)"
+              style={{
+                width: '100%',
+                minHeight: 320,
+                fontSize: 17,
+                lineHeight: 1.8,
+                border: 'none',
+                outline: 'none',
+                resize: 'none',
+                background: 'transparent',
+                fontFamily: 'inherit',
+                color: '#222',
+                marginBottom: 8,
+              }}
+              maxLength={30000}
+            />
+            <div style={{ fontSize: 13, color: '#bbb', textAlign: 'right' }}>{characterCount}자</div>
+          </div>
+        </div>
+
+        {/* Right Toolbar */}
+        <div style={{ width: 180, minWidth: 140, position: 'sticky', top: 96 }}>
+          <div style={{ background: '#fff', borderRadius: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.06)', padding: '24px 16px', marginBottom: 24 }}>
+            <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12, color: '#007bff' }}>툴박스</div>
+            <button
+              onClick={() => alert('소설 삽화 생성 기능(예시)')}
+              style={{
+                width: '100%',
+                background: '#f8f9fa',
+                border: '1px solid #ddd',
+                borderRadius: 6,
+                padding: '10px 0',
+                fontWeight: 600,
+                color: '#333',
+                marginBottom: 10,
+                cursor: 'pointer',
+                fontSize: 15
+              }}
+            >
+              삽화 생성
+            </button>
+            <button
+              onClick={() => alert('씬 생성 기능(예시)')}
+              style={{
+                width: '100%',
+                background: '#f8f9fa',
+                border: '1px solid #ddd',
+                borderRadius: 6,
+                padding: '10px 0',
+                fontWeight: 600,
+                color: '#333',
+                marginBottom: 10,
+                cursor: 'pointer',
+                fontSize: 15
+              }}
+            >
+              씬 생성
+            </button>
+            <button
+              onClick={() => alert('스토리 생성 기능(예시)')}
+              style={{
+                width: '100%',
+                background: '#f8f9fa',
+                border: '1px solid #ddd',
+                borderRadius: 6,
+                padding: '10px 0',
+                fontWeight: 600,
+                color: '#333',
+                cursor: 'pointer',
+                fontSize: 15
+              }}
+            >
+              스토리 생성
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Preview Modal */}
+      {preview && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          background: 'rgba(0,0,0,0.25)',
+          zIndex: 9999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+          <div style={{
+            background: '#fff',
+            borderRadius: 12,
+            boxShadow: '0 4px 24px rgba(0,0,0,0.15)',
+            width: 600,
+            maxWidth: '90vw',
+            padding: 40,
+            position: 'relative',
+          }}>
+            <button
+              onClick={handleClosePreview}
+              style={{
+                position: 'absolute',
+                top: 18,
+                right: 18,
+                background: 'none',
+                border: 'none',
+                fontSize: 22,
+                color: '#bbb',
+                cursor: 'pointer',
+              }}
+            >
+              ×
+            </button>
+            <div style={{ fontSize: 20, fontWeight: 700, marginBottom: 18 }}>{episodeTitle || '제목 없음'}</div>
+            <div style={{ fontSize: 15, color: '#888', marginBottom: 24 }}>{novelTitle} | </div>
+            <div style={{ fontSize: 16, lineHeight: 1.8, color: '#222', whiteSpace: 'pre-line' }}>{episodeContent || '본문이 없습니다.'}</div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

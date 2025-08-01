@@ -107,11 +107,7 @@ const NovelListPage: React.FC = () => {
       <Header title="작품 목록" />
       
       <main className="p-4">
-        <GenreFilter 
-          selectedGenre={selectedGenre}
-          onGenreSelect={setSelectedGenre}
-        />
-        
+       
         {filteredNovels.length === 0 ? (
           <div className="text-center py-8">
             <p className="text-gray-600">표시할 작품이 없습니다.</p>

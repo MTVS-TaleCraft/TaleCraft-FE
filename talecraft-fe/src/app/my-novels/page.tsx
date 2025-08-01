@@ -64,7 +64,7 @@ const MyNovelsPage: React.FC = () => {
 
   const handleEditNovel = (novelId: number) => {
     // 작품 수정 페이지로 이동
-    console.log('작품 수정:', novelId);
+    window.location.href = `/novel-create?novelId=${novelId}`;
   };
 
   const handleWriteEpisode = (novelId: number) => {
@@ -166,7 +166,7 @@ const MyNovelsPage: React.FC = () => {
         </div>
 
         {/* 작품 목록 섹션 */}
-        <div className="bg-orange-200 p-4 rounded-lg">
+        <div className="bg-slate-50 p-4 rounded-lg">
           <div className="space-y-4">
             {filteredNovels.length === 0 ? (
               <div className="text-center py-8 text-gray-600">
@@ -190,7 +190,14 @@ const MyNovelsPage: React.FC = () => {
                   
                   {/* 작품 정보 */}
                   <div className="flex-1 bg-yellow-200 p-4 rounded">
-                    <h3 className="font-semibold text-lg mb-2">{novel.title}</h3>
+                    <h3 className="font-semibold text-lg mb-2">
+                      <button
+                        onClick={() => window.location.href = `/novel/${novel.novelId}`}
+                        style={{ background: 'none', border: 'none', padding: 0, margin: 0, color: '#1d4ed8', textDecoration: 'underline', cursor: 'pointer', fontSize: 'inherit', fontWeight: 'inherit' }}
+                      >
+                        {novel.title}
+                      </button>
+                    </h3>
                     <p className="text-sm text-gray-600">{novel.userId}</p>
                     <p className="text-xs text-gray-500 mt-1">
                       {novel.episodeCount}화 • {novel.lastUpdated}
