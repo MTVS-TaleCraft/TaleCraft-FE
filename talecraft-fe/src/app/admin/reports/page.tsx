@@ -143,7 +143,15 @@ export default function ReportManagementPage() {
           ]);
         } else {
           // 백엔드 데이터를 프론트엔드 형식으로 변환
-          const formattedReports = data.map((report: any) => ({
+          const formattedReports = data.map((report: {
+            commentReportId: number;
+            reportTag: string;
+            reportUser: string;
+            reportedUser: string;
+            reportDate?: string | Date;
+            description: string;
+            isView: boolean;
+          }) => ({
             id: `comment_${report.commentReportId}`,
             reportTag: report.reportTag,
             reportingUser: report.reportUser,

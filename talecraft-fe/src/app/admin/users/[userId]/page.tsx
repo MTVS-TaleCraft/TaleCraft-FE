@@ -242,7 +242,12 @@ export default function UserDetailPage() {
     if (!user) return;
 
     const token = localStorage.getItem('token');
-    const updateData: any = {
+    const updateData: Partial<{
+      targetUserId: string;
+      email?: string;
+      userName?: string;
+      newPassword?: string;
+    }> = {
       targetUserId: userId // 관리자가 변경할 사용자 ID
     };
 
