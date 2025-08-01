@@ -618,7 +618,7 @@ export default function HomePage() {
                 </button>
                 <button
                   className="w-full bg-black text-white py-3 px-4 rounded-lg hover:bg-gray-800 transition-colors"
-                  onClick={() => handleNavigation2("/novels/my-novels")}
+                  onClick={() => handleNavigation2("/my-novels")}
                 >
                   내 작품 목록
                 </button>

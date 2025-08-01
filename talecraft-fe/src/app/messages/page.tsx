@@ -6,6 +6,13 @@ import { ArrowLeft, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { getAuthToken } from "@/utils/cookies"
 
+interface UserInfo {
+  userId: string;
+  userName: string;
+  email: string;
+  authorityId: string;
+}
+
 interface Message {
   messageId: number
   sender: string
@@ -23,7 +30,7 @@ export default function MessagesPage() {
   const [receivedMessages, setReceivedMessages] = useState<Message[]>([])
   const [activeTab, setActiveTab] = useState<"received" | "sent">("received")
   const [isLoading, setIsLoading] = useState(true)
-  const [userInfo, setUserInfo] = useState<any>(null)
+  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
 
   useEffect(() => {
     checkLoginStatus()
