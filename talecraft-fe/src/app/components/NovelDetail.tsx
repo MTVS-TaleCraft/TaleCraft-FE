@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface NovelDetailProps {
   title: string;
@@ -8,6 +8,7 @@ interface NovelDetailProps {
   bookmarkCount: number;
   commentCount: number;
   titleImage?: string;
+  novelId: number;
 }
 
 const NovelDetail: React.FC<NovelDetailProps> = ({
@@ -17,8 +18,109 @@ const NovelDetail: React.FC<NovelDetailProps> = ({
   tags,
   bookmarkCount,
   commentCount,
-  titleImage
+  titleImage,
+  novelId
 }) => {
+  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // 북마크 상태 확인
+  const checkBookmarkStatus = async () => {
+    console.log('북마크 상태 확인 시작:', novelId);
+    try {
+      const response = await fetch(`/api/novels/bookmarks/check/${novelId}`, {
+        credentials: 'include'
+      });
+      
+      console.log('북마크 상태 확인 응답:', response.status);
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('북마크 상태 데이터:', data);
+        setIsBookmarked(data.isBookmarked || false);
+      } else if (response.status === 401) {
+        console.log('로그인 필요');
+        setIsBookmarked(false);
+      } else {
+        console.error('북마크 상태 확인 실패:', response.status);
+        setIsBookmarked(false);
+      }
+    } catch (error) {
+      console.error('북마크 상태 확인 실패:', error);
+      setIsBookmarked(false);
+    }
+  };
+
+  useEffect(() => {
+    if (novelId) {
+      setIsLoading(false); // 로딩 상태 초기화
+      checkBookmarkStatus();
+    }
+  }, [novelId]);
+
+  // 북마크 토글 함수
+  const handleBookmarkToggle = async () => {
+    if (isLoading) return;
+    
+    setIsLoading(true);
+    const previousState = isBookmarked;
+    
+    try {
+      const method = isBookmarked ? 'DELETE' : 'POST';
+      const response = await fetch(`/api/novels/bookmarks/${novelId}`, {
+        method,
+        credentials: 'include'
+      });
+      
+      if (response.ok) {
+        // 성공 시 즉시 상태 변경
+        setIsBookmarked(!isBookmarked);
+        // 성공 메시지 표시
+        alert(isBookmarked ? '북마크가 해제되었습니다.' : '북마크가 추가되었습니다.');
+      } else if (response.status === 401) {
+        alert('로그인이 필요합니다.');
+      } else {
+        const errorData = await response.json();
+        alert(errorData.message || '북마크 처리에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('북마크 처리 실패:', error);
+      alert('북마크 처리 중 오류가 발생했습니다.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // 신고 함수
+  const handleReportNovel = async () => {
+    const reason = prompt('신고 사유를 입력해주세요:');
+    if (!reason) return;
+
+    try {
+      const response = await fetch('/api/reports/novels', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          novelId: novelId,
+          reason: reason
+        })
+      });
+      
+      if (response.ok) {
+        alert('신고가 접수되었습니다.');
+      } else {
+        const errorData = await response.json();
+        alert(errorData.error || '신고 접수에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('Error reporting novel:', error);
+      alert('신고 접수 중 오류가 발생했습니다.');
+    }
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
       <div className="flex gap-6">
@@ -51,11 +153,21 @@ const NovelDetail: React.FC<NovelDetailProps> = ({
           
           {/* 북마크, 댓글, 공유 버튼 */}
           <div className="flex gap-3 mb-4">
-            <button className="bg-blue-50 hover:bg-blue-100 text-blue-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button 
+              onClick={handleBookmarkToggle}
+              disabled={isLoading}
+              className={`${
+                isBookmarked 
+                  ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                  : 'bg-blue-50 hover:bg-blue-100 text-blue-700'
+              } px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
+                isLoading ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+            >
+              <svg className="w-4 h-4" fill={isBookmarked ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
               </svg>
-              북마크 ({bookmarkCount})
+              {isBookmarked ? '북마크됨' : `북마크${bookmarkCount !== undefined ? ` (${bookmarkCount})` : ''}`}
             </button>
             <button className="bg-blue-50 hover:bg-blue-100 text-blue-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -68,6 +180,18 @@ const NovelDetail: React.FC<NovelDetailProps> = ({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
               </svg>
               공유
+            </button>
+            <button 
+              onClick={handleReportNovel}
+              disabled={isLoading}
+              className={`${
+                isLoading ? 'opacity-50 cursor-not-allowed' : ''
+              } px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 bg-red-50 hover:bg-red-100 text-red-700`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 10h-1.26A8 8 0 109 21v-2.257A7 7 0 006 13c0-2.821 1.79-5.14 4.35-6.003A8 8 0 1018 10z" />
+              </svg>
+              신고
             </button>
           </div>
           

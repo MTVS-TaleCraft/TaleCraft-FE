@@ -135,6 +135,7 @@ const NovelPage: React.FC = () => {
           bookmarkCount={novel.bookmarkCount}
           commentCount={novel.commentCount}
           titleImage={novel.titleImage}
+          novelId={novel.novelId}
         />
         
         {/* 에피소드 목록 */}
