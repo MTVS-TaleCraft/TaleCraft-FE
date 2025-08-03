@@ -52,6 +52,44 @@ const EpisodeCreatePage: React.FC = () => {
     checkLoginStatus();
   }, []);
 
+  // Fetch novel information when novelId is available
+  useEffect(() => {
+    const fetchNovelInfo = async () => {
+      if (!novelId) return;
+      
+      setNovelTitleLoading(true);
+      try {
+        const response = await fetch(`/api/novels/${novelId}`, {
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        if (response.ok) {
+          const novelData = await response.json();
+          setNovelTitle(novelData.title);
+          setNovelInfo({
+            novelId: novelData.novelId,
+            title: novelData.title,
+            userId: novelData.author,
+            episodeCount: novelData.episodeCount || 0
+          });
+        } else {
+          console.error('작품 정보를 가져오는데 실패했습니다.');
+          setNovelTitle('');
+        }
+      } catch (error) {
+        console.error('작품 정보 가져오기 오류:', error);
+        setNovelTitle('');
+      } finally {
+        setNovelTitleLoading(false);
+      }
+    };
+
+    fetchNovelInfo();
+  }, [novelId]);
+
   const checkLoginStatus = async () => {
     try {
       const response = await fetch('/api/auth/profile', {
@@ -223,11 +261,31 @@ const EpisodeCreatePage: React.FC = () => {
     }
   };
 
-  const handleLogout = () => {
-    removeAuthToken();
-    setIsLoggedIn(false);
-    setUserInfo(null);
-  };
+  const handleLogout = async () => {
+    try {
+      // 백엔드에 로그아웃 요청
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        console.log('로그아웃 성공');
+      } else {
+        console.error('로그아웃 실패');
+      }
+    } catch (error) {
+      console.error('로그아웃 중 오류:', error);
+    } finally {
+      // 프론트엔드 상태 정리
+      removeAuthToken();
+      setIsLoggedIn(false);
+      setUserInfo(null);
+    }
+  }
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -241,8 +299,8 @@ const EpisodeCreatePage: React.FC = () => {
     router.push(path);
   };
 
-  const handleLogout2 = () => {
-    handleLogout();
+  const handleLogout2 = async () => {
+    await handleLogout();
     setIsSidebarOpen(false);
     router.push("/");
   };
@@ -429,7 +487,7 @@ const EpisodeCreatePage: React.FC = () => {
         </div>
 
         {/* Right Toolbar */}
-        <div style={{ width: 180, minWidth: 140, position: 'sticky', top: 96 }}>
+        <div style={{ width: 180, minWidth: 140, position: 'fixed', top: 96, right: 'calc(50% - 400px - 220px)', zIndex: 100 }}>
           <div style={{ background: '#fff', borderRadius: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.06)', padding: '24px 16px', marginBottom: 24 }}>
             <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12, color: '#007bff' }}>툴박스</div>
             <button

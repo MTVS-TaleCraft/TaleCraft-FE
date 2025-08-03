@@ -309,11 +309,31 @@ const NovelCreatePage: React.FC = () => {
     }
   };
 
-  const handleLogout = () => {
-    removeAuthToken();
-    setIsLoggedIn(false);
-    setUserInfo(null);
-  };
+  const handleLogout = async () => {
+    try {
+      // 백엔드에 로그아웃 요청
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        console.log('로그아웃 성공');
+      } else {
+        console.error('로그아웃 실패');
+      }
+    } catch (error) {
+      console.error('로그아웃 중 오류:', error);
+    } finally {
+      // 프론트엔드 상태 정리
+      removeAuthToken();
+      setIsLoggedIn(false);
+      setUserInfo(null);
+    }
+  }
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -327,8 +347,8 @@ const NovelCreatePage: React.FC = () => {
     router.push(path);
   };
 
-  const handleLogout2 = () => {
-    handleLogout();
+  const handleLogout2 = async () => {
+    await handleLogout();
     setIsSidebarOpen(false);
     router.push("/");
   };

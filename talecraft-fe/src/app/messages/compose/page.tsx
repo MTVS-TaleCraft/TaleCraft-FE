@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { ArrowLeft, Send } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { getAuthToken } from "@/utils/cookies"
 
 interface UserInfo {
   userId: string;
@@ -24,30 +25,25 @@ export default function ComposeMessagePage() {
     checkLoginStatus()
   }, [])
 
-  const checkLoginStatus = () => {
-    const token = localStorage.getItem("token")
-    if (!token) {
-      router.push("/auth/login")
-      return
-    }
-    fetchUserInfo()
-  }
-
-  const fetchUserInfo = async () => {
+  const checkLoginStatus = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"}/api/auth/profile`, {
+      const response = await fetch('/api/auth/profile', {
         credentials: 'include',
         headers: {
           "Content-Type": "application/json",
         },
-      })
+      });
 
       if (response.ok) {
-        const data = await response.json()
-        setUserInfo(data)
+        const data = await response.json();
+        setUserInfo(data);
+      } else {
+        // 로그인되지 않은 경우 로그인 페이지로 리다이렉트
+        router.push("/auth/login");
       }
     } catch (error) {
-      console.error("Error fetching user info:", error)
+      console.error('로그인 상태 확인 오류:', error);
+      router.push("/auth/login");
     }
   }
 
@@ -62,7 +58,7 @@ export default function ComposeMessagePage() {
     setIsLoading(true)
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"}/api/messages/send`, {
+      const response = await fetch('/api/messages/send', {
         method: "POST",
         credentials: 'include',
         headers: {

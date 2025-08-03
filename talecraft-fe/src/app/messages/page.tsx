@@ -39,38 +39,22 @@ export default function MessagesPage() {
 
   const checkLoginStatus = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"}/api/auth/profile`, {
+      const response = await fetch('/api/auth/profile', {
         credentials: 'include',
         headers: {
           "Content-Type": "application/json",
         },
-      })
+      });
       
       if (response.ok) {
-        fetchUserInfo()
+        const data = await response.json();
+        setUserInfo(data);
       } else {
-        router.push("/auth/login")
+        router.push("/auth/login");
       }
     } catch (error) {
-      router.push("/auth/login")
-    }
-  }
-
-  const fetchUserInfo = async () => {
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"}/api/auth/profile`, {
-        credentials: 'include',
-        headers: {
-          "Content-Type": "application/json",
-        },
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        setUserInfo(data)
-      }
-    } catch (error) {
-      console.error("Error fetching user info:", error)
+      console.error('로그인 상태 확인 오류:', error);
+      router.push("/auth/login");
     }
   }
 
@@ -79,7 +63,7 @@ export default function MessagesPage() {
       setIsLoading(true)
 
       // 받은 쪽지 조회
-      const receivedResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"}/api/messages/received`, {
+      const receivedResponse = await fetch('/api/messages/received', {
         credentials: 'include',
         headers: {
           "Content-Type": "application/json",
@@ -92,7 +76,7 @@ export default function MessagesPage() {
       }
 
       // 보낸 쪽지 조회
-      const sentResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"}/api/messages/sent`, {
+      const sentResponse = await fetch('/api/messages/sent', {
         credentials: 'include',
         headers: {
           "Content-Type": "application/json",
@@ -112,7 +96,7 @@ export default function MessagesPage() {
 
   const handleDeleteMessage = async (messageId: number, type: "received" | "sent") => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"}/api/messages/${type}/${messageId}`, {
+      const response = await fetch(`/api/messages/${type}/${messageId}`, {
         method: "DELETE",
         credentials: 'include',
         headers: {

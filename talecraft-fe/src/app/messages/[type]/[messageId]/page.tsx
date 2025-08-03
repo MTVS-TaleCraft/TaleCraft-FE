@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { useRouter, useParams } from "next/navigation"
 import { ArrowLeft, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { getAuthToken } from "@/utils/cookies"
 
 interface UserInfo {
   userId: string;
@@ -37,30 +38,24 @@ export default function MessageDetailPage() {
     fetchMessage()
   }, [messageId, type])
 
-  const checkLoginStatus = () => {
-    const token = localStorage.getItem("token")
-    if (!token) {
-      router.push("/auth/login")
-      return
-    }
-    fetchUserInfo()
-  }
-
-  const fetchUserInfo = async () => {
+  const checkLoginStatus = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"}/api/auth/profile`, {
+      const response = await fetch('/api/auth/profile', {
         credentials: 'include',
         headers: {
           "Content-Type": "application/json",
         },
-      })
+      });
 
       if (response.ok) {
-        const data = await response.json()
-        setUserInfo(data)
+        const data = await response.json();
+        setUserInfo(data);
+      } else {
+        router.push("/auth/login");
       }
     } catch (error) {
-      console.error("Error fetching user info:", error)
+      console.error('로그인 상태 확인 오류:', error);
+      router.push("/auth/login");
     }
   }
 
@@ -68,7 +63,7 @@ export default function MessageDetailPage() {
     try {
       setIsLoading(true)
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"}/api/messages/${type}/${messageId}`, {
+      const response = await fetch(`/api/messages/${type}/${messageId}`, {
         credentials: 'include',
         headers: {
           "Content-Type": "application/json",
@@ -95,7 +90,7 @@ export default function MessageDetailPage() {
     if (!confirm("정말로 이 쪽지를 삭제하시겠습니까?")) return
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"}/api/messages/${type}/${messageId}`, {
+      const response = await fetch(`/api/messages/${type}/${messageId}`, {
         method: "DELETE",
         credentials: 'include',
         headers: {
