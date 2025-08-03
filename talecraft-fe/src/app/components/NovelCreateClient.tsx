@@ -1,8 +1,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
-import Header from './Header';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { Search, Menu, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { getAuthToken, removeAuthToken } from '@/utils/cookies';
 import { API_BASE_URL } from '../../config/api';
 
 interface NovelData {
@@ -14,8 +16,16 @@ interface NovelData {
   tags?: string[];
 }
 
+interface UserInfo {
+  userId: string;
+  userName: string;
+  email: string;
+  authorityId: string;
+}
+
 const NovelCreatePage: React.FC = () => {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const novelId = searchParams.get('novelId');
   const isEditMode = !!novelId;
 
@@ -32,6 +42,39 @@ const NovelCreatePage: React.FC = () => {
   const [showTagInput, setShowTagInput] = useState(false);
   const [commonTags, setCommonTags] = useState<string[]>([]);
   const [loadingCommonTags, setLoadingCommonTags] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+
+  useEffect(() => {
+    checkLoginStatus();
+  }, []);
+
+  const checkLoginStatus = async () => {
+    try {
+      const response = await fetch('/api/auth/profile', {
+        credentials: 'include',
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setUserInfo(data);
+        setIsLoggedIn(true);
+      } else {
+        setIsLoggedIn(false);
+        setUserInfo(null);
+      }
+    } catch (error) {
+      console.error('로그인 상태 확인 오류:', error);
+      setIsLoggedIn(false);
+      setUserInfo(null);
+    }
+  };
 
   // 기존 작품 데이터 불러오기
   useEffect(() => {
@@ -266,24 +309,110 @@ const NovelCreatePage: React.FC = () => {
     }
   };
 
+  const handleLogout = () => {
+    removeAuthToken();
+    setIsLoggedIn(false);
+    setUserInfo(null);
+  };
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      console.log("Searching for:", searchQuery);
+    }
+  };
+
+  const handleNavigation2 = (path: string) => {
+    setIsSidebarOpen(false);
+    router.push(path);
+  };
+
+  const handleLogout2 = () => {
+    handleLogout();
+    setIsSidebarOpen(false);
+    router.push("/");
+  };
+
   if (loadingNovel) {
     return (
-      <div className="min-h-screen bg-white">
-        <Header title="작품 생성 페이지" />
-        <main className="p-6 max-w-4xl mx-auto">
-          <div className="flex items-center justify-center h-64">
-            <div className="text-lg text-gray-600">작품 정보를 불러오는 중...</div>
-          </div>
-        </main>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+          <p className="mt-4 text-gray-600">로딩 중...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      <Header title={isEditMode ? "작품 수정 페이지" : "작품 생성 페이지"} />
-      
-      <main className="p-6 max-w-4xl mx-auto">
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-blue-400 text-white p-4 shadow-md">
+        <div className="flex justify-between items-center w-full">
+          <h1 className="text-xl font-bold cursor-pointer hover:text-blue-200 transition-colors" onClick={() => router.push('/')}>
+            TaleCraft
+          </h1>
+
+          <div className="flex items-center space-x-2">
+            {isSearchOpen ? (
+              <form onSubmit={handleSearch} className="flex items-center space-x-2">
+                <input
+                  type="text"
+                  placeholder="검색어를 입력하세요..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="px-3 py-1 rounded text-black text-sm w-48 focus:outline-none focus:ring-2 focus:ring-white"
+                  autoFocus
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="text-white hover:bg-blue-500"
+                  onClick={() => {
+                    setIsSearchOpen(false);
+                    setSearchQuery("");
+                  }}
+                >
+                  <X className="w-5 h-5" />
+                  <span className="sr-only">검색 닫기</span>
+                </Button>
+              </form>
+            ) : (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-white hover:bg-blue-500"
+                onClick={() => setIsSearchOpen(true)}
+              >
+                <Search className="w-5 h-5" />
+                <span className="sr-only">검색</span>
+              </Button>
+            )}
+
+            {isLoggedIn && userInfo && (
+              <span className="text-sm font-medium hidden sm:inline">안녕하세요, {userInfo.userName}님!</span>
+            )}
+
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-white hover:bg-blue-500"
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            >
+              <Menu className="w-5 h-5" />
+              <span className="sr-only">메뉴</span>
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="max-w-4xl mx-auto p-6 pt-8 pb-24">
+        <h2 className="text-2xl font-bold text-gray-800 mb-8 text-center">
+          {isEditMode ? "작품 수정 페이지" : "작품 생성 페이지"}
+        </h2>
+        
         {/* 제목 입력 */}
         <div className="mb-6">
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -544,6 +673,107 @@ const NovelCreatePage: React.FC = () => {
           )}
         </div>
       </main>
+
+      {/* Sidebar */}
+      <div
+        className={`fixed right-0 top-0 h-full w-80 z-50 transition-transform duration-300 ease-in-out ${
+          isSidebarOpen ? "translate-x-0" : "translate-x-full"
+        }`}
+      >
+        <div className="absolute right-0 top-0 h-full w-full bg-gradient-to-b from-purple-400 to-pink-400 p-6 shadow-lg">
+          {/* User Section */}
+          <div className="flex flex-col items-center mb-8">
+            <div className="w-16 h-16 bg-gray-300 rounded-full mb-4 flex items-center justify-center">
+              <div className="w-12 h-12 bg-gray-600 rounded-full"></div>
+            </div>
+            {isLoggedIn && userInfo ? (
+              <div className="text-center">
+                <p className="text-black font-semibold text-lg">{userInfo.userName}</p>
+                <p className="text-black text-sm">{userInfo.email}</p>
+              </div>
+            ) : (
+              <button
+                className="text-black font-semibold text-lg"
+                onClick={() => {
+                  setIsSidebarOpen(false);
+                  router.push("/auth/login");
+                }}
+              >
+                로그인
+              </button>
+            )}
+          </div>
+
+          {/* Menu Buttons */}
+          <div className="space-y-4">
+            {isLoggedIn ? (
+              <>
+                <button
+                  className="w-full bg-black text-white py-3 px-4 rounded-lg hover:bg-gray-800 transition-colors"
+                  onClick={() => handleNavigation2("/novel-create")}
+                >
+                  작품등록
+                </button>
+                <button
+                  className="w-full bg-black text-white py-3 px-4 rounded-lg hover:bg-gray-800 transition-colors"
+                  onClick={() => handleNavigation2("/my-novels")}
+                >
+                  내 작품 목록
+                </button>
+                <button
+                  className="w-full bg-black text-white py-3 px-4 rounded-lg hover:bg-gray-800 transition-colors"
+                  onClick={() => handleNavigation2("/mypage")}
+                >
+                  마이페이지
+                </button>
+                <button
+                  className="w-full bg-black text-white py-3 px-4 rounded-lg hover:bg-gray-800 transition-colors"
+                  onClick={() => handleNavigation2("/messages")}
+                >
+                  쪽지함
+                </button>
+                {userInfo?.authorityId === "3" && (
+                  <button
+                    className="w-full bg-black text-white py-3 px-4 rounded-lg hover:bg-gray-800 transition-colors"
+                    onClick={() => handleNavigation2("/admin")}
+                  >
+                    관리자 페이지
+                  </button>
+                )}
+                {userInfo?.authorityId === "1" && (
+                  <button
+                    className="w-full bg-purple-500 text-white py-3 px-4 rounded-lg hover:bg-purple-600 transition-colors"
+                    onClick={() => handleNavigation2("/admin/inquiry")}
+                  >
+                    관리자 문의
+                  </button>
+                )}
+                <button
+                  className="w-full bg-red-500 text-white py-3 px-4 rounded-lg hover:bg-red-600 transition-colors"
+                  onClick={handleLogout2}
+                >
+                  로그아웃
+                </button>
+              </>
+            ) : (
+              <button
+                className="w-full bg-black text-white py-3 px-4 rounded-lg hover:bg-gray-800 transition-colors"
+                onClick={() => handleNavigation2("/auth/login")}
+              >
+                로그인
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Overlay */}
+      <div
+        className={`fixed inset-0 z-40 transition-opacity duration-300 ${
+          isSidebarOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
+        onClick={() => setIsSidebarOpen(false)}
+      />
     </div>
   );
 };

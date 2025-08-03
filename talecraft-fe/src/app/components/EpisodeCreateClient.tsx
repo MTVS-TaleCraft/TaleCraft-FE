@@ -2,12 +2,22 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { Search, Menu, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { getAuthToken, removeAuthToken } from '@/utils/cookies';
 
 interface NovelInfo {
   novelId: number;
   title: string;
   userId: string;
   episodeCount: number;
+}
+
+interface UserInfo {
+  userId: string;
+  userName: string;
+  email: string;
+  authorityId: string;
 }
 
 const getSessionKey = (novelId: string | null) => `episode-create-draft-${novelId}`;
@@ -27,21 +37,44 @@ const EpisodeCreatePage: React.FC = () => {
   const [preview, setPreview] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [isNotice, setIsNotice] = useState(false);
+  const [showChatSidebar, setShowChatSidebar] = useState(false);
+  const [chatMessages, setChatMessages] = useState<Array<{type: 'user' | 'assistant', content: string}>>([]);
+  const [chatInput, setChatInput] = useState('');
   const contentRef = useRef<HTMLTextAreaElement>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
 
   // Fetch novel title from backend
   useEffect(() => {
-    if (novelId) {
-      setNovelTitleLoading(true);
-      fetch(`/api/novels/${novelId}`, { credentials: 'include' })
-        .then(res => res.json())
-        .then(data => {
-          setNovelTitle(data.title || '');
-        })
-        .catch(() => setNovelTitle(''))
-        .finally(() => setNovelTitleLoading(false));
+    checkLoginStatus();
+  }, []);
+
+  const checkLoginStatus = async () => {
+    try {
+      const response = await fetch('/api/auth/profile', {
+        credentials: 'include',
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setUserInfo(data);
+        setIsLoggedIn(true);
+      } else {
+        setIsLoggedIn(false);
+        setUserInfo(null);
+      }
+    } catch (error) {
+      console.error('로그인 상태 확인 오류:', error);
+      setIsLoggedIn(false);
+      setUserInfo(null);
     }
-  }, [novelId]);
+  };
 
   // 세션 임시저장 불러오기
   useEffect(() => {
@@ -150,120 +183,200 @@ const EpisodeCreatePage: React.FC = () => {
     setPreview(false);
   };
 
+  const toggleChatSidebar = () => {
+    setShowChatSidebar(!showChatSidebar);
+  };
+
+  const handleChatSend = async () => {
+    if (!chatInput.trim()) return;
+
+    const userMessage = chatInput;
+    setChatInput('');
+    setChatMessages(prev => [...prev, { type: 'user', content: userMessage }]);
+
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          message: userMessage,
+          context: {
+            novelTitle: novelTitle,
+            episodeTitle: episodeTitle,
+            episodeContent: episodeContent
+          }
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setChatMessages(prev => [...prev, { type: 'assistant', content: data.response }]);
+      } else {
+        setChatMessages(prev => [...prev, { type: 'assistant', content: '죄송합니다. 응답을 생성할 수 없습니다.' }]);
+      }
+    } catch (error) {
+      console.error('Chat error:', error);
+      setChatMessages(prev => [...prev, { type: 'assistant', content: '네트워크 오류가 발생했습니다.' }]);
+    }
+  };
+
+  const handleLogout = () => {
+    removeAuthToken();
+    setIsLoggedIn(false);
+    setUserInfo(null);
+  };
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      console.log("Searching for:", searchQuery);
+    }
+  };
+
+  const handleNavigation2 = (path: string) => {
+    setIsSidebarOpen(false);
+    router.push(path);
+  };
+
+  const handleLogout2 = () => {
+    handleLogout();
+    setIsSidebarOpen(false);
+    router.push("/");
+  };
+
   if (novelTitleLoading) {
     return (
-      <div style={{ minHeight: '100vh', background: '#f8f9fa', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ fontSize: 18, color: '#666' }}>작품 제목을 불러오는 중...</div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+          <p className="mt-4 text-gray-600">작품 제목을 불러오는 중...</p>
+        </div>
       </div>
     );
   }
 
   if (!novelId || !novelTitle) {
     return (
-      <div style={{ minHeight: '100vh', background: '#f8f9fa', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ fontSize: 18, color: '#666' }}>작품 정보를 찾을 수 없습니다.</div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-600">작품 정보를 찾을 수 없습니다.</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div style={{ background: '#f8f9fa', minHeight: '100vh' }}>
-      {/* Sticky Top Bar */}
-      <div style={{
-        position: 'sticky',
-        top: 0,
-        zIndex: 100,
-        background: '#fff',
-        borderBottom: '1px solid #e9ecef',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
-        padding: '0 0',
-      }}>
-        <div style={{
-          maxWidth: 900,
-          margin: '0 auto',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          height: 64,
-          padding: '0 32px',
-        }}>
-          <div>
-            <div style={{ fontSize: 15, color: '#888', marginBottom: 2 }}>{novelTitle}</div>
-            <div style={{ fontSize: 22, fontWeight: 700 }}>새 회차 작성</div>
-          </div>
-          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <input
-                type="checkbox"
-                id="isNotice"
-                checked={isNotice}
-                onChange={(e) => setIsNotice(e.target.checked)}
-                style={{ width: 16, height: 16 }}
-              />
-              <label htmlFor="isNotice" style={{ fontSize: 14, color: '#666', cursor: 'pointer' }}>
-                공지
-              </label>
-            </div>
-            <button
-              onClick={handleTempSave}
-              disabled={saving}
-              style={{
-                background: '#fff',
-                border: '1px solid #ddd',
-                borderRadius: 6,
-                padding: '10px 20px',
-                fontWeight: 600,
-                color: '#666',
-                cursor: saving ? 'not-allowed' : 'pointer',
-                fontSize: 15
-              }}
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-blue-400 text-white p-4 shadow-md">
+        <div className="flex justify-between items-center w-full">
+          <h1 className="text-xl font-bold cursor-pointer hover:text-blue-200 transition-colors" onClick={() => router.push('/')}>
+            TaleCraft
+          </h1>
+
+          <div className="flex items-center space-x-2">
+            {isSearchOpen ? (
+              <form onSubmit={handleSearch} className="flex items-center space-x-2">
+                <input
+                  type="text"
+                  placeholder="검색어를 입력하세요..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="px-3 py-1 rounded text-black text-sm w-48 focus:outline-none focus:ring-2 focus:ring-white"
+                  autoFocus
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="text-white hover:bg-blue-500"
+                  onClick={() => {
+                    setIsSearchOpen(false);
+                    setSearchQuery("");
+                  }}
+                >
+                  <X className="w-5 h-5" />
+                  <span className="sr-only">검색 닫기</span>
+                </Button>
+              </form>
+            ) : (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-white hover:bg-blue-500"
+                onClick={() => setIsSearchOpen(true)}
+              >
+                <Search className="w-5 h-5" />
+                <span className="sr-only">검색</span>
+              </Button>
+            )}
+
+            {isLoggedIn && userInfo && (
+              <span className="text-sm font-medium hidden sm:inline">안녕하세요, {userInfo.userName}님!</span>
+            )}
+
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-white hover:bg-blue-500"
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
             >
-              임시저장
-            </button>
-            <button
-              onClick={handlePreview}
-              style={{
-                background: '#f8f9fa',
-                border: '1px solid #007bff',
-                borderRadius: 6,
-                padding: '10px 20px',
-                fontWeight: 600,
-                color: '#007bff',
-                cursor: 'pointer',
-                fontSize: 15
-              }}
-            >
-              미리보기
-            </button>
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              style={{
-                background: '#007bff',
-                border: 'none',
-                borderRadius: 6,
-                padding: '10px 24px',
-                fontWeight: 600,
-                color: '#fff',
-                cursor: saving ? 'not-allowed' : 'pointer',
-                fontSize: 15
-              }}
-            >
-              공개 저장
-            </button>
+              <Menu className="w-5 h-5" />
+              <span className="sr-only">메뉴</span>
+            </Button>
           </div>
         </div>
-      </div>
+      </header>
 
       {/* Main Content */}
-      <div style={{
-        maxWidth: 900,
-        margin: '32px auto 0 auto',
-        display: 'flex',
-        alignItems: 'flex-start',
-        gap: 32,
-        position: 'relative',
-      }}>
+      <main className="max-w-4xl mx-auto p-6 pt-8 pb-24">
+        {/* Episode Header */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-sm text-gray-600 mb-2">{novelTitle}</div>
+              <h1 className="text-2xl font-bold text-gray-900">새 회차 작성</h1>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="isNotice"
+                  checked={isNotice}
+                  onChange={(e) => setIsNotice(e.target.checked)}
+                  className="w-4 h-4"
+                />
+                <label htmlFor="isNotice" className="text-sm text-gray-600 cursor-pointer">
+                  공지
+                </label>
+              </div>
+              <button
+                onClick={handleTempSave}
+                disabled={saving}
+                className="px-4 py-2 bg-white border border-gray-300 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              >
+                임시저장
+              </button>
+              <button
+                onClick={handlePreview}
+                className="px-4 py-2 bg-gray-100 border border-blue-500 rounded text-sm font-medium text-blue-600 hover:bg-gray-200"
+              >
+                미리보기
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="px-6 py-2 bg-blue-600 text-white rounded text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+              >
+                공개 저장
+              </button>
+            </div>
+          </div>
+        </div>
+
         {/* Editor */}
         <div style={{ flex: 1, background: '#fff', borderRadius: 12, boxShadow: '0 2px 12px rgba(0,0,0,0.06)', padding: '40px 36px', minHeight: 600 }}>
           {message && (
@@ -320,58 +433,209 @@ const EpisodeCreatePage: React.FC = () => {
           <div style={{ background: '#fff', borderRadius: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.06)', padding: '24px 16px', marginBottom: 24 }}>
             <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12, color: '#007bff' }}>툴박스</div>
             <button
-              onClick={() => alert('소설 삽화 생성 기능(예시)')}
+              onClick={() => {
+                if (confirm('정말로 이 에피소드를 삭제하시겠습니까?')) {
+                  // 에피소드 삭제 기능 (현재는 새로 작성 중이므로 임시저장 삭제)
+                  if (novelId) {
+                    const key = getSessionKey(novelId);
+                    sessionStorage.removeItem(key);
+                    setEpisodeTitle('');
+                    setEpisodeContent('');
+                    setIsNotice(false);
+                    setMessage('임시저장이 삭제되었습니다.');
+                  }
+                }
+              }}
               style={{
                 width: '100%',
-                background: '#f8f9fa',
-                border: '1px solid #ddd',
+                background: '#fff',
+                border: '1px solid #dc3545',
                 borderRadius: 6,
                 padding: '10px 0',
                 fontWeight: 600,
-                color: '#333',
+                color: '#dc3545',
                 marginBottom: 10,
                 cursor: 'pointer',
                 fontSize: 15
               }}
             >
-              삽화 생성
+              에피소드 삭제
             </button>
             <button
-              onClick={() => alert('씬 생성 기능(예시)')}
+              onClick={() => {
+                // 새 에피소드 작성 페이지로 이동
+                if (novelId) {
+                  window.location.href = `/episode-create?novelId=${novelId}`;
+                }
+              }}
               style={{
                 width: '100%',
-                background: '#f8f9fa',
-                border: '1px solid #ddd',
+                background: '#fff',
+                border: '1px solid #28a745',
                 borderRadius: 6,
                 padding: '10px 0',
                 fontWeight: 600,
-                color: '#333',
+                color: '#28a745',
                 marginBottom: 10,
                 cursor: 'pointer',
                 fontSize: 15
               }}
             >
-              씬 생성
+              새 에피소드 작성
             </button>
             <button
-              onClick={() => alert('스토리 생성 기능(예시)')}
+              onClick={toggleChatSidebar}
               style={{
                 width: '100%',
-                background: '#f8f9fa',
-                border: '1px solid #ddd',
+                background: '#fff',
+                border: '1px solid #ffc107',
                 borderRadius: 6,
                 padding: '10px 0',
                 fontWeight: 600,
-                color: '#333',
+                color: '#ffc107',
                 cursor: 'pointer',
                 fontSize: 15
               }}
+              title="에피소드를 먼저 저장한 후 사용할 수 있습니다"
             >
-              스토리 생성
+              창작 도우미 채팅
             </button>
           </div>
         </div>
+      </main>
+
+      {/* Chat Sidebar */}
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        right: 0,
+        width: '400px',
+        height: '100vh',
+        background: '#fff',
+        boxShadow: '-2px 0 10px rgba(0,0,0,0.1)',
+        zIndex: 1000,
+        display: 'flex',
+        flexDirection: 'column',
+        transform: showChatSidebar ? 'translateX(0)' : 'translateX(100%)',
+        transition: 'transform 0.3s ease-in-out',
+      }}>
+        {/* Chat Header */}
+        <div style={{
+          padding: '20px',
+          borderBottom: '1px solid #e9ecef',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}>
+          <div style={{ fontWeight: 700, fontSize: 18 }}>창작 도우미</div>
+          <button
+            onClick={toggleChatSidebar}
+            style={{
+              background: 'none',
+              border: 'none',
+              fontSize: 24,
+              color: '#666',
+              cursor: 'pointer',
+            }}
+          >
+            ×
+          </button>
+        </div>
+
+        {/* Chat Messages */}
+        <div style={{
+          flex: 1,
+          padding: '20px',
+          overflowY: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '12px',
+        }}>
+          {chatMessages.length === 0 && (
+            <div style={{ textAlign: 'center', color: '#666', fontSize: 14, marginTop: '20px' }}>
+              에피소드를 먼저 저장한 후 AI 채팅을 사용할 수 있습니다.
+            </div>
+          )}
+          {chatMessages.map((msg, index) => (
+            <div key={index} style={{
+              display: 'flex',
+              justifyContent: msg.type === 'user' ? 'flex-end' : 'flex-start',
+              opacity: 0,
+              animation: 'fadeIn 0.3s ease-in-out forwards',
+              animationDelay: `${index * 0.1}s`,
+            }}>
+              <div style={{
+                maxWidth: '80%',
+                padding: '12px 16px',
+                borderRadius: '18px',
+                background: msg.type === 'user' ? '#007bff' : '#f8f9fa',
+                color: msg.type === 'user' ? '#fff' : '#333',
+                fontSize: 14,
+                lineHeight: 1.4,
+              }}>
+                {msg.content}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Chat Input */}
+        <div style={{
+          padding: '20px',
+          borderTop: '1px solid #e9ecef',
+          display: 'flex',
+          gap: '8px',
+        }}>
+          <input
+            type="text"
+            value={chatInput}
+            onChange={(e) => setChatInput(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && handleChatSend()}
+            placeholder="메시지를 입력하세요..."
+            style={{
+              flex: 1,
+              padding: '12px',
+              border: '1px solid #ddd',
+              borderRadius: '20px',
+              outline: 'none',
+              fontSize: 14,
+            }}
+          />
+          <button
+            onClick={handleChatSend}
+            style={{
+              padding: '12px 16px',
+              background: '#007bff',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '20px',
+              cursor: 'pointer',
+              fontSize: 14,
+              fontWeight: 600,
+            }}
+          >
+            전송
+          </button>
+        </div>
       </div>
+
+      {/* Overlay for sidebar */}
+      {showChatSidebar && (
+        <div 
+          onClick={toggleChatSidebar}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            background: 'rgba(0,0,0,0.3)',
+            zIndex: 999,
+            opacity: 0,
+            animation: 'fadeIn 0.3s ease-in-out forwards',
+          }}
+        />
+      )}
 
       {/* Preview Modal */}
       {preview && (
@@ -417,6 +681,118 @@ const EpisodeCreatePage: React.FC = () => {
           </div>
         </div>
       )}
+
+      <style jsx>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+      `}</style>
+
+      {/* Sidebar */}
+      <div
+        className={`fixed right-0 top-0 h-full w-80 z-50 transition-transform duration-300 ease-in-out ${
+          isSidebarOpen ? "translate-x-0" : "translate-x-full"
+        }`}
+      >
+        <div className="absolute right-0 top-0 h-full w-full bg-gradient-to-b from-purple-400 to-pink-400 p-6 shadow-lg">
+          {/* User Section */}
+          <div className="flex flex-col items-center mb-8">
+            <div className="w-16 h-16 bg-gray-300 rounded-full mb-4 flex items-center justify-center">
+              <div className="w-12 h-12 bg-gray-600 rounded-full"></div>
+            </div>
+            {isLoggedIn && userInfo ? (
+              <div className="text-center">
+                <p className="text-black font-semibold text-lg">{userInfo.userName}</p>
+                <p className="text-black text-sm">{userInfo.email}</p>
+              </div>
+            ) : (
+              <button
+                className="text-black font-semibold text-lg"
+                onClick={() => {
+                  setIsSidebarOpen(false);
+                  router.push("/auth/login");
+                }}
+              >
+                로그인
+              </button>
+            )}
+          </div>
+
+          {/* Menu Buttons */}
+          <div className="space-y-4">
+            {isLoggedIn ? (
+              <>
+                <button
+                  className="w-full bg-black text-white py-3 px-4 rounded-lg hover:bg-gray-800 transition-colors"
+                  onClick={() => handleNavigation2("/novel-create")}
+                >
+                  작품등록
+                </button>
+                <button
+                  className="w-full bg-black text-white py-3 px-4 rounded-lg hover:bg-gray-800 transition-colors"
+                  onClick={() => handleNavigation2("/my-novels")}
+                >
+                  내 작품 목록
+                </button>
+                <button
+                  className="w-full bg-black text-white py-3 px-4 rounded-lg hover:bg-gray-800 transition-colors"
+                  onClick={() => handleNavigation2("/mypage")}
+                >
+                  마이페이지
+                </button>
+                <button
+                  className="w-full bg-black text-white py-3 px-4 rounded-lg hover:bg-gray-800 transition-colors"
+                  onClick={() => handleNavigation2("/messages")}
+                >
+                  쪽지함
+                </button>
+                {userInfo?.authorityId === "3" && (
+                  <button
+                    className="w-full bg-black text-white py-3 px-4 rounded-lg hover:bg-gray-800 transition-colors"
+                    onClick={() => handleNavigation2("/admin")}
+                  >
+                    관리자 페이지
+                  </button>
+                )}
+                {userInfo?.authorityId === "1" && (
+                  <button
+                    className="w-full bg-purple-500 text-white py-3 px-4 rounded-lg hover:bg-purple-600 transition-colors"
+                    onClick={() => handleNavigation2("/admin/inquiry")}
+                  >
+                    관리자 문의
+                  </button>
+                )}
+                <button
+                  className="w-full bg-red-500 text-white py-3 px-4 rounded-lg hover:bg-red-600 transition-colors"
+                  onClick={handleLogout2}
+                >
+                  로그아웃
+                </button>
+              </>
+            ) : (
+              <button
+                className="w-full bg-black text-white py-3 px-4 rounded-lg hover:bg-gray-800 transition-colors"
+                onClick={() => handleNavigation2("/auth/login")}
+              >
+                로그인
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Overlay */}
+      <div
+        className={`fixed inset-0 z-40 transition-opacity duration-300 ${
+          isSidebarOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
+        onClick={() => setIsSidebarOpen(false)}
+      />
     </div>
   );
 };

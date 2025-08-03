@@ -490,7 +490,8 @@ export default function HomePage() {
                         // Click on side banner to move it to center
                         handleNavigation(position > 0 ? "right" : "left")
                       } else if (isCenter) {
-                        console.log("Navigate to novel:", item.novelId)
+                        // 중앙 아이템 클릭 시 해당 소설의 상세 페이지로 이동
+                        router.push(`/novel/${item.novelId}`)
                       }
                     }}
                   >
@@ -582,7 +583,23 @@ export default function HomePage() {
               className={`px-4 py-2 ${
                 activeTab === item.value ? "bg-black text-white" : "bg-white text-black border-black hover:bg-gray-100"
               }`}
-              onClick={() => setActiveTab(item.value)}
+              onClick={() => {
+                if (item.value === 'library') {
+                  // 보관함 버튼 클릭 시 북마크 필터가 활성화된 상태로 my-novels 페이지로 이동
+                  router.push('/my-novels?filter=bookmarked');
+                } else if (item.value === 'best') {
+                  // 베스트 버튼 클릭 시 novel-list 페이지로 이동
+                  router.push('/novel-list');
+                } else if (item.value === 'latest') {
+                  // 최신 버튼 클릭 시 novel-list 페이지로 이동
+                  router.push('/novel-list');
+                } else if (item.value === 'completed') {
+                  // 완결 버튼 클릭 시 novel-list 페이지로 이동
+                  router.push('/novel-list');
+                } else {
+                  setActiveTab(item.value);
+                }
+              }}
             >
               {item.label}
             </Button>

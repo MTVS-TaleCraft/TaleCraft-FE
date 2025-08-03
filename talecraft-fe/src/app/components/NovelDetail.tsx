@@ -23,6 +23,8 @@ const NovelDetail: React.FC<NovelDetailProps> = ({
 }) => {
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [currentUser, setCurrentUser] = useState<{id: string, userName: string} | null>(null);
+  const [isMyNovel, setIsMyNovel] = useState(false);
 
   // 북마크 상태 확인
   const checkBookmarkStatus = async () => {
@@ -51,12 +53,49 @@ const NovelDetail: React.FC<NovelDetailProps> = ({
     }
   };
 
+  // 현재 사용자 정보 가져오기
+  const fetchCurrentUser = async () => {
+    try {
+      const response = await fetch('/api/auth/profile', {
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (response.ok) {
+        const userData = await response.json();
+        console.log('현재 사용자 정보:', userData);
+        console.log('작품 저자:', author);
+        console.log('사용자 ID:', userData.userId);
+        console.log('사용자 이름:', userData.userName);
+        console.log('저자와 일치하는가 (userId):', userData.userId === author);
+        console.log('저자와 일치하는가 (userName):', userData.userName === author);
+        
+        setCurrentUser(userData);
+        // 현재 사용자가 작품의 저자인지 확인 (userName으로 비교)
+        const isMyNovelValue = userData.userName === author;
+        console.log('isMyNovel 설정:', isMyNovelValue);
+        setIsMyNovel(isMyNovelValue);
+      } else {
+        console.log('사용자 정보 가져오기 실패 - 응답 상태:', response.status);
+        setCurrentUser(null);
+        setIsMyNovel(false);
+      }
+    } catch (error) {
+      console.error('사용자 정보 가져오기 실패:', error);
+      setCurrentUser(null);
+      setIsMyNovel(false);
+    }
+  };
+
   useEffect(() => {
     if (novelId) {
       setIsLoading(false); // 로딩 상태 초기화
       checkBookmarkStatus();
+      fetchCurrentUser();
     }
-  }, [novelId]);
+  }, [novelId, author]);
 
   // 북마크 토글 함수
   const handleBookmarkToggle = async () => {
@@ -93,8 +132,20 @@ const NovelDetail: React.FC<NovelDetailProps> = ({
 
   // 신고 함수
   const handleReportNovel = async () => {
-    const reason = prompt('신고 사유를 입력해주세요:');
-    if (!reason) return;
+    const description = prompt('신고 사유를 입력해주세요:');
+    if (!description) return;
+
+    // 신고 태그 선택
+    const reportTags = ['욕설/비방', '스팸', '부적절한 내용', '저작권 침해', '기타'];
+    const reportTag = prompt(`신고 유형을 선택해주세요:\n${reportTags.map((tag, index) => `${index + 1}. ${tag}`).join('\n')}\n\n번호를 입력하세요 (1-${reportTags.length}):`);
+    
+    if (!reportTag) return;
+    
+    const selectedTagIndex = parseInt(reportTag) - 1;
+    if (isNaN(selectedTagIndex) || selectedTagIndex < 0 || selectedTagIndex >= reportTags.length) {
+      alert('올바른 번호를 입력해주세요.');
+      return;
+    }
 
     try {
       const response = await fetch('/api/reports/novels', {
@@ -105,7 +156,9 @@ const NovelDetail: React.FC<NovelDetailProps> = ({
         },
         body: JSON.stringify({
           novelId: novelId,
-          reason: reason
+          reportedUser: author, // 작품의 저자를 신고 대상으로 설정
+          reportTag: reportTags[selectedTagIndex],
+          description: description
         })
       });
       
@@ -153,22 +206,31 @@ const NovelDetail: React.FC<NovelDetailProps> = ({
           
           {/* 북마크, 댓글, 공유 버튼 */}
           <div className="flex gap-3 mb-4">
-            <button 
-              onClick={handleBookmarkToggle}
-              disabled={isLoading}
-              className={`${
-                isBookmarked 
-                  ? 'bg-blue-600 hover:bg-blue-700 text-white' 
-                  : 'bg-blue-50 hover:bg-blue-100 text-blue-700'
-              } px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
-                isLoading ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
-            >
-              <svg className="w-4 h-4" fill={isBookmarked ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-              </svg>
-              {isBookmarked ? '북마크됨' : `북마크${bookmarkCount !== undefined ? ` (${bookmarkCount})` : ''}`}
-            </button>
+            {/* 디버깅 정보 */}
+            <div style={{display: 'none'}}>
+              isMyNovel: {isMyNovel.toString()}, 
+              currentUser: {currentUser ? currentUser.userId : 'null'}, 
+              author: {author}
+            </div>
+            {/* 북마크 버튼 - 자신의 작품이 아닐 때만 표시 */}
+            {!isMyNovel && (
+              <button 
+                onClick={handleBookmarkToggle}
+                disabled={isLoading}
+                className={`${
+                  isBookmarked 
+                    ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                    : 'bg-blue-50 hover:bg-blue-100 text-blue-700'
+                } px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
+                  isLoading ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
+              >
+                <svg className="w-4 h-4" fill={isBookmarked ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                </svg>
+                {isBookmarked ? '북마크됨' : `북마크${bookmarkCount !== undefined ? ` (${bookmarkCount})` : ''}`}
+              </button>
+            )}
             <button className="bg-blue-50 hover:bg-blue-100 text-blue-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -181,18 +243,21 @@ const NovelDetail: React.FC<NovelDetailProps> = ({
               </svg>
               공유
             </button>
-            <button 
-              onClick={handleReportNovel}
-              disabled={isLoading}
-              className={`${
-                isLoading ? 'opacity-50 cursor-not-allowed' : ''
-              } px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 bg-red-50 hover:bg-red-100 text-red-700`}
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 10h-1.26A8 8 0 109 21v-2.257A7 7 0 006 13c0-2.821 1.79-5.14 4.35-6.003A8 8 0 1018 10z" />
-              </svg>
-              신고
-            </button>
+            {/* 신고 버튼 - 자신의 작품이 아닐 때만 표시 */}
+            {!isMyNovel && (
+              <button 
+                onClick={handleReportNovel}
+                disabled={isLoading}
+                className={`${
+                  isLoading ? 'opacity-50 cursor-not-allowed' : ''
+                } px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 bg-red-50 hover:bg-red-100 text-red-700`}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 10h-1.26A8 8 0 109 21v-2.257A7 7 0 006 13c0-2.821 1.79-5.14 4.35-6.003A8 8 0 1018 10z" />
+                </svg>
+                신고
+              </button>
+            )}
           </div>
           
           {/* 소설 줄거리 */}
