@@ -207,7 +207,7 @@ export default function ReportDetailPage() {
       {/* 헤더 */}
       <header className="bg-blue-400 text-white p-4 shadow-md">
         <div className="flex justify-between items-center w-full">
-          <button 
+          <button
             onClick={() => router.back()}
             className="flex items-center space-x-2 text-xl font-bold hover:text-blue-200 transition-colors"
           >

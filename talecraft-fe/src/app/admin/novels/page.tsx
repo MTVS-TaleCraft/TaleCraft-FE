@@ -52,7 +52,7 @@ export default function AdminNovelsPage() {
         console.log('사용자 정보:', data);
         console.log('권한 ID:', data.authorityId);
         console.log('권한이 3인가?', data.authorityId === "3");
-        
+
         setUserInfo(data);
         
         // 관리자 권한 확인 (authorityId가 3이 아니면 접근 거부)
@@ -76,7 +76,7 @@ export default function AdminNovelsPage() {
   const fetchNovels = async () => {
     try {
       console.log('신고된 작품 목록을 가져오는 중...');
-      
+
       // 1. 먼저 신고된 소설 ID 목록을 가져오기
       console.log('신고된 소설 API 호출 시작...');
       const reportedResponse = await fetch('http://localhost:8081/api/reports/reported-novels', {
@@ -108,13 +108,13 @@ export default function AdminNovelsPage() {
         setNovels([]);
         return;
       }
-      
+
       if (reportedNovelIds.length === 0) {
         console.log('신고된 소설이 없습니다.');
         setNovels([]);
         return;
       }
-      
+
       // 2. 신고된 소설들의 상세 정보를 가져오기
       const novelsWithReports = await Promise.all(
         reportedNovelIds.map(async (novelId: number) => {
@@ -122,7 +122,7 @@ export default function AdminNovelsPage() {
             // 소설 정보 가져오기
             const novelResponse = await fetch(`http://localhost:8081/api/novels/${novelId}`);
             let novelData = null;
-            
+
             if (novelResponse.ok) {
               novelData = await novelResponse.json();
               console.log(`소설 ${novelId} 원본 데이터:`, novelData);
@@ -132,7 +132,7 @@ export default function AdminNovelsPage() {
               console.error(`소설 ${novelId} 정보를 가져오는데 실패했습니다.`);
               return null;
             }
-            
+
             // 신고 수 가져오기
             const reportResponse = await fetch(`http://localhost:8081/api/reports/novels/${novelId}/count`, {
               credentials: 'include',
@@ -141,12 +141,12 @@ export default function AdminNovelsPage() {
               },
             });
             let reportCount = 0;
-            
+
             if (reportResponse.ok) {
               const reportData = await reportResponse.json();
               reportCount = reportData.reportCount || 0;
             }
-            
+
             return {
               novelId: novelId,
               title: novelData.title || '제목 없음',
@@ -163,20 +163,20 @@ export default function AdminNovelsPage() {
           }
         })
       );
-      
+
       // null 값 제거
       const validNovels = novelsWithReports.filter(novel => novel !== null);
-      
+
       // 각 소설의 isBanned 상태 로그 출력
       validNovels.forEach(novel => {
         console.log(`소설 ${novel.novelId} (${novel.title}): isBanned = ${novel.isBanned}`);
         console.log(`소설 ${novel.novelId} isBanned 타입:`, typeof novel.isBanned);
         console.log(`소설 ${novel.novelId} 전체 데이터:`, novel);
       });
-      
+
       setNovels(validNovels);
       console.log('처리된 신고된 작품 목록:', validNovels);
-      
+
     } catch (error) {
       console.error('신고된 작품 목록을 가져오는데 실패했습니다:', error);
       setNovels([]);
@@ -186,31 +186,31 @@ export default function AdminNovelsPage() {
   const handleToggleBan = async (novelId: number) => {
     console.log('=== 차단/해제 버튼 클릭됨 ===');
     console.log(`소설 ${novelId} 차단/해제 요청 시작`);
-    
+
     // 현재 소설의 상태 확인
     const currentNovel = novels.find(novel => novel.novelId === novelId);
     console.log('현재 소설 정보:', currentNovel);
     console.log('현재 isBanned 상태:', currentNovel?.isBanned);
-    
+
     try {
       // 쿠키에서 토큰 가져오기
       const cookies = document.cookie.split(';');
       const tokenCookie = cookies.find(cookie => cookie.trim().startsWith('token='));
       const token = tokenCookie ? tokenCookie.split('=')[1] : null;
-      
+
       console.log('토큰 확인:', token ? '토큰 존재' : '토큰 없음');
       console.log('전체 쿠키:', document.cookie);
-      
+
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
       };
-      
+
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
       }
-      
+
       console.log('요청 헤더:', headers);
-      
+
       const response = await fetch(`http://localhost:8081/api/novels/${novelId}/ban`, {
         method: 'PATCH',
         credentials: 'include',
@@ -224,7 +224,7 @@ export default function AdminNovelsPage() {
         console.log('차단/해제 성공:', data);
         console.log('새로운 isBanned 상태:', data.isBanned);
         alert(data.message);
-        
+
         // 목록 새로고침
         console.log('목록 새로고침 시작...');
         await fetchNovels();

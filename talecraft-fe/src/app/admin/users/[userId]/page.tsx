@@ -262,7 +262,7 @@ export default function UserDetailPage() {
 
   const handleBanNovel = async (novelId: number) => {
     if (!user) return;
-    
+
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(`http://localhost:8081/api/novels/${novelId}/ban`, {
@@ -370,7 +370,7 @@ export default function UserDetailPage() {
       <header className="bg-blue-400 text-white p-4 shadow-md">
         <div className="flex justify-between items-center w-full">
           <div className="flex items-center space-x-4">
-            <button 
+            <button
               onClick={() => router.back()}
               className="flex items-center space-x-2 text-xl font-bold hover:text-blue-200 transition-colors"
             >
@@ -395,7 +395,7 @@ export default function UserDetailPage() {
             <div className="bg-yellow-200 p-4 border-b border-orange-400">
               <div className="flex justify-between items-center">
                 <span className="font-medium">아이디: {user.id}</span>
-                <button 
+                <button
                   onClick={() => handleViewWorks(user.id)}
                   className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition-colors"
                 >
@@ -407,7 +407,7 @@ export default function UserDetailPage() {
             <div className="bg-yellow-200 p-4 border-b border-orange-400">
               <div className="flex justify-between items-center">
                 <span className="font-medium">이메일: {user.email}</span>
-                <button 
+                <button
                   onClick={handleChangeEmail}
                   className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition-colors"
                 >
@@ -419,7 +419,7 @@ export default function UserDetailPage() {
             <div className="bg-yellow-200 p-4 border-b border-orange-400">
               <div className="flex justify-between items-center">
                 <span className="font-medium">닉네임: {user.userName}</span>
-                <button 
+                <button
                   onClick={handleChangeNickname}
                   className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition-colors"
                 >
@@ -431,7 +431,7 @@ export default function UserDetailPage() {
             <div className="bg-yellow-200 p-4 border-b border-orange-400">
               <div className="flex justify-between items-center">
                 <span className="font-medium">비밀번호</span>
-                <button 
+                <button
                   onClick={handleChangePassword}
                   className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition-colors"
                 >
@@ -445,7 +445,7 @@ export default function UserDetailPage() {
                 <span className="font-medium">유저 차단 여부</span>
                 <div className="flex items-center space-x-4">
                   <span className="text-sm">{user.isBlocked ? "차단됨" : "차단 전"}</span>
-                  <button 
+                  <button
                     onClick={() => handleProcessBlock(user.id, user.isBlocked)}
                     className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition-colors"
                   >
@@ -460,7 +460,7 @@ export default function UserDetailPage() {
                 <span className="font-medium">유저 탈퇴 여부</span>
                 <div className="flex items-center space-x-4">
                   <span className="text-sm">{user.isWithdrawn ? "탈퇴됨" : "활성화"}</span>
-                  <button 
+                  <button
                     onClick={() => handleWithdraw(user.id)}
                     className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition-colors"
                   >
@@ -474,14 +474,14 @@ export default function UserDetailPage() {
           <div className="bg-orange-300 border-t-2 border-t-orange-400 border-b-2 border-b-orange-400 p-4">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold text-black">{user.userName}의 작품 목록</h2>
-              <button 
+              <button
                 onClick={() => setShowNovels(false)}
                 className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition-colors"
               >
                 사용자 정보로 돌아가기
               </button>
             </div>
-            
+
             {novels.length > 0 ? (
               <div className="space-y-4">
                 {novels.map((novel) => (
@@ -496,13 +496,13 @@ export default function UserDetailPage() {
                         </div>
                       </div>
                       <div className="flex space-x-2">
-                        <button 
+                        <button
                           className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600 transition-colors"
                           onClick={() => window.open(`/novel/${novel.novelId}`, '_blank')}
                         >
                           보기
                         </button>
-                        <button 
+                        <button
                           className="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600 transition-colors"
                           onClick={() => handleBanNovel(novel.novelId)}
                         >

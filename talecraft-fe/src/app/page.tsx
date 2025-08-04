@@ -301,13 +301,13 @@ export default function HomePage() {
   // 드래그 이벤트 핸들러들
   const handleMouseDown = (e: React.MouseEvent) => {
     if (isAnimating || novels.length === 0) return
-    
+
     // 자동 슬라이드 일시정지
     if (autoSlideInterval) {
       clearInterval(autoSlideInterval)
       setAutoSlideInterval(null)
     }
-    
+
     setIsDragging(true)
     setDragStartX(e.clientX)
     setDragCurrentX(e.clientX)
@@ -341,13 +341,13 @@ export default function HomePage() {
 
   const handleTouchStart = (e: React.TouchEvent) => {
     if (isAnimating || novels.length === 0) return
-    
+
     // 자동 슬라이드 일시정지
     if (autoSlideInterval) {
       clearInterval(autoSlideInterval)
       setAutoSlideInterval(null)
     }
-    
+
     setIsDragging(true)
     setDragStartX(e.touches[0].clientX)
     setDragCurrentX(e.touches[0].clientX)

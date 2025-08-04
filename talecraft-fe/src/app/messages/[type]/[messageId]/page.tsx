@@ -42,7 +42,7 @@ export default function MessageDetailPage() {
         fetchMessage();
       }
     };
-    
+
     initPage();
   }, [messageId, type, router])
 

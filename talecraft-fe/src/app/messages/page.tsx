@@ -41,7 +41,7 @@ export default function MessagesPage() {
         fetchMessages();
       }
     };
-    
+
     initPage();
   }, [router])
 
@@ -53,7 +53,7 @@ export default function MessagesPage() {
           "Content-Type": "application/json",
         },
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         setUserInfo(data);
