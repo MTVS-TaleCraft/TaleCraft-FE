@@ -1,10 +1,10 @@
 {
   "env": {
-    "BACKEND_URL": "http://localhost:8080"
+    "BACKEND_URL": "http://localhost:8081"
   },
   "build": {
     "env": {
-      "BACKEND_URL": "http://localhost:8080"
+      "BACKEND_URL": "http://localhost:8081"
     }
   }
 }
