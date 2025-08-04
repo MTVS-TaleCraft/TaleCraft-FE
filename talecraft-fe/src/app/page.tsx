@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { Search, Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { getAuthToken, removeAuthToken } from "@/utils/cookies"
+import { removeAuthToken } from "@/utils/cookies"
 
 interface Novel {
   novelId: number
@@ -83,7 +83,7 @@ export default function HomePage() {
         clearInterval(interval)
       }
     }
-  }, [novels.length, isAnimating, isDragging])
+  }, [novels.length, isAnimating, isDragging, autoSlideInterval, handleNavigation])
 
   // Initialize carousel items with stable IDs
   useEffect(() => {
@@ -125,29 +125,7 @@ export default function HomePage() {
     }
   };
 
-  const fetchUserInfo = async () => {
-    try {
-      const response = await fetch('/api/auth/profile', {
-        credentials: 'include',
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
 
-      if (response.ok) {
-        const data = await response.json();
-        setUserInfo(data);
-        setIsLoggedIn(true);
-      } else {
-        setIsLoggedIn(false);
-        setUserInfo(null);
-      }
-    } catch (error) {
-      console.error('사용자 정보 가져오기 오류:', error);
-      setIsLoggedIn(false);
-      setUserInfo(null);
-    }
-  };
 
   const fetchNovels = async () => {
     try {
@@ -213,7 +191,7 @@ export default function HomePage() {
         }
       }, 10000)
     },
-    [isAnimating, novels.length, currentIndex, autoSlideInterval],
+    [isAnimating, novels.length, currentIndex, autoSlideInterval, isDragging],
   )
 
   const handleIndicatorClick = (index: number) => {

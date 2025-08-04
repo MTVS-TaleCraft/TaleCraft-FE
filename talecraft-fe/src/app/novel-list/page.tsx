@@ -4,8 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { getAuthToken, removeAuthToken } from '@/utils/cookies';
-import { checkAuthAndRedirect } from '@/utils/auth';
+import { removeAuthToken } from '@/utils/cookies';
 import NovelCard from '../components/NovelCard';
 
 interface Novel {
@@ -35,10 +34,10 @@ interface UserInfo {
 
 const NovelListPage: React.FC = () => {
   const router = useRouter();
-  const [selectedGenre, setSelectedGenre] = useState<string>('');
+
   const [novels, setNovels] = useState<Novel[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string>('');
+
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
@@ -110,7 +109,7 @@ const NovelListPage: React.FC = () => {
     }
   };
 
-  const fetchNovels = async (page: number = 0, tag?: string) => {
+  const fetchNovels = async (tag?: string) => {
     setLoading(true);
     setError('');
 
@@ -143,16 +142,16 @@ const NovelListPage: React.FC = () => {
     setSelectedTag(selectedTag === tag ? '' : tag);
     if (selectedTag === tag) {
       // 같은 태그를 다시 클릭하면 전체 목록으로
-      await fetchNovels(0);
+      await fetchNovels();
     } else {
       // 새로운 태그를 클릭하면 해당 태그의 소설들
-      await fetchNovels(0, tag);
+      await fetchNovels(tag);
     }
   };
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-    fetchNovels(page, selectedTag);
+    fetchNovels(selectedTag);
   };
 
   const handleLogout = async () => {
