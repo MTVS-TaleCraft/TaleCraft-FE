@@ -9,6 +9,7 @@ interface NovelDetailProps {
   commentCount: number;
   titleImage?: string;
   novelId: number;
+  isLoggedIn?: boolean;
 }
 
 const NovelDetail: React.FC<NovelDetailProps> = ({
@@ -19,7 +20,8 @@ const NovelDetail: React.FC<NovelDetailProps> = ({
   bookmarkCount,
   commentCount,
   titleImage,
-  novelId
+  novelId,
+  isLoggedIn
 }) => {
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -28,7 +30,16 @@ const NovelDetail: React.FC<NovelDetailProps> = ({
 
   // 북마크 상태 확인
   const checkBookmarkStatus = async () => {
-    console.log('북마크 상태 확인 시작:', novelId);
+    console.log('checkBookmarkStatus 호출됨 - isLoggedIn:', isLoggedIn);
+    
+    // 로그인하지 않은 사용자는 북마크 체크를 하지 않음
+    if (!isLoggedIn) {
+      console.log('로그인하지 않은 사용자 - 북마크 체크 건너뜀');
+      setIsBookmarked(false);
+      return;
+    }
+
+    console.log('로그인한 사용자 - 북마크 상태 확인 시작:', novelId);
     try {
       const response = await fetch(`/api/novels/bookmarks/check/${novelId}`, {
         credentials: 'include'
@@ -95,11 +106,17 @@ const NovelDetail: React.FC<NovelDetailProps> = ({
       checkBookmarkStatus();
       fetchCurrentUser();
     }
-  }, [novelId, author]);
+  }, [novelId, author, isLoggedIn]);
 
   // 북마크 토글 함수
   const handleBookmarkToggle = async () => {
     if (isLoading) return;
+    
+    // 로그인하지 않은 사용자는 북마크 기능 사용 불가
+    if (!isLoggedIn) {
+      alert('북마크 기능을 사용하려면 로그인이 필요합니다.');
+      return;
+    }
     
     setIsLoading(true);
     const previousState = isBookmarked;
@@ -216,19 +233,22 @@ const NovelDetail: React.FC<NovelDetailProps> = ({
             {!isMyNovel && (
               <button 
                 onClick={handleBookmarkToggle}
-                disabled={isLoading}
+                disabled={isLoading || !isLoggedIn}
                 className={`${
-                  isBookmarked 
-                    ? 'bg-blue-600 hover:bg-blue-700 text-white' 
-                    : 'bg-blue-50 hover:bg-blue-100 text-blue-700'
+                  !isLoggedIn 
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                    : isBookmarked 
+                      ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                      : 'bg-blue-50 hover:bg-blue-100 text-blue-700'
                 } px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
                   isLoading ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
+                title={!isLoggedIn ? '북마크 기능을 사용하려면 로그인이 필요합니다.' : ''}
               >
                 <svg className="w-4 h-4" fill={isBookmarked ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
                 </svg>
-                {isBookmarked ? '북마크됨' : `북마크${bookmarkCount !== undefined ? ` (${bookmarkCount})` : ''}`}
+                {!isLoggedIn ? '북마크 (로그인 필요)' : (isBookmarked ? '북마크됨' : `북마크${bookmarkCount !== undefined ? ` (${bookmarkCount})` : ''}`)}
               </button>
             )}
             <button className="bg-blue-50 hover:bg-blue-100 text-blue-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2">

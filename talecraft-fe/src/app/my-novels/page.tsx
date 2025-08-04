@@ -178,7 +178,7 @@ const MyNovelsPage: React.FC = () => {
 
   const handleRemoveBookmark = async (novelId: number) => {
     try {
-      const response = await fetch(`/api/novels/${novelId}/bookmark`, {
+      const response = await fetch(`/api/novels/bookmarks/${novelId}`, {
         method: 'DELETE',
         credentials: 'include',
         headers: {
