@@ -47,14 +47,15 @@ const EpisodeViewPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+  const [isLiked, setIsLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
+  const [isLikeLoading, setIsLikeLoading] = useState(false);
 
   // Mock data for demonstration
   useEffect(() => {
     const initPage = async () => {
-      const isAuthenticated = await checkAuthAndRedirect(router);
-      if (isAuthenticated) {
-        checkLoginStatus();
-      }
+      // 로그인 없이도 접근 가능하도록 인증 체크 제거
+      checkLoginStatus();
     };
     
     initPage();
@@ -138,14 +139,125 @@ const EpisodeViewPage = () => {
         const data = await response.json();
         setUserInfo(data);
         setIsLoggedIn(true);
+        // 로그인 상태 확인 후 추천 상태 확인
+        fetchLikeStatus();
       } else {
         setIsLoggedIn(false);
         setUserInfo(null);
+        // 로그아웃 상태일 때 추천 상태 초기화
+        setIsLiked(false);
+        setLikeCount(0);
       }
     } catch (error) {
       console.error('로그인 상태 확인 오류:', error);
       setIsLoggedIn(false);
       setUserInfo(null);
+      // 에러 발생 시 추천 상태 초기화
+      setIsLiked(false);
+      setLikeCount(0);
+    }
+  };
+
+  // 추천 상태 가져오기
+  const fetchLikeStatus = async () => {
+    // 로그인이 되어 있지 않으면 추천 기능 비활성화
+    if (!isLoggedIn) {
+      setIsLiked(false);
+      setLikeCount(0);
+      return;
+    }
+
+    try {
+      // 소설의 전체 추천 목록을 가져와서 현재 에피소드가 포함되어 있는지 확인
+      const response = await fetch(`/api/novels/1/like`, {
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('추천 목록 응답:', data);
+        
+        // 백엔드 응답 구조: { status: boolean, message: string, likes: number[] }
+        if (data.likes && Array.isArray(data.likes)) {
+          // likes 배열에 현재 에피소드 ID가 포함되어 있는지 확인
+          const currentEpisodeId = parseInt(episodeId);
+          const isCurrentEpisodeLiked = data.likes.includes(currentEpisodeId);
+          
+          console.log('현재 에피소드 ID:', currentEpisodeId);
+          console.log('좋아요한 에피소드 목록:', data.likes);
+          console.log('현재 에피소드 좋아요 여부:', isCurrentEpisodeLiked);
+          
+          setIsLiked(isCurrentEpisodeLiked);
+          setLikeCount(data.likes.length);
+        } else {
+          console.log('예상하지 못한 응답 구조:', data);
+          setIsLiked(false);
+          setLikeCount(0);
+        }
+      } else if (response.status === 403) {
+        console.log('인증되지 않은 사용자 - 추천 기능 비활성화');
+        setIsLiked(false);
+        setLikeCount(0);
+      } else {
+        console.error('추천 상태 확인 실패:', response.status);
+        setIsLiked(false);
+        setLikeCount(0);
+      }
+    } catch (error) {
+      console.error('추천 상태 확인 실패:', error);
+      setIsLiked(false);
+      setLikeCount(0);
+    }
+  };
+
+  // 추천 토글
+  const handleLikeToggle = async () => {
+    if (!isLoggedIn) {
+      alert('로그인이 필요합니다.');
+      return;
+    }
+
+    setIsLikeLoading(true);
+    try {
+      const method = isLiked ? 'DELETE' : 'POST';
+      const response = await fetch(`/api/novels/1/like/episodes/${episodeId}`, {
+        method,
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('좋아요 토글 응답:', data);
+        
+        // 백엔드 응답에서 업데이트된 좋아요 상태 파싱
+        if (data.likes && Array.isArray(data.likes)) {
+          const currentEpisodeId = parseInt(episodeId);
+          const isCurrentEpisodeLiked = data.likes.includes(currentEpisodeId);
+          
+          console.log('토글 후 현재 에피소드 좋아요 여부:', isCurrentEpisodeLiked);
+          console.log('토글 후 좋아요 목록:', data.likes);
+          
+          setIsLiked(isCurrentEpisodeLiked);
+          setLikeCount(data.likes.length);
+        } else {
+          // 응답 구조가 예상과 다르면 다시 상태 확인
+          await fetchLikeStatus();
+        }
+      } else {
+        console.error('추천 처리 실패:', response.status);
+        const errorData = await response.json();
+        console.error('에러 메시지:', errorData);
+      }
+    } catch (error) {
+      console.error('추천 처리 중 오류:', error);
+    } finally {
+      setIsLikeLoading(false);
     }
   };
 
@@ -436,43 +548,76 @@ const EpisodeViewPage = () => {
             padding: '20px 0',
             borderTop: '1px solid #e9ecef'
           }}>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button style={{ 
+                background: '#007bff', 
+                color: '#fff', 
+                border: 'none', 
+                borderRadius: 6, 
+                padding: '8px 16px',
+                fontSize: 14,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6
+              }}>
+                <span>←</span>
+                이전화
+              </button>
+              
+              {/* 추천 버튼 */}
+              <button 
+                onClick={handleLikeToggle}
+                disabled={isLikeLoading || !isLoggedIn}
+                style={{ 
+                  background: isLiked ? '#dc3545' : '#28a745', 
+                  color: '#fff', 
+                  border: 'none', 
+                  borderRadius: 6, 
+                  padding: '8px 16px',
+                  fontSize: 14,
+                  cursor: (isLikeLoading || !isLoggedIn) ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  opacity: (isLikeLoading || !isLoggedIn) ? 0.6 : 1
+                }}
+                title={!isLoggedIn ? '로그인이 필요합니다' : '추천'}
+              >
+                <span>{isLiked ? '❤️' : '🤍'}</span>
+                추천 {likeCount > 0 && `(${likeCount})`}
+              </button>
+              
+              <button style={{ 
+                background: '#007bff', 
+                color: '#fff', 
+                border: 'none', 
+                borderRadius: 6, 
+                padding: '8px 16px',
+                fontSize: 14,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6
+              }}>
+                다음화
+                <span>→</span>
+              </button>
+            </div>
+            
             <button style={{ 
-              background: '#007bff', 
+              background: '#6c757d', 
               color: '#fff', 
               border: 'none', 
               borderRadius: 6, 
-              padding: '12px 24px',
-              cursor: 'pointer',
+              padding: '8px 16px',
               fontSize: 14,
-              fontWeight: 600
-            }}>
-              👍 추천
+              cursor: 'pointer'
+            }}
+            onClick={() => router.push(`/novel/${episode.novelId}`)}
+            >
+              목록으로
             </button>
-            <div style={{ display: 'flex', gap: 12 }}>
-              <button style={{ 
-                background: '#6c757d', 
-                color: '#fff', 
-                border: 'none', 
-                borderRadius: 6, 
-                padding: '12px 20px',
-                cursor: 'pointer',
-                fontSize: 14
-              }}>
-                이전화
-              </button>
-              <button style={{ 
-                background: '#28a745', 
-                color: '#fff', 
-                border: 'none', 
-                borderRadius: 6, 
-                padding: '12px 20px',
-                cursor: 'pointer',
-                fontSize: 14,
-                fontWeight: 600
-              }}>
-                다음화
-              </button>
-            </div>
           </div>
 
           {/* Comments Section */}

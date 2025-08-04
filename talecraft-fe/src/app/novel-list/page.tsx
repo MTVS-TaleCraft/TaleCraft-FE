@@ -53,12 +53,10 @@ const NovelListPage: React.FC = () => {
 
   useEffect(() => {
     const initPage = async () => {
-      const isAuthenticated = await checkAuthAndRedirect(router);
-      if (isAuthenticated) {
-        checkLoginStatus();
-        fetchDefaultTags();
-        fetchNovels();
-      }
+      // 로그인 상태 확인 추가
+      checkLoginStatus();
+      fetchDefaultTags();
+      fetchNovels();
     };
     
     initPage();
@@ -91,12 +89,17 @@ const NovelListPage: React.FC = () => {
   const fetchDefaultTags = async () => {
     setLoadingTags(true);
     try {
-      const response = await fetch('/api/tags/default', { credentials: 'include' });
+      // 백엔드 API를 직접 호출
+      const response = await fetch('http://localhost:8081/api/tags/default', { 
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
       if (response.ok) {
         const data = await response.json();
         setCommonTags(data.tagNames || []);
       } else {
-        console.error('기본 태그 로드 실패');
+        console.error('기본 태그 로드 실패:', response.status);
         setCommonTags([]);
       }
     } catch (error) {
@@ -112,9 +115,9 @@ const NovelListPage: React.FC = () => {
     setError('');
 
     try {
-      let url = `/api/novels`;
+      let url = 'http://localhost:8081/api/novels';
       if (tag) {
-        url = `/api/tags/search/novels?tagName=${encodeURIComponent(tag)}`;
+        url = `http://localhost:8081/api/tags/search/novels?tagName=${encodeURIComponent(tag)}`;
       }
 
       const response = await fetch(url);
@@ -194,6 +197,15 @@ const NovelListPage: React.FC = () => {
     await handleLogout();
     setIsSidebarOpen(false);
     router.push("/");
+  };
+
+  // 사이드바를 열 때 로그인 상태 확인
+  const handleSidebarToggle = () => {
+    if (!isLoggedIn) {
+      // 로그인 상태가 확인되지 않은 경우에만 확인
+      checkLoginStatus();
+    }
+    setIsSidebarOpen(!isSidebarOpen);
   };
 
   const filteredNovels = selectedGenre
@@ -296,7 +308,7 @@ const NovelListPage: React.FC = () => {
               variant="ghost"
               size="icon"
               className="text-white hover:bg-blue-500"
-              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              onClick={handleSidebarToggle}
             >
               <Menu className="w-5 h-5" />
               <span className="sr-only">메뉴</span>

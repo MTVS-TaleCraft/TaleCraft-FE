@@ -53,10 +53,8 @@ const NovelPage: React.FC = () => {
 
   useEffect(() => {
     const initPage = async () => {
-      const isAuthenticated = await checkAuthAndRedirect(router);
-      if (isAuthenticated) {
-        checkLoginStatus();
-      }
+      // 로그인 없이도 접근 가능하도록 인증 체크 제거
+      checkLoginStatus();
     };
     
     initPage();
@@ -315,6 +313,7 @@ const NovelPage: React.FC = () => {
           commentCount={novel.commentCount}
           titleImage={novel.titleImage}
           novelId={novel.novelId}
+          isLoggedIn={isLoggedIn}
         />
         
         {/* 에피소드 목록 */}
