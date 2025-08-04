@@ -47,6 +47,7 @@ const NovelCreatePage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   useEffect(() => {
     checkLoginStatus();
@@ -182,30 +183,27 @@ const NovelCreatePage: React.FC = () => {
 
       const data = await response.json();
 
-             if (response.ok) {
-         setMessage(isEditMode ? '작품이 성공적으로 수정되었습니다!' : '작품이 성공적으로 생성되었습니다!');
-         
-         // 태그 저장 (수정 모드인 경우)
-         if (isEditMode && novelId) {
-           await saveTagsToBackend(novelId, tags);
-         }
-         // 새 작품 생성 시 태그 저장
-         else if (!isEditMode && data.novelId) {
-           await saveTagsToBackend(data.novelId.toString(), tags);
-         }
-         
-         // 성공 시 폼 초기화 (수정 모드가 아닌 경우에만)
-         if (!isEditMode) {
-           setTitle('');
-           setTitleImage(null);
-           setSummary('');
-           setAvailability('PUBLIC');
-           setExistingTitleImage('');
-           setTags([]);
-           setTagInput('');
-           setShowTagInput(false);
-         }
-       } else {
+      if (response.ok) {
+        setMessage(isEditMode ? '작품이 성공적으로 수정되었습니다!' : '작품이 성공적으로 생성되었습니다!');
+        setShowSuccessModal(true); // ✅ 성공 모달 표시
+
+        if (isEditMode && novelId) {
+          await saveTagsToBackend(novelId, tags);
+        } else if (!isEditMode && data.novelId) {
+          await saveTagsToBackend(data.novelId.toString(), tags);
+        }
+
+        if (!isEditMode) {
+          setTitle('');
+          setTitleImage(null);
+          setSummary('');
+          setAvailability('PUBLIC');
+          setExistingTitleImage('');
+          setTags([]);
+          setTagInput('');
+          setShowTagInput(false);
+        }
+      } else {
          setMessage(data.error || (isEditMode ? '작품 수정에 실패했습니다.' : '작품 생성에 실패했습니다.'));
        }
     } catch (error) {
@@ -626,7 +624,7 @@ const NovelCreatePage: React.FC = () => {
                 onChange={(e) => setAvailability(e.target.value as 'PUBLIC' | 'PARTIAL' | 'PRIVATE')}
                 className="mr-2"
               />
-              <span className="text-sm">PUBLIC - 모든 사용자에게 공개</span>
+              <span className="text-sm">모든 사용자에게 공개</span>
             </label>
             <label className="flex items-center">
               <input
@@ -637,7 +635,7 @@ const NovelCreatePage: React.FC = () => {
                 onChange={(e) => setAvailability(e.target.value as 'PUBLIC' | 'PARTIAL' | 'PRIVATE')}
                 className="mr-2"
               />
-              <span className="text-sm">PARTIAL - 일부 사용자에게만 공개</span>
+              <span className="text-sm">일부 사용자에게만 공개</span>
             </label>
             <label className="flex items-center">
               <input
@@ -648,7 +646,7 @@ const NovelCreatePage: React.FC = () => {
                 onChange={(e) => setAvailability(e.target.value as 'PUBLIC' | 'PARTIAL' | 'PRIVATE')}
                 className="mr-2"
               />
-              <span className="text-sm">PRIVATE - 비공개</span>
+              <span className="text-sm">비공개</span>
             </label>
           </div>
         </div>
@@ -693,7 +691,24 @@ const NovelCreatePage: React.FC = () => {
           )}
         </div>
       </main>
-
+      {/* 성공 모달 */}
+      {showSuccessModal && (
+          <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50">
+            <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
+              <h2 className="text-xl font-bold mb-4 text-green-600">✅ 성공!</h2>
+              <p className="mb-6">{message}</p>
+              <button
+                  onClick={() => {
+                    setShowSuccessModal(false);
+                    router.push('/novel-list');
+                  }}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+              >
+                확인
+              </button>
+            </div>
+          </div>
+      )}
       {/* Sidebar */}
       <div
         className={`fixed right-0 top-0 h-full w-80 z-50 transition-transform duration-300 ease-in-out ${
