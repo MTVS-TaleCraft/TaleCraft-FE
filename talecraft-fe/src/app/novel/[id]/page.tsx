@@ -51,6 +51,8 @@ const NovelPage: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
 
+
+
   useEffect(() => {
     const initPage = async () => {
       // 로그인 없이도 접근 가능하도록 인증 체크 제거
@@ -102,7 +104,7 @@ const NovelPage: React.FC = () => {
           setNovel(novelData);
           console.log('소설 상세 정보:', novelData);
           console.log('태그 정보:', novelData.tags);
-      
+
           // episodeData가 유효한 에피소드 데이터인지 확인
           if (episodeData && episodeData.episodesList && Array.isArray(episodeData.episodesList)) {
             setEpisodes(episodeData.episodesList);
@@ -330,20 +332,28 @@ const NovelPage: React.FC = () => {
             ) : (
               <div className="space-y-3">
                 {episodes.map((ep) => (
-                  <div key={ep.episodeId} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                    <div className="flex-1">
-                      <div className="font-medium text-gray-900 mb-1">{ep.title}</div>
-                      <div className="text-sm text-gray-500">
-                        조회수: {ep.view} • {ep.createDate ? new Date(ep.createDate).toLocaleDateString() : '날짜 없음'}
+                    <div key={ep.episodeId} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                      <div className="flex-1">
+                        <div className="font-medium text-gray-900 mb-1">{ep.title}</div>
+                        <div className="text-sm text-gray-500">
+                          조회수: {ep.view} • {ep.createDate ? new Date(ep.createDate).toLocaleDateString() : '날짜 없음'}
+                        </div>
                       </div>
+                      <button
+                          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium"
+                          onClick={() => window.location.href = `/episode-view/${ep.episodeId}`}
+                      >
+                        읽기
+                      </button>
+                      {userInfo?.authorityId === '3' && (
+                          <button
+                              className="px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition-colors text-sm font-medium"
+                              onClick={() => router.push(`/episode-create?novelId=${novelId}&episodeId=${ep.episodeId}`)}
+                          >
+                            수정
+                          </button>
+                      )}
                     </div>
-                    <button
-                      className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium"
-                      onClick={() => window.location.href = `/episode-view/${ep.episodeId}`}
-                    >
-                      읽기
-                    </button>
-                  </div>
                 ))}
               </div>
             )}

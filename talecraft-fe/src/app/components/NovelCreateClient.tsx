@@ -47,10 +47,38 @@ const NovelCreatePage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   useEffect(() => {
     checkLoginStatus();
   }, []);
+  const handleDelete = async () => {
+    if (!novelId) return;
+
+    const confirmDelete = window.confirm("정말 이 작품을 삭제하시겠습니까?");
+    if (!confirmDelete) return;
+
+    try {
+      const response = await fetch(`/api/novels/${novelId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+
+      if (response.ok) {
+        setMessage('작품이 성공적으로 삭제되었습니다.');
+        // 삭제 후 이동
+        setTimeout(() => {
+          router.push('/my-novels');
+        }, 1500);
+      } else {
+        const data = await response.json();
+        setMessage(data.error || '작품 삭제에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('삭제 중 오류:', error);
+      setMessage('네트워크 오류로 인해 삭제에 실패했습니다.');
+    }
+  };
 
   const checkLoginStatus = async () => {
     try {
@@ -241,11 +269,11 @@ const NovelCreatePage: React.FC = () => {
   const handleAddTag = () => {
     if (tagInput.trim() && !tags.includes(tagInput.trim())) {
       const newTag = tagInput.trim();
-      
+
       // 커스텀 태그 추가 허용
       setTags([...tags, newTag]);
       setMessage(`태그 "${newTag}"가 추가되었습니다.`);
-      
+
       setTagInput('');
       setShowTagInput(false);
     }
@@ -271,13 +299,13 @@ const NovelCreatePage: React.FC = () => {
   const saveTagsToBackend = async (novelId: string, tags: string[]) => {
     try {
       console.log('태그 저장 시작:', novelId, tags);
-      
+
       // 기존 태그 모두 삭제
       const deleteResponse = await fetch(`/api/tags/novels/${novelId}/all`, {
         method: 'DELETE',
         credentials: 'include'
       });
-      
+
       if (!deleteResponse.ok) {
         console.error('기존 태그 삭제 실패:', deleteResponse.status);
       }
@@ -290,12 +318,12 @@ const NovelCreatePage: React.FC = () => {
             'Content-Type': 'application/json',
           },
           credentials: 'include',
-          body: JSON.stringify({ 
+          body: JSON.stringify({
             novelId: parseInt(novelId),
-            tagNames: tags 
+            tagNames: tags
           })
         });
-        
+
         if (addResponse.ok) {
           console.log('태그 추가 성공');
         } else {
@@ -670,7 +698,7 @@ const NovelCreatePage: React.FC = () => {
                 onChange={(e) => setAvailability(e.target.value as 'PUBLIC' | 'PARTIAL' | 'PRIVATE')}
                 className="mr-2"
               />
-              <span className="text-sm">PUBLIC - 모든 사용자에게 공개</span>
+              <span className="text-sm">모든 사용자에게 공개</span>
             </label>
             <label className="flex items-center">
               <input
@@ -681,7 +709,7 @@ const NovelCreatePage: React.FC = () => {
                 onChange={(e) => setAvailability(e.target.value as 'PUBLIC' | 'PARTIAL' | 'PRIVATE')}
                 className="mr-2"
               />
-              <span className="text-sm">PARTIAL - 일부 사용자에게만 공개</span>
+              <span className="text-sm">일부 사용자에게만 공개</span>
             </label>
             <label className="flex items-center">
               <input
@@ -692,7 +720,7 @@ const NovelCreatePage: React.FC = () => {
                 onChange={(e) => setAvailability(e.target.value as 'PUBLIC' | 'PARTIAL' | 'PRIVATE')}
                 className="mr-2"
               />
-              <span className="text-sm">PRIVATE - 비공개</span>
+              <span className="text-sm">비공개</span>
             </label>
           </div>
         </div>
@@ -717,7 +745,7 @@ const NovelCreatePage: React.FC = () => {
           >
             취소
           </button>
-          
+
           <button
             onClick={() => handleSubmit('save')}
             disabled={loading || !title || !summary}
@@ -735,9 +763,38 @@ const NovelCreatePage: React.FC = () => {
               {loading ? '저장 중...' : '1회 저장'}
             </button>
           )}
+
+          {isEditMode && (
+              <div className="flex justify-center mt-4">
+                <button
+                    onClick={handleDelete}
+                    className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  작품 삭제
+                </button>
+              </div>
+          )}
+
         </div>
       </main>
-
+      {/* 성공 모달 */}
+      {showSuccessModal && (
+          <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50">
+            <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
+              <h2 className="text-xl font-bold mb-4 text-green-600">✅ 성공!</h2>
+              <p className="mb-6">{message}</p>
+              <button
+                  onClick={() => {
+                    setShowSuccessModal(false);
+                    router.push('/novel-list');
+                  }}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+              >
+                확인
+              </button>
+            </div>
+          </div>
+      )}
       {/* Sidebar */}
       <div
         className={`fixed right-0 top-0 h-full w-80 z-50 transition-transform duration-300 ease-in-out ${
