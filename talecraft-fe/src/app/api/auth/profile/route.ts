@@ -35,8 +35,8 @@ export async function GET(request: NextRequest) {
     let data;
     try {
       data = JSON.parse(responseText);
-    } catch (parseError) {
-      console.error('Profile API JSON parse error:', parseError);
+    } catch {
+      console.error('Profile API JSON parse error occurred');
       return NextResponse.json(
         { error: '사용자 정보 형식이 올바르지 않습니다.' },
         { status: 500 }
@@ -93,8 +93,8 @@ export async function PATCH(request: NextRequest) {
     let data;
     try {
       data = JSON.parse(responseText);
-    } catch (parseError) {
-      console.error('Profile update API JSON parse error:', parseError);
+    } catch {
+      console.error('Profile update API JSON parse error occurred');
       return NextResponse.json(
         { error: '사용자 정보 업데이트에 실패했습니다.' },
         { status: 500 }
@@ -148,8 +148,8 @@ export async function POST(request: NextRequest) {
     let data;
     try {
       data = JSON.parse(responseText);
-    } catch (parseError) {
-      console.error('Logout API JSON parse error:', parseError);
+    } catch {
+      console.error('Logout API JSON parse error occurred');
       return NextResponse.json(
         { message: '로그아웃되었습니다.' },
         { status: 200 }

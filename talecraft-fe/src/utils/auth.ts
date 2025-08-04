@@ -1,6 +1,7 @@
 import { getAuthToken } from './cookies';
+import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 
-export const checkAuthAndRedirect = async (router: any) => {
+export const checkAuthAndRedirect = async (router: AppRouterInstance) => {
   try {
     console.log('인증 상태 확인 시작...');
     
@@ -22,7 +23,7 @@ export const checkAuthAndRedirect = async (router: any) => {
         const responseData = await response.json();
         console.log('인증 성공 - 사용자 정보:', responseData);
         return true;
-      } catch (parseError) {
+      } catch {
         console.log('응답 파싱 실패, 하지만 상태 코드는 OK');
         return true;
       }

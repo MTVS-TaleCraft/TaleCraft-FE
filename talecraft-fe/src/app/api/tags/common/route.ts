@@ -27,8 +27,8 @@ export async function GET(request: NextRequest) {
     try {
       data = JSON.parse(responseText);
       console.log('Response data:', data);
-    } catch (parseError) {
-      console.error('JSON parse error:', parseError);
+    } catch {
+      console.error('JSON parse error occurred');
       console.error('Response text was:', responseText);
       return NextResponse.json(
         { error: '백엔드 응답을 파싱할 수 없습니다.', responseText },
