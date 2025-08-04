@@ -316,6 +316,7 @@ const NovelPage: React.FC = () => {
           titleImage={novel.titleImage}
           novelId={novel.novelId}
           isLoggedIn={isLoggedIn}
+          userInfo={userInfo}
         />
         
         {/* 에피소드 목록 */}
@@ -345,7 +346,7 @@ const NovelPage: React.FC = () => {
                       >
                         읽기
                       </button>
-                      {userInfo?.authorityId === '3' && (
+                      {(userInfo?.authorityId === '3' || userInfo?.userName === novel.author) && (
                           <button
                               className="px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition-colors text-sm font-medium"
                               onClick={() => router.push(`/episode-create?novelId=${novelId}&episodeId=${ep.episodeId}`)}

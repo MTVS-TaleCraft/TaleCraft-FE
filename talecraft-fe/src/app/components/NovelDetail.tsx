@@ -10,6 +10,7 @@ interface NovelDetailProps {
   titleImage?: string;
   novelId: number;
   isLoggedIn?: boolean;
+  userInfo?: {userId: string, userName: string, email: string, authorityId: string} | null;
 }
 
 const NovelDetail: React.FC<NovelDetailProps> = ({
@@ -21,7 +22,8 @@ const NovelDetail: React.FC<NovelDetailProps> = ({
   commentCount,
   titleImage,
   novelId,
-  isLoggedIn
+  isLoggedIn,
+  userInfo
 }) => {
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -66,37 +68,47 @@ const NovelDetail: React.FC<NovelDetailProps> = ({
 
   // 현재 사용자 정보 가져오기
   const fetchCurrentUser = async () => {
-    try {
-      const response = await fetch('/api/auth/profile', {
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+    // userInfo가 전달된 경우 사용, 없으면 API 호출
+    if (userInfo) {
+      console.log('전달받은 사용자 정보:', userInfo);
+      console.log('작품 저자:', author);
+      console.log('사용자 이름:', userInfo.userName);
       
-      if (response.ok) {
-        const userData = await response.json();
-        console.log('현재 사용자 정보:', userData);
-        console.log('작품 저자:', author);
-        console.log('사용자 ID:', userData.userId);
-        console.log('사용자 이름:', userData.userName);
-        console.log('저자와 일치하는가 (userId):', userData.userId === author);
-        console.log('저자와 일치하는가 (userName):', userData.userName === author);
+      setCurrentUser(userInfo);
+      // 현재 사용자가 작품의 저자인지 확인 (userName으로 비교)
+      const isMyNovelValue = userInfo.userName === author;
+      console.log('저자 일치 여부 (userName 기준):', isMyNovelValue);
+      setIsMyNovel(isMyNovelValue);
+    } else {
+      try {
+        const response = await fetch('/api/auth/profile', {
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
         
-        setCurrentUser(userData);
-        // 현재 사용자가 작품의 저자인지 확인 (userName으로 비교)
-        const isMyNovelValue = userData.userName === author;
-        console.log('isMyNovel 설정:', isMyNovelValue);
-        setIsMyNovel(isMyNovelValue);
-      } else {
-        console.log('사용자 정보 가져오기 실패 - 응답 상태:', response.status);
+        if (response.ok) {
+          const userData = await response.json();
+          console.log('API로 가져온 사용자 정보:', userData);
+          console.log('작품 저자:', author);
+          console.log('사용자 이름:', userData.userName);
+          
+          setCurrentUser(userData);
+          // 현재 사용자가 작품의 저자인지 확인 (userName으로 비교)
+          const isMyNovelValue = userData.userName === author;
+          console.log('저자 일치 여부 (userName 기준):', isMyNovelValue);
+          setIsMyNovel(isMyNovelValue);
+        } else {
+          console.log('사용자 정보 가져오기 실패 - 응답 상태:', response.status);
+          setCurrentUser(null);
+          setIsMyNovel(false);
+        }
+      } catch (error) {
+        console.error('사용자 정보 가져오기 실패:', error);
         setCurrentUser(null);
         setIsMyNovel(false);
       }
-    } catch (error) {
-      console.error('사용자 정보 가져오기 실패:', error);
-      setCurrentUser(null);
-      setIsMyNovel(false);
     }
   };
 
