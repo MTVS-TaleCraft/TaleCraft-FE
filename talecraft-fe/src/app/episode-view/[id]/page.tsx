@@ -1,11 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Search, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { getAuthToken, removeAuthToken } from '@/utils/cookies';
-import { checkAuthAndRedirect } from '@/utils/auth';
+import { removeAuthToken } from '@/utils/cookies';
 
 interface Episode {
   episodeId: number;
@@ -42,7 +41,7 @@ const EpisodeViewPage = () => {
   const [loading, setLoading] = useState(true);
   const [fontSize, setFontSize] = useState(16);
   const [comment, setComment] = useState('');
-  const [currentUser, setCurrentUser] = useState<any>(null); // 현재 로그인한 사용자 정보
+  const [currentUser, setCurrentUser] = useState<UserInfo | null>(null); // 현재 로그인한 사용자 정보
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -52,6 +51,109 @@ const EpisodeViewPage = () => {
   const [likeCount, setLikeCount] = useState(0);
   const [isLikeLoading, setIsLikeLoading] = useState(false);
 
+  // 추천 상태 가져오기
+  const fetchLikeStatus = useCallback(async () => {
+    console.log('fetchLikeStatus 호출 - isLoggedIn:', isLoggedIn, 'episodeId:', episodeId);
+    
+    // 로그인이 되어 있지 않으면 추천 기능 비활성화
+    if (!isLoggedIn) {
+      console.log('로그인하지 않은 사용자 - 좋아요 상태 초기화');
+      setIsLiked(false);
+      setLikeCount(0);
+      return;
+    }
+
+    // episode 정보가 없으면 대기
+    if (!episode) {
+      console.log('에피소드 정보가 없음 - 대기');
+      return;
+    }
+
+    try {
+      // 특정 에피소드의 좋아요 상태를 확인 - 실제 novelId 사용
+      const url = `/api/novels/${episode.novelId}/like?episodeId=${episodeId}`;
+      console.log('좋아요 상태 확인 요청 URL:', url);
+      
+      const response = await fetch(url, {
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      console.log('상태 확인 응답 상태:', response.status);
+      console.log('상태 확인 응답 OK:', response.ok);
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('추천 상태 응답:', data);
+        
+        // 백엔드 응답 구조: { likes: number[], message: string }
+        if (data.likes && Array.isArray(data.likes)) {
+          // likes 배열에 likeId가 있으면 해당 에피소드를 좋아요한 상태
+          const isCurrentEpisodeLiked = data.likes.length > 0;
+          
+          console.log('현재 에피소드 좋아요 상태:', isCurrentEpisodeLiked);
+          console.log('좋아요 개수:', data.likes.length);
+          console.log('상태 업데이트 전 - isLiked:', isLiked);
+          
+          setIsLiked(isCurrentEpisodeLiked);
+          setLikeCount(data.likes.length);
+          
+          console.log('상태 업데이트 후 - isLiked:', isCurrentEpisodeLiked);
+        } else {
+          console.log('좋아요하지 않은 상태');
+          setIsLiked(false);
+          setLikeCount(0);
+        }
+      } else if (response.status === 403) {
+        console.log('인증되지 않은 사용자 - 추천 기능 비활성화');
+        setIsLiked(false);
+        setLikeCount(0);
+      } else {
+        console.error('추천 상태 확인 실패:', response.status);
+        setIsLiked(false);
+        setLikeCount(0);
+      }
+    } catch (error) {
+      console.error('추천 상태 확인 오류:', error);
+      setIsLiked(false);
+      setLikeCount(0);
+    }
+  }, [isLoggedIn, episode, episodeId, isLiked]);
+
+  const checkLoginStatus = useCallback(async () => {
+    try {
+      const response = await fetch('/api/auth/profile', {
+        credentials: 'include',
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setUserInfo(data);
+        setIsLoggedIn(true);
+        // 로그인 상태 확인 후 추천 상태 확인
+        fetchLikeStatus();
+      } else {
+        setIsLoggedIn(false);
+        setUserInfo(null);
+        // 로그아웃 상태일 때 추천 상태 초기화
+        setIsLiked(false);
+        setLikeCount(0);
+      }
+    } catch (error) {
+      console.error('로그인 상태 확인 오류:', error);
+      setIsLoggedIn(false);
+      setUserInfo(null);
+      // 에러 발생 시 추천 상태 초기화
+      setIsLiked(false);
+      setLikeCount(0);
+    }
+  }, [fetchLikeStatus]);
+
   // Mock data for demonstration
   useEffect(() => {
     const initPage = async () => {
@@ -60,7 +162,7 @@ const EpisodeViewPage = () => {
     };
     
     initPage();
-  }, [router]);
+  }, [checkLoginStatus]);
 
   // 에피소드 데이터 가져오기
   useEffect(() => {
@@ -150,109 +252,6 @@ const EpisodeViewPage = () => {
       fetchEpisodeData();
     }
   }, [episodeId, isLoggedIn]);
-
-  const checkLoginStatus = async () => {
-    try {
-      const response = await fetch('/api/auth/profile', {
-        credentials: 'include',
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setUserInfo(data);
-        setIsLoggedIn(true);
-        // 로그인 상태 확인 후 추천 상태 확인
-        fetchLikeStatus();
-      } else {
-        setIsLoggedIn(false);
-        setUserInfo(null);
-        // 로그아웃 상태일 때 추천 상태 초기화
-        setIsLiked(false);
-        setLikeCount(0);
-      }
-    } catch (error) {
-      console.error('로그인 상태 확인 오류:', error);
-      setIsLoggedIn(false);
-      setUserInfo(null);
-      // 에러 발생 시 추천 상태 초기화
-      setIsLiked(false);
-      setLikeCount(0);
-    }
-  };
-
-  // 추천 상태 가져오기
-  const fetchLikeStatus = async () => {
-    console.log('fetchLikeStatus 호출 - isLoggedIn:', isLoggedIn, 'episodeId:', episodeId);
-    
-    // 로그인이 되어 있지 않으면 추천 기능 비활성화
-    if (!isLoggedIn) {
-      console.log('로그인하지 않은 사용자 - 좋아요 상태 초기화');
-      setIsLiked(false);
-      setLikeCount(0);
-      return;
-    }
-
-    // episode 정보가 없으면 대기
-    if (!episode) {
-      console.log('에피소드 정보가 없음 - 대기');
-      return;
-    }
-
-    try {
-      // 특정 에피소드의 좋아요 상태를 확인 - 실제 novelId 사용
-      const url = `/api/novels/${episode.novelId}/like?episodeId=${episodeId}`;
-      console.log('좋아요 상태 확인 요청 URL:', url);
-      
-      const response = await fetch(url, {
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      console.log('상태 확인 응답 상태:', response.status);
-      console.log('상태 확인 응답 OK:', response.ok);
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log('추천 상태 응답:', data);
-        
-        // 백엔드 응답 구조: { likes: number[], message: string }
-        if (data.likes && Array.isArray(data.likes)) {
-          // likes 배열에 likeId가 있으면 해당 에피소드를 좋아요한 상태
-          const isCurrentEpisodeLiked = data.likes.length > 0;
-          
-          console.log('현재 에피소드 좋아요 상태:', isCurrentEpisodeLiked);
-          console.log('좋아요 개수:', data.likes.length);
-          console.log('상태 업데이트 전 - isLiked:', isLiked);
-          
-          setIsLiked(isCurrentEpisodeLiked);
-          setLikeCount(data.likes.length);
-          
-          console.log('상태 업데이트 후 - isLiked:', isCurrentEpisodeLiked);
-        } else {
-          console.log('좋아요하지 않은 상태');
-          setIsLiked(false);
-          setLikeCount(0);
-        }
-      } else if (response.status === 403) {
-        console.log('인증되지 않은 사용자 - 추천 기능 비활성화');
-        setIsLiked(false);
-        setLikeCount(0);
-      } else {
-        console.error('추천 상태 확인 실패:', response.status);
-        setIsLiked(false);
-        setLikeCount(0);
-      }
-    } catch (error) {
-      console.error('추천 상태 확인 실패:', error);
-      setIsLiked(false);
-      setLikeCount(0);
-    }
-  };
 
   // 추천 토글
   const handleLikeToggle = async () => {

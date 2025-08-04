@@ -2,10 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { novelId: string } }
+  { params }: { params: Promise<{ novelId: string }> }
 ) {
   try {
-    const novelId = params.novelId;
+    const { novelId } = await params;
     
     const response = await fetch(`${process.env.BACKEND_URL || 'http://localhost:8081'}/api/novels/bookmarks/${novelId}`, {
       method: 'POST',
@@ -36,10 +36,10 @@ export async function POST(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { novelId: string } }
+  { params }: { params: Promise<{ novelId: string }> }
 ) {
   try {
-    const novelId = params.novelId;
+    const { novelId } = await params;
     
     const response = await fetch(`${process.env.BACKEND_URL || 'http://localhost:8081'}/api/novels/bookmarks/${novelId}`, {
       method: 'DELETE',

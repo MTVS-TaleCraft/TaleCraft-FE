@@ -2,10 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { novelId: string; tagName: string } }
+  { params }: { params: Promise<{ novelId: string; tagName: string }> }
 ) {
   try {
-    const { novelId, tagName } = params;
+    const { novelId, tagName } = await params;
     const backendUrl = process.env.BACKEND_URL;
     
     const response = await fetch(`${backendUrl}/api/tags/novels/${novelId}/common/${encodeURIComponent(tagName)}`, {

@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, Trash2 } from "lucide-react"
+import { Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { getAuthToken } from "@/utils/cookies"
+
 import { checkAuthAndRedirect } from '@/utils/auth'
 
 interface UserInfo {
@@ -26,12 +26,13 @@ interface Message {
 
 export default function MessagesPage() {
   const router = useRouter()
-  const [messages, setMessages] = useState<Message[]>([])
+
   const [sentMessages, setSentMessages] = useState<Message[]>([])
   const [receivedMessages, setReceivedMessages] = useState<Message[]>([])
   const [activeTab, setActiveTab] = useState<"received" | "sent">("received")
   const [isLoading, setIsLoading] = useState(true)
-  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+  const [userInfo, setUserInfo] = useState<UserInfo | null>(null)
+
 
   useEffect(() => {
     const initPage = async () => {

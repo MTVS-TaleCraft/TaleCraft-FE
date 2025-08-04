@@ -47,6 +47,7 @@ const NovelListPage: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [selectedTag, setSelectedTag] = useState<string>('');
+  const [selectedGenre, setSelectedGenre] = useState<string>('');
   const [commonTags, setCommonTags] = useState<string[]>([]);
   const [loadingTags, setLoadingTags] = useState(false);
 

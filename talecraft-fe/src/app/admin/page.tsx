@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { getAuthToken, removeAuthToken } from '@/utils/cookies';
+import { removeAuthToken } from '@/utils/cookies';
 
 interface UserInfo {
   userId: string;
@@ -17,11 +17,7 @@ export default function AdminPage() {
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
-  useEffect(() => {
-    checkAuth();
-  }, []);
-
-  const checkAuth = async () => {
+  const checkAuth = useCallback(async () => {
     try {
       const response = await fetch('http://localhost:8081/api/auth/profile', {
         credentials: 'include',
@@ -49,7 +45,11 @@ export default function AdminPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [router]);
+
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
 
   if (isLoading) {
     return (

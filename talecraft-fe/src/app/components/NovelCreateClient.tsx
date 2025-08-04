@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Search, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { getAuthToken, removeAuthToken } from '@/utils/cookies';
+import { removeAuthToken } from '@/utils/cookies';
 import { API_BASE_URL } from '../../config/api';
 
 interface NovelData {

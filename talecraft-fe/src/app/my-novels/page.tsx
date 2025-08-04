@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Search, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { getAuthToken, removeAuthToken } from '@/utils/cookies';
+import { removeAuthToken } from '@/utils/cookies';
 import { checkAuthAndRedirect } from '@/utils/auth';
-import { API_BASE_URL } from '../../config/api';
+
 
 interface MyNovel {
   novelId: number;
@@ -29,7 +29,7 @@ interface UserInfo {
   authorityId: string;
 }
 
-const MyNovelsPage: React.FC = () => {
+const MyNovelsPageContent: React.FC = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [novels, setNovels] = useState<MyNovel[]>([]);
@@ -688,6 +688,14 @@ const MyNovelsPage: React.FC = () => {
         onClick={() => setIsSidebarOpen(false)}
       />
     </div>
+  );
+};
+
+const MyNovelsPage: React.FC = () => {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <MyNovelsPageContent />
+    </Suspense>
   );
 };
 

@@ -27,7 +27,7 @@ const NovelDetail: React.FC<NovelDetailProps> = ({
 }) => {
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [currentUser, setCurrentUser] = useState<{id: string, userName: string} | null>(null);
+  const [currentUser, setCurrentUser] = useState<{userId: string, userName: string, email: string, authorityId: string} | null>(null);
   const [isMyNovel, setIsMyNovel] = useState(false);
 
   // 북마크 상태 확인

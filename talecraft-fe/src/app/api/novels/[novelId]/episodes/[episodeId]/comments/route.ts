@@ -2,10 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { novelId: string; episodeId: string } }
+  { params }: { params: Promise<{ novelId: string; episodeId: string }> }
 ) {
   try {
-    const { novelId, episodeId } = params;
+    const { novelId, episodeId } = await params;
     
     const response = await fetch(`${process.env.BACKEND_URL || 'http://localhost:8081'}/api/novels/${novelId}/episodes/${episodeId}/comments`, {
       method: 'GET',
@@ -38,10 +38,10 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { novelId: string; episodeId: string } }
+  { params }: { params: Promise<{ novelId: string; episodeId: string }> }
 ) {
   try {
-    const { novelId, episodeId } = params;
+    const { novelId, episodeId } = await params;
     const body = await request.json();
     
     const response = await fetch(`${process.env.BACKEND_URL || 'http://localhost:8081'}/api/novels/${novelId}/episodes/${episodeId}/comments`, {

@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Search, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { getAuthToken, removeAuthToken } from '@/utils/cookies';
+import { removeAuthToken } from '@/utils/cookies';
 
 interface NovelInfo {
   novelId: number;

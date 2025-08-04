@@ -2,10 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { novelId: string } }
+  { params }: { params: Promise<{ novelId: string }> }
 ) {
   try {
-    const novelId = params.novelId;
+    const { novelId } = await params;
     const cookies = request.headers.get('cookie');
     
     console.log('북마크 상태 확인 API 호출:', novelId);

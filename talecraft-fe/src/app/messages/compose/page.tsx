@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { ArrowLeft, Send } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { getAuthToken } from "@/utils/cookies"
+
 
 interface UserInfo {
   userId: string;
@@ -19,7 +19,8 @@ export default function ComposeMessagePage() {
   const [messageTitle, setMessageTitle] = useState("")
   const [description, setDescription] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+  const [userInfo, setUserInfo] = useState<UserInfo | null>(null)
+
 
   useEffect(() => {
     checkLoginStatus()

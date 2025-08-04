@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { useRouter, useParams } from "next/navigation"
 import { ArrowLeft, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { getAuthToken } from "@/utils/cookies"
+
 import { checkAuthAndRedirect } from '@/utils/auth'
 
 interface UserInfo {
@@ -32,7 +32,8 @@ export default function MessageDetailPage() {
   
   const [message, setMessage] = useState<Message | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+  const [userInfo, setUserInfo] = useState<UserInfo | null>(null)
+
 
   useEffect(() => {
     const initPage = async () => {

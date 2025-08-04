@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Search, X, Menu, ArrowLeft } from 'lucide-react';
@@ -33,50 +33,9 @@ export default function AdminNovelsPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const router = useRouter();
 
-  useEffect(() => {
-    checkAuth();
-    fetchNovels();
-  }, []);
-
-  const checkAuth = async () => {
-    try {
-      const response = await fetch('http://localhost:8081/api/auth/profile', {
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log('사용자 정보:', data);
-        console.log('권한 ID:', data.authorityId);
-        console.log('권한이 3인가?', data.authorityId === "3");
-
-        setUserInfo(data);
-        
-        // 관리자 권한 확인 (authorityId가 3이 아니면 접근 거부)
-        if (data.authorityId !== "3") {
-          console.error('관리자 권한이 없습니다. 현재 권한:', data.authorityId);
-          alert('관리자 권한이 필요합니다.');
-          router.push('/');
-          return;
-        }
-      } else {
-        router.push('/auth/login');
-      }
-    } catch (error) {
-      console.error('인증 확인 실패:', error);
-      router.push('/auth/login');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const fetchNovels = async () => {
+  const fetchNovels = useCallback(async () => {
     try {
       console.log('신고된 작품 목록을 가져오는 중...');
-
       // 1. 먼저 신고된 소설 ID 목록을 가져오기
       console.log('신고된 소설 API 호출 시작...');
       const reportedResponse = await fetch('http://localhost:8081/api/reports/reported-novels', {
@@ -181,7 +140,47 @@ export default function AdminNovelsPage() {
       console.error('신고된 작품 목록을 가져오는데 실패했습니다:', error);
       setNovels([]);
     }
-  };
+  }, []);
+
+  const checkAuth = useCallback(async () => {
+    try {
+      const response = await fetch('http://localhost:8081/api/auth/profile', {
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('사용자 정보:', data);
+        console.log('권한 ID:', data.authorityId);
+        console.log('권한이 3인가?', data.authorityId === "3");
+
+        setUserInfo(data);
+        
+        // 관리자 권한 확인 (authorityId가 3이 아니면 접근 거부)
+        if (data.authorityId !== "3") {
+          console.error('관리자 권한이 없습니다. 현재 권한:', data.authorityId);
+          alert('관리자 권한이 필요합니다.');
+          router.push('/');
+          return;
+        }
+      } else {
+        router.push('/auth/login');
+      }
+    } catch (error) {
+      console.error('인증 확인 실패:', error);
+      router.push('/auth/login');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [router]);
+
+  useEffect(() => {
+    checkAuth();
+    fetchNovels();
+  }, [checkAuth, fetchNovels]);
 
   const handleToggleBan = async (novelId: number) => {
     console.log('=== 차단/해제 버튼 클릭됨 ===');

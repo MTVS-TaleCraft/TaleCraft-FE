@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { getAuthToken, removeAuthToken } from '@/utils/cookies';
+
 import { checkAuthAndRedirect } from '@/utils/auth';
 import Link from 'next/link';
 
@@ -25,6 +25,7 @@ export default function MyPage() {
   const [isUpdating, setIsUpdating] = useState(false);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [withdrawPassword, setWithdrawPassword] = useState('');
+
   const router = useRouter();
 
   useEffect(() => {

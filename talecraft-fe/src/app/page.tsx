@@ -83,7 +83,40 @@ export default function HomePage() {
         clearInterval(interval)
       }
     }
-  }, [novels.length, isAnimating, isDragging, autoSlideInterval, handleNavigation])
+  }, [novels.length, isAnimating, isDragging, autoSlideInterval])
+
+  const handleNavigation = useCallback(
+    (direction: "left" | "right") => {
+      if (isAnimating || novels.length === 0) return
+
+      setIsAnimating(true)
+
+      // 자동 슬라이드 일시정지
+      if (autoSlideInterval) {
+        clearInterval(autoSlideInterval)
+        setAutoSlideInterval(null)
+      }
+
+      // Update positions immediately for smooth animation
+      setCarouselItems((prev) =>
+        prev.map((item) => ({
+          ...item,
+          carouselPosition: direction === "left" ? item.carouselPosition - 1 : item.carouselPosition + 1,
+        })),
+      )
+
+      // Update the actual index after animation starts
+      setTimeout(() => {
+        if (direction === "left") {
+          setCurrentIndex((prev) => (prev + 1) % novels.length)
+        } else {
+          setCurrentIndex((prev) => (prev - 1 + novels.length) % novels.length)
+        }
+        setTimeout(() => setIsAnimating(false), 100)
+      }, 50)
+    },
+    [isAnimating, novels.length, autoSlideInterval],
+  )
 
   // Initialize carousel items with stable IDs
   useEffect(() => {
@@ -125,8 +158,6 @@ export default function HomePage() {
     }
   };
 
-
-
   const fetchNovels = async () => {
     try {
       setIsLoading(true)
@@ -148,51 +179,6 @@ export default function HomePage() {
       setIsLoading(false)
     }
   }
-
-  const handleNavigation = useCallback(
-    (direction: "left" | "right") => {
-      if (isAnimating || novels.length === 0) return
-
-      setIsAnimating(true)
-
-      // 자동 슬라이드 일시정지
-      if (autoSlideInterval) {
-        clearInterval(autoSlideInterval)
-        setAutoSlideInterval(null)
-      }
-
-      // Update positions immediately for smooth animation
-      setCarouselItems((prev) =>
-        prev.map((item) => ({
-          ...item,
-          carouselPosition: direction === "left" ? item.carouselPosition - 1 : item.carouselPosition + 1,
-        })),
-      )
-
-      // Update the actual index after animation starts
-      setTimeout(() => {
-        if (direction === "left") {
-          setCurrentIndex((prev) => (prev + 1) % novels.length)
-        } else {
-          setCurrentIndex((prev) => (prev - 1 + novels.length) % novels.length)
-        }
-        setTimeout(() => setIsAnimating(false), 100)
-      }, 200)
-
-      // 10초 후 자동 슬라이드 재시작
-      setTimeout(() => {
-        if (novels.length > 0) {
-          const interval = setInterval(() => {
-            if (!isAnimating && !isDragging) {
-              handleNavigation("left")
-            }
-          }, 5000)
-          setAutoSlideInterval(interval)
-        }
-      }, 10000)
-    },
-    [isAnimating, novels.length, autoSlideInterval, isDragging],
-  )
 
   const handleIndicatorClick = (index: number) => {
     if (isAnimating || index === currentIndex || novels.length === 0) return
@@ -231,6 +217,8 @@ export default function HomePage() {
       }
     }, 10000)
   }
+
+
 
   const handleLogout = async () => {
     try {

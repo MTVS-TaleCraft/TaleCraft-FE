@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Search, X, Menu, ArrowLeft } from 'lucide-react';
@@ -24,11 +24,7 @@ export default function AdminInquiryPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
 
-  useEffect(() => {
-    checkAuth();
-  }, []);
-
-  const checkAuth = async () => {
+  const checkAuth = useCallback(async () => {
     try {
       const response = await fetch('http://localhost:8081/api/auth/profile', {
         credentials: 'include',
@@ -51,7 +47,11 @@ export default function AdminInquiryPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [router]);
+
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -92,7 +92,6 @@ export default function AdminInquiryPage() {
   };
 
   const handleLogout = () => {
-    removeAuthToken();
     router.push('/auth/login');
   };
 

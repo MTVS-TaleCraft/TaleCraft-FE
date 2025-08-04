@@ -2,10 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { novelId: string } }
+  { params }: { params: Promise<{ novelId: string }> }
 ) {
   try {
-    const novelId = params.novelId;
+    const { novelId } = await params;
     
     const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/novels/${novelId}`, {
       method: 'GET',
