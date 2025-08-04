@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Search } from 'lucide-react';
+import { Search, ArrowLeft } from 'lucide-react';
 
 interface UserInfo {
   userId: string;
@@ -195,7 +195,10 @@ export default function UserManagementPage() {
              {/* 헤더 */}
        <header className="bg-blue-400 text-white p-4 shadow-md">
          <div className="flex justify-between items-center w-full">
-           <h1 className="text-xl font-bold">TaleCraft</h1>
+                       <Link href="/admin" className="flex items-center space-x-2 text-xl font-bold hover:text-blue-200 transition-colors">
+              <ArrowLeft size={24} />
+              <span>관리자 페이지로 이동</span>
+            </Link>
            <div className="flex items-center space-x-2">
              <button 
                onClick={handleSearchToggle}

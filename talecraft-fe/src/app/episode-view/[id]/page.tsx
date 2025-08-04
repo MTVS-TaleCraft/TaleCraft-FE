@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { Search, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getAuthToken, removeAuthToken } from '@/utils/cookies';
+import { checkAuthAndRedirect } from '@/utils/auth';
 
 interface Episode {
   episodeId: number;
@@ -49,8 +50,15 @@ const EpisodeViewPage = () => {
 
   // Mock data for demonstration
   useEffect(() => {
-    checkLoginStatus();
-  }, []);
+    const initPage = async () => {
+      const isAuthenticated = await checkAuthAndRedirect(router);
+      if (isAuthenticated) {
+        checkLoginStatus();
+      }
+    };
+    
+    initPage();
+  }, [router]);
 
   // 에피소드 데이터 가져오기
   useEffect(() => {
