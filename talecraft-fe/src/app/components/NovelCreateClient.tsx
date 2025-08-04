@@ -52,6 +52,33 @@ const NovelCreatePage: React.FC = () => {
   useEffect(() => {
     checkLoginStatus();
   }, []);
+  const handleDelete = async () => {
+    if (!novelId) return;
+
+    const confirmDelete = window.confirm("정말 이 작품을 삭제하시겠습니까?");
+    if (!confirmDelete) return;
+
+    try {
+      const response = await fetch(`/api/novels/${novelId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+
+      if (response.ok) {
+        setMessage('작품이 성공적으로 삭제되었습니다.');
+        // 삭제 후 이동
+        setTimeout(() => {
+          router.push('/my-novels');
+        }, 1500);
+      } else {
+        const data = await response.json();
+        setMessage(data.error || '작품 삭제에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('삭제 중 오류:', error);
+      setMessage('네트워크 오류로 인해 삭제에 실패했습니다.');
+    }
+  };
 
   const checkLoginStatus = async () => {
     try {
@@ -718,7 +745,7 @@ const NovelCreatePage: React.FC = () => {
           >
             취소
           </button>
-          
+
           <button
             onClick={() => handleSubmit('save')}
             disabled={loading || !title || !summary}
@@ -736,6 +763,18 @@ const NovelCreatePage: React.FC = () => {
               {loading ? '저장 중...' : '1회 저장'}
             </button>
           )}
+
+          {isEditMode && (
+              <div className="flex justify-center mt-4">
+                <button
+                    onClick={handleDelete}
+                    className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  작품 삭제
+                </button>
+              </div>
+          )}
+
         </div>
       </main>
       {/* 성공 모달 */}
