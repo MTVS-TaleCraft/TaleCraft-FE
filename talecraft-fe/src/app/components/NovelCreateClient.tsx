@@ -102,15 +102,18 @@ const NovelCreatePage: React.FC = () => {
   // 기본 태그 불러오기
   useEffect(() => {
     setLoadingCommonTags(true);
-    fetch('/api/tags/common', { credentials: 'include' })
+    fetch(`${API_BASE_URL}/api/tags/default`, { credentials: 'include' })
       .then(res => res.json())
       .then((data) => {
-        if (data.commonTags && Array.isArray(data.commonTags)) {
-          setCommonTags(data.commonTags);
+        console.log('기본 태그 응답 데이터:', data);
+        if (data.tagNames && Array.isArray(data.tagNames)) {
+          setCommonTags(data.tagNames);
+        } else {
+          console.log('기본 태그 데이터 구조가 예상과 다름:', data);
         }
       })
-      .catch(() => {
-        console.log('기본 태그 정보를 불러오는데 실패했습니다.');
+      .catch((error) => {
+        console.error('기본 태그 정보를 불러오는데 실패했습니다:', error);
       })
       .finally(() => {
         setLoadingCommonTags(false);
@@ -183,27 +186,36 @@ const NovelCreatePage: React.FC = () => {
 
       const data = await response.json();
 
-      if (response.ok) {
-        setMessage(isEditMode ? '작품이 성공적으로 수정되었습니다!' : '작품이 성공적으로 생성되었습니다!');
-        setShowSuccessModal(true); // ✅ 성공 모달 표시
-
-        if (isEditMode && novelId) {
-          await saveTagsToBackend(novelId, tags);
-        } else if (!isEditMode && data.novelId) {
-          await saveTagsToBackend(data.novelId.toString(), tags);
-        }
-
-        if (!isEditMode) {
-          setTitle('');
-          setTitleImage(null);
-          setSummary('');
-          setAvailability('PUBLIC');
-          setExistingTitleImage('');
-          setTags([]);
-          setTagInput('');
-          setShowTagInput(false);
-        }
-      } else {
+             if (response.ok) {
+         setMessage(isEditMode ? '작품이 성공적으로 수정되었습니다!' : '작품이 성공적으로 생성되었습니다!');
+         
+         // 태그 저장 (수정 모드인 경우)
+         if (isEditMode && novelId) {
+           await saveTagsToBackend(novelId, tags);
+         }
+         // 새 작품 생성 시 태그 저장
+         else if (!isEditMode && data.novelId) {
+           await saveTagsToBackend(data.novelId.toString(), tags);
+         }
+         
+         // 성공 시 처리
+         if (isEditMode) {
+           // 수정 모드인 경우 my-novels 페이지로 이동
+           setTimeout(() => {
+             router.push('/my-novels');
+           }, 1500);
+         } else {
+           // 생성 모드인 경우 폼 초기화
+           setTitle('');
+           setTitleImage(null);
+           setSummary('');
+           setAvailability('PUBLIC');
+           setExistingTitleImage('');
+           setTags([]);
+           setTagInput('');
+           setShowTagInput(false);
+         }
+       } else {
          setMessage(data.error || (isEditMode ? '작품 수정에 실패했습니다.' : '작품 생성에 실패했습니다.'));
        }
     } catch (error) {
@@ -228,9 +240,13 @@ const NovelCreatePage: React.FC = () => {
 
   // 태그 추가 함수
   const handleAddTag = () => {
-    const trimmedTag = tagInput.trim();
-    if (trimmedTag && !tags.includes(trimmedTag)) {
-      setTags([...tags, trimmedTag]);
+    if (tagInput.trim() && !tags.includes(tagInput.trim())) {
+      const newTag = tagInput.trim();
+
+      // 커스텀 태그 추가 허용
+      setTags([...tags, newTag]);
+      setMessage(`태그 "${newTag}"가 추가되었습니다.`);
+
       setTagInput('');
       setShowTagInput(false);
     }
@@ -255,22 +271,37 @@ const NovelCreatePage: React.FC = () => {
   // 태그를 백엔드에 저장하는 함수
   const saveTagsToBackend = async (novelId: string, tags: string[]) => {
     try {
+      console.log('태그 저장 시작:', novelId, tags);
+
       // 기존 태그 모두 삭제
-      await fetch(`/api/tags/novels/${novelId}/all`, {
+      const deleteResponse = await fetch(`/api/tags/novels/${novelId}/all`, {
         method: 'DELETE',
         credentials: 'include'
       });
 
+      if (!deleteResponse.ok) {
+        console.error('기존 태그 삭제 실패:', deleteResponse.status);
+      }
+
       // 새 태그들 추가
       if (tags.length > 0) {
-        await fetch(`/api/tags/novels/${novelId}`, {
+        const addResponse = await fetch(`/api/tags/novels/${novelId}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           credentials: 'include',
-          body: JSON.stringify({ tagNames: tags })
+          body: JSON.stringify({
+            novelId: parseInt(novelId),
+            tagNames: tags
+          })
         });
+
+        if (addResponse.ok) {
+          console.log('태그 추가 성공');
+        } else {
+          console.error('태그 추가 실패:', addResponse.status);
+        }
       }
     } catch (error) {
       console.error('태그 저장 중 오류:', error);
@@ -286,20 +317,30 @@ const NovelCreatePage: React.FC = () => {
 
     try {
       if (isEditMode && novelId) {
-        // 수정 모드: 바로 작품에 추가
-        const response = await fetch(`/api/tags/novels/${novelId}/common/${encodeURIComponent(tagName)}`, {
+        // 수정 모드: 새로운 태그 시스템 API 사용
+        const response = await fetch(`/api/tags/novels/${novelId}`, {
           method: 'POST',
-          credentials: 'include'
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            novelId: parseInt(novelId),
+            tagNames: [tagName]
+          })
         });
         
         if (response.ok) {
           setTags([...tags, tagName]);
+          console.log('기본 태그 추가 성공:', tagName);
         } else {
+          console.error('기본 태그 추가 실패:', response.status);
           alert('기본 태그 추가에 실패했습니다.');
         }
       } else {
         // 생성 모드: 임시로 상태에만 추가
         setTags([...tags, tagName]);
+        console.log('생성 모드에서 태그 추가:', tagName);
       }
     } catch (error) {
       console.error('기본 태그 추가 중 오류:', error);
@@ -559,6 +600,7 @@ const NovelCreatePage: React.FC = () => {
                     <button
                       onClick={() => handleRemoveTag(tag)}
                       className="text-blue-500 hover:text-blue-700 text-xs"
+                      title="태그 삭제"
                     >
                       ×
                     </button>
@@ -569,31 +611,36 @@ const NovelCreatePage: React.FC = () => {
             
             {/* 태그 입력 영역 */}
             {showTagInput ? (
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={tagInput}
-                  onChange={(e) => setTagInput(e.target.value)}
-                  onKeyPress={handleTagKeyPress}
-                  className="flex-1 p-2 bg-gray-200 rounded-lg border-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="태그를 입력하고 엔터를 누르세요"
-                  autoFocus
-                />
-                <button
-                  onClick={handleAddTag}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  추가
-                </button>
-                <button
-                  onClick={() => {
-                    setShowTagInput(false);
-                    setTagInput('');
-                  }}
-                  className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
-                >
-                  취소
-                </button>
+              <div className="space-y-2">
+                <div className="text-xs text-gray-500">
+                  💡 기본 태그를 클릭하거나 새로운 커스텀 태그를 입력할 수 있습니다.
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={tagInput}
+                    onChange={(e) => setTagInput(e.target.value)}
+                    onKeyPress={handleTagKeyPress}
+                    className="flex-1 p-2 bg-gray-200 rounded-lg border-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="새로운 태그를 입력하세요"
+                    autoFocus
+                  />
+                  <button
+                    onClick={handleAddTag}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    추가
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowTagInput(false);
+                      setTagInput('');
+                    }}
+                    className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                  >
+                    취소
+                  </button>
+                </div>
               </div>
             ) : (
               <button
@@ -603,7 +650,7 @@ const NovelCreatePage: React.FC = () => {
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
-                태그 추가
+                커스텀 태그 추가
               </button>
             )}
           </div>

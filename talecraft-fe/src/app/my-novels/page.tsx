@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { Search, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getAuthToken, removeAuthToken } from '@/utils/cookies';
+import { checkAuthAndRedirect } from '@/utils/auth';
 import { API_BASE_URL } from '../../config/api';
 
 interface MyNovel {
@@ -35,7 +36,7 @@ const MyNovelsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterType, setFilterType] = useState<'all' | 'bookmarked' | 'my'>('my');
+  const [filterType, setFilterType] = useState<'all' | 'bookmarked' | 'my'>('bookmarked');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -51,8 +52,15 @@ const MyNovelsPage: React.FC = () => {
   }, [searchParams]);
 
   useEffect(() => {
-    checkLoginStatus();
-  }, []);
+    const initPage = async () => {
+      const isAuthenticated = await checkAuthAndRedirect(router);
+      if (isAuthenticated) {
+        checkLoginStatus();
+      }
+    };
+    
+    initPage();
+  }, [router]);
 
   const checkLoginStatus = async () => {
     try {
@@ -111,6 +119,8 @@ const MyNovelsPage: React.FC = () => {
       setError('');
       try {
         let data;
+        
+        // 북마크를 우선적으로 처리
         if (filterType === 'bookmarked') {
           console.log('북마크된 소설 데이터 가져오는 중...');
           data = await fetchBookmarkedNovelsFromApi();
@@ -135,7 +145,7 @@ const MyNovelsPage: React.FC = () => {
           }));
           console.log('변환된 북마크 소설:', novels);
           setNovels(novels);
-        } else {
+        } else if (filterType === 'my') {
           console.log('내 작품 데이터 가져오는 중...');
           data = await fetchMyNovelsFromApi();
           console.log('내 작품 데이터 받음:', data);
@@ -242,6 +252,8 @@ const MyNovelsPage: React.FC = () => {
       setError('');
       try {
         let data;
+        
+        // 북마크를 우선적으로 처리
         if (newFilterType === 'bookmarked') {
           console.log('북마크된 소설 데이터 가져오는 중...');
           data = await fetchBookmarkedNovelsFromApi();
@@ -266,7 +278,7 @@ const MyNovelsPage: React.FC = () => {
           }));
           console.log('변환된 북마크 소설:', novels);
           setNovels(novels);
-        } else {
+        } else if (newFilterType === 'my') {
           console.log('내 작품 데이터 가져오는 중...');
           data = await fetchMyNovelsFromApi();
           console.log('내 작품 데이터 받음:', data);

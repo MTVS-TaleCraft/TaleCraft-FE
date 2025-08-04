@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Search, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getAuthToken, removeAuthToken } from '@/utils/cookies';
+import { checkAuthAndRedirect } from '@/utils/auth';
 import NovelCard from '../components/NovelCard';
 
 interface Novel {
@@ -46,11 +47,22 @@ const NovelListPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+  const [selectedTag, setSelectedTag] = useState<string>('');
+  const [commonTags, setCommonTags] = useState<string[]>([]);
+  const [loadingTags, setLoadingTags] = useState(false);
 
   useEffect(() => {
-    checkLoginStatus();
-    fetchNovels();
-  }, []);
+    const initPage = async () => {
+      const isAuthenticated = await checkAuthAndRedirect(router);
+      if (isAuthenticated) {
+        checkLoginStatus();
+        fetchDefaultTags();
+        fetchNovels();
+      }
+    };
+    
+    initPage();
+  }, [router]);
 
   const checkLoginStatus = async () => {
     try {
@@ -76,20 +88,44 @@ const NovelListPage: React.FC = () => {
     }
   };
 
-  const fetchNovels = async (page: number = 0) => {
+  const fetchDefaultTags = async () => {
+    setLoadingTags(true);
+    try {
+      const response = await fetch('/api/tags/default', { credentials: 'include' });
+      if (response.ok) {
+        const data = await response.json();
+        setCommonTags(data.tagNames || []);
+      } else {
+        console.error('기본 태그 로드 실패');
+        setCommonTags([]);
+      }
+    } catch (error) {
+      console.error('기본 태그 로드 실패:', error);
+      setCommonTags([]);
+    } finally {
+      setLoadingTags(false);
+    }
+  };
+
+  const fetchNovels = async (page: number = 0, tag?: string) => {
     setLoading(true);
     setError('');
 
     try {
-      const response = await fetch(`/api/novels`);
+      let url = `/api/novels`;
+      if (tag) {
+        url = `/api/tags/search/novels?tagName=${encodeURIComponent(tag)}`;
+      }
+
+      const response = await fetch(url);
       const data: NovelListResponse = await response.json();
 
       if (response.ok) {
-        console.log(data.novelList);
-        setNovels(data.novelList);
-        setCurrentPage(data.page);
-        setTotalPages(data.totalPages);
-        setTotalElements(data.totalElements);
+        console.log('소설 목록:', data.novelList);
+        setNovels(data.novelList || []);
+        setCurrentPage(data.page || 0);
+        setTotalPages(data.totalPages || 0);
+        setTotalElements(data.totalElements || 0);
       } else {
         setError('작품 목록을 불러오는데 실패했습니다.');
       }
@@ -100,9 +136,20 @@ const NovelListPage: React.FC = () => {
     }
   };
 
+  const handleTagClick = async (tag: string) => {
+    setSelectedTag(selectedTag === tag ? '' : tag);
+    if (selectedTag === tag) {
+      // 같은 태그를 다시 클릭하면 전체 목록으로
+      await fetchNovels(0);
+    } else {
+      // 새로운 태그를 클릭하면 해당 태그의 소설들
+      await fetchNovels(0, tag);
+    }
+  };
+
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-    fetchNovels(page);
+    fetchNovels(page, selectedTag);
   };
 
   const handleLogout = async () => {
@@ -261,10 +308,65 @@ const NovelListPage: React.FC = () => {
       {/* Main Content */}
       <main className="max-w-6xl mx-auto p-4 md:p-6 pt-8 pb-24">
         <h2 className="text-2xl font-bold text-gray-800 mb-8 text-center">작품 목록</h2>
+        
+        {/* 태그 필터 버튼들 */}
+        <div className="mb-8">
+          <h3 className="text-lg font-semibold text-gray-700 mb-4">태그별 필터</h3>
+          
+          {/* 기본 태그 섹션 */}
+          {!loadingTags && commonTags.length > 0 && (
+            <div className="mb-4">
+              <h4 className="text-sm font-medium text-gray-600 mb-2 flex items-center">
+                <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+                기본 태그
+              </h4>
+              <div className="flex flex-wrap gap-2">
+                {commonTags.map((tag) => (
+                  <button
+                    key={tag}
+                    onClick={() => handleTagClick(tag)}
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                      selectedTag === tag
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                    }`}
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {loadingTags && (
+            <div className="flex items-center justify-center w-full py-4">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+              <span className="ml-2 text-gray-600">태그 로딩 중...</span>
+            </div>
+          )}
+          
+          {!loadingTags && commonTags.length === 0 && (
+            <div className="text-gray-500 text-sm">사용 가능한 태그가 없습니다.</div>
+          )}
+          
+          {selectedTag && (
+            <div className="mt-4 text-center">
+              <span className="text-blue-600 font-medium">선택된 태그: {selectedTag}</span>
+              <button
+                onClick={() => handleTagClick(selectedTag)}
+                className="ml-2 text-gray-500 hover:text-gray-700 text-sm"
+              >
+                필터 해제
+              </button>
+            </div>
+          )}
+        </div>
        
         {filteredNovels.length === 0 ? (
           <div className="text-center py-8">
-            <p className="text-gray-600">표시할 작품이 없습니다.</p>
+            <p className="text-gray-600">
+              {selectedTag ? `"${selectedTag}" 태그가 할당된 작품이 없습니다.` : '표시할 작품이 없습니다.'}
+            </p>
           </div>
         ) : (
           <>
@@ -319,6 +421,7 @@ const NovelListPage: React.FC = () => {
 
             <div className="text-center text-sm text-gray-600">
               총 {totalElements}개의 작품 중 {filteredNovels.length}개 표시
+              {selectedTag && ` (${selectedTag} 태그)`}
             </div>
           </>
         )}

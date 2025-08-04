@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { Search, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getAuthToken, removeAuthToken } from '@/utils/cookies';
+import { checkAuthAndRedirect } from '@/utils/auth';
 import NovelDetail from '../../components/NovelDetail';
 import EpisodeList from '../../components/EpisodeList';
 import { API_BASE_URL } from '../../../config/api';
@@ -51,8 +52,15 @@ const NovelPage: React.FC = () => {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
 
   useEffect(() => {
-    checkLoginStatus();
-  }, []);
+    const initPage = async () => {
+      const isAuthenticated = await checkAuthAndRedirect(router);
+      if (isAuthenticated) {
+        checkLoginStatus();
+      }
+    };
+    
+    initPage();
+  }, [router]);
 
   const checkLoginStatus = async () => {
     try {
@@ -94,6 +102,8 @@ const NovelPage: React.FC = () => {
         const episodeData = await episodeResponse.json();
         if (novelResponse.ok) {
           setNovel(novelData);
+          console.log('소설 상세 정보:', novelData);
+          console.log('태그 정보:', novelData.tags);
       
           // episodeData가 유효한 에피소드 데이터인지 확인
           if (episodeData && episodeData.episodesList && Array.isArray(episodeData.episodesList)) {

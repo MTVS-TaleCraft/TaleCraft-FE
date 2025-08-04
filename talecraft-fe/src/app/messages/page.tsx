@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { ArrowLeft, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { getAuthToken } from "@/utils/cookies"
+import { checkAuthAndRedirect } from '@/utils/auth'
 
 interface UserInfo {
   userId: string;
@@ -33,9 +34,16 @@ export default function MessagesPage() {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
 
   useEffect(() => {
-    checkLoginStatus()
-    fetchMessages()
-  }, [])
+    const initPage = async () => {
+      const isAuthenticated = await checkAuthAndRedirect(router);
+      if (isAuthenticated) {
+        checkLoginStatus();
+        fetchMessages();
+      }
+    };
+    
+    initPage();
+  }, [router])
 
   const checkLoginStatus = async () => {
     try {

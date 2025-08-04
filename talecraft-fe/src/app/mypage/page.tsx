@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { getAuthToken, removeAuthToken } from '@/utils/cookies';
+import { checkAuthAndRedirect } from '@/utils/auth';
 import Link from 'next/link';
 
 interface UserInfo {
@@ -27,8 +28,15 @@ export default function MyPage() {
   const router = useRouter();
 
   useEffect(() => {
-    checkLoginStatus();
-  }, []);
+    const initPage = async () => {
+      const isAuthenticated = await checkAuthAndRedirect(router);
+      if (isAuthenticated) {
+        checkLoginStatus();
+      }
+    };
+    
+    initPage();
+  }, [router]);
 
   const checkLoginStatus = async () => {
     try {

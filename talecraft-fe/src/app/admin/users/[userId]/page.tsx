@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { Search } from 'lucide-react';
+import { Search, ArrowLeft } from 'lucide-react';
 
 interface UserInfo {
   userId: string;
@@ -18,6 +18,14 @@ interface User {
   userName: string;
   isBlocked: boolean;
   isWithdrawn: boolean;
+}
+
+interface Novel {
+  novelId: number;
+  title: string;
+  summary: string;
+  availability: string;
+  createdAt: string;
 }
 
 interface UpdateModalProps {
@@ -98,6 +106,8 @@ export default function UserDetailPage() {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
+  const [novels, setNovels] = useState<Novel[]>([]);
+  const [showNovels, setShowNovels] = useState(false);
   const [modalConfig, setModalConfig] = useState<{
     isOpen: boolean;
     title: string;
@@ -186,9 +196,28 @@ export default function UserDetailPage() {
     }
   };
 
-  const handleViewWorks = (userId: string) => {
-    // 작품 목록 보기 기능
-    console.log('작품 목록 보기:', userId);
+  const handleViewWorks = async (userId: string) => {
+    try {
+      // NovelController의 전체 조회 API를 사용해서 해당 유저의 소설 목록 가져오기
+      const response = await fetch(`http://localhost:8081/api/novels?type=userId&value=${userId}`, {
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setNovels(data.novelList || []);
+        setShowNovels(true);
+      } else {
+        console.error('소설 목록 가져오기 실패:', response.status);
+        alert('소설 목록을 가져오는데 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('소설 목록 가져오기 실패:', error);
+      alert('소설 목록을 가져오는데 실패했습니다.');
+    }
   };
 
   const handleChangeEmail = () => {
@@ -229,6 +258,33 @@ export default function UserDetailPage() {
   const handleWithdraw = (userId: string) => {
     // 탈퇴 처리 기능
     console.log('탈퇴 처리:', userId);
+  };
+
+  const handleBanNovel = async (novelId: number) => {
+    if (!user) return;
+    
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:8081/api/novels/${novelId}/ban`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        alert('소설이 차단되었습니다.');
+        // 소설 목록 새로고침
+        await handleViewWorks(user.id);
+      } else {
+        const errorData = await response.json();
+        alert(errorData.error || '소설 차단에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('소설 차단 실패:', error);
+      alert('소설 차단에 실패했습니다.');
+    }
   };
 
   const handleUpdateUser = async (newValue: string) => {
@@ -314,9 +370,13 @@ export default function UserDetailPage() {
       <header className="bg-blue-400 text-white p-4 shadow-md">
         <div className="flex justify-between items-center w-full">
           <div className="flex items-center space-x-4">
-            <Link href="/admin/users" className="text-xl font-bold hover:text-blue-200 transition-colors">
-              ← 사용자 목록
-            </Link>
+            <button 
+              onClick={() => router.back()}
+              className="flex items-center space-x-2 text-xl font-bold hover:text-blue-200 transition-colors"
+            >
+              <ArrowLeft size={24} />
+              <span>뒤로가기</span>
+            </button>
             <span className="text-sm">[관리자] 유저 보기 페이지</span>
           </div>
           <div className="flex items-center space-x-2">
@@ -329,86 +389,137 @@ export default function UserDetailPage() {
 
       {/* 메인 콘텐츠 */}
       <main className="max-w-4xl mx-auto p-6 pt-16">
-        <div className="bg-orange-300 border-t-2 border-t-orange-400 border-b-2 border-b-orange-400 p-4">
-          {/* 사용자 정보 섹션들 */}
-          <div className="bg-yellow-200 p-4 border-b border-orange-400">
-            <div className="flex justify-between items-center">
-              <span className="font-medium">아이디: {user.id}</span>
-              <button 
-                onClick={() => handleViewWorks(user.id)}
-                className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition-colors"
-              >
-                작품 목록 보기
-              </button>
-            </div>
-          </div>
-
-          <div className="bg-yellow-200 p-4 border-b border-orange-400">
-            <div className="flex justify-between items-center">
-              <span className="font-medium">이메일: {user.email}</span>
-              <button 
-                onClick={handleChangeEmail}
-                className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition-colors"
-              >
-                이메일 변경
-              </button>
-            </div>
-          </div>
-
-          <div className="bg-yellow-200 p-4 border-b border-orange-400">
-            <div className="flex justify-between items-center">
-              <span className="font-medium">닉네임: {user.userName}</span>
-              <button 
-                onClick={handleChangeNickname}
-                className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition-colors"
-              >
-                닉네임 변경
-              </button>
-            </div>
-          </div>
-
-          <div className="bg-yellow-200 p-4 border-b border-orange-400">
-            <div className="flex justify-between items-center">
-              <span className="font-medium">비밀번호</span>
-              <button 
-                onClick={handleChangePassword}
-                className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition-colors"
-              >
-                비밀번호 변경
-              </button>
-            </div>
-          </div>
-
-          <div className="bg-yellow-200 p-4 border-b border-orange-400">
-            <div className="flex justify-between items-center">
-              <span className="font-medium">유저 차단 여부</span>
-              <div className="flex items-center space-x-4">
-                <span className="text-sm">{user.isBlocked ? "차단됨" : "차단 전"}</span>
+        {!showNovels ? (
+          <div className="bg-orange-300 border-t-2 border-t-orange-400 border-b-2 border-b-orange-400 p-4">
+            {/* 사용자 정보 섹션들 */}
+            <div className="bg-yellow-200 p-4 border-b border-orange-400">
+              <div className="flex justify-between items-center">
+                <span className="font-medium">아이디: {user.id}</span>
                 <button 
-                  onClick={() => handleProcessBlock(user.id, user.isBlocked)}
+                  onClick={() => handleViewWorks(user.id)}
                   className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition-colors"
                 >
-                  처리하기
+                  작품 목록 보기
                 </button>
               </div>
             </div>
-          </div>
 
-          <div className="bg-yellow-200 p-4">
-            <div className="flex justify-between items-center">
-              <span className="font-medium">유저 탈퇴 여부</span>
-              <div className="flex items-center space-x-4">
-                <span className="text-sm">{user.isWithdrawn ? "탈퇴됨" : "활성화"}</span>
+            <div className="bg-yellow-200 p-4 border-b border-orange-400">
+              <div className="flex justify-between items-center">
+                <span className="font-medium">이메일: {user.email}</span>
                 <button 
-                  onClick={() => handleWithdraw(user.id)}
+                  onClick={handleChangeEmail}
                   className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition-colors"
                 >
-                  탈퇴하기
+                  이메일 변경
                 </button>
               </div>
             </div>
+
+            <div className="bg-yellow-200 p-4 border-b border-orange-400">
+              <div className="flex justify-between items-center">
+                <span className="font-medium">닉네임: {user.userName}</span>
+                <button 
+                  onClick={handleChangeNickname}
+                  className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition-colors"
+                >
+                  닉네임 변경
+                </button>
+              </div>
+            </div>
+
+            <div className="bg-yellow-200 p-4 border-b border-orange-400">
+              <div className="flex justify-between items-center">
+                <span className="font-medium">비밀번호</span>
+                <button 
+                  onClick={handleChangePassword}
+                  className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition-colors"
+                >
+                  비밀번호 변경
+                </button>
+              </div>
+            </div>
+
+            <div className="bg-yellow-200 p-4 border-b border-orange-400">
+              <div className="flex justify-between items-center">
+                <span className="font-medium">유저 차단 여부</span>
+                <div className="flex items-center space-x-4">
+                  <span className="text-sm">{user.isBlocked ? "차단됨" : "차단 전"}</span>
+                  <button 
+                    onClick={() => handleProcessBlock(user.id, user.isBlocked)}
+                    className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition-colors"
+                  >
+                    처리하기
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-yellow-200 p-4">
+              <div className="flex justify-between items-center">
+                <span className="font-medium">유저 탈퇴 여부</span>
+                <div className="flex items-center space-x-4">
+                  <span className="text-sm">{user.isWithdrawn ? "탈퇴됨" : "활성화"}</span>
+                  <button 
+                    onClick={() => handleWithdraw(user.id)}
+                    className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition-colors"
+                  >
+                    탈퇴하기
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="bg-orange-300 border-t-2 border-t-orange-400 border-b-2 border-b-orange-400 p-4">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-black">{user.userName}의 작품 목록</h2>
+              <button 
+                onClick={() => setShowNovels(false)}
+                className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition-colors"
+              >
+                사용자 정보로 돌아가기
+              </button>
+            </div>
+            
+            {novels.length > 0 ? (
+              <div className="space-y-4">
+                {novels.map((novel) => (
+                  <div key={novel.novelId} className="bg-yellow-200 p-4 rounded">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <h3 className="font-bold text-black text-lg">{novel.title}</h3>
+                        <p className="text-black text-sm mt-2">{novel.summary}</p>
+                        <div className="flex items-center space-x-4 mt-2 text-sm text-black">
+                          <span>상태: {novel.availability}</span>
+                          <span>작성일: {new Date(novel.createdAt).toLocaleDateString()}</span>
+                        </div>
+                      </div>
+                      <div className="flex space-x-2">
+                        <button 
+                          className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600 transition-colors"
+                          onClick={() => window.open(`/novel/${novel.novelId}`, '_blank')}
+                        >
+                          보기
+                        </button>
+                        <button 
+                          className="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600 transition-colors"
+                          onClick={() => handleBanNovel(novel.novelId)}
+                        >
+                          차단
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="bg-yellow-200 p-4 rounded text-center">
+                <p className="text-black">작성된 작품이 없습니다.</p>
+              </div>
+            )}
+          </div>
+        )}
       </main>
 
       {/* 업데이트 모달 */}

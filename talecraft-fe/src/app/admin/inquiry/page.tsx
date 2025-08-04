@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Search, Menu, X } from 'lucide-react';
+import { Search, X, Menu, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface UserInfo {
@@ -112,9 +112,10 @@ export default function AdminInquiryPage() {
       {/* 헤더 */}
       <header className="bg-blue-400 text-white p-4 shadow-md">
         <div className="flex justify-between items-center w-full">
-          <Link href="/" className="text-xl font-bold hover:text-blue-200 transition-colors">
-            TaleCraft
-          </Link>
+                      <Link href="/admin" className="flex items-center space-x-2 text-xl font-bold hover:text-blue-200 transition-colors">
+              <ArrowLeft size={24} />
+              <span>관리자 페이지로 이동</span>
+            </Link>
           <div className="flex items-center space-x-2">
             {isSearchOpen ? (
               <div className="flex items-center space-x-2">
