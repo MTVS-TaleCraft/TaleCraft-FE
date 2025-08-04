@@ -4,7 +4,8 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     
-    const response = await fetch(`${process.env.BACKEND_URL || 'http://localhost:8081'}/api/reports/comments`, {
+    const backendUrl = process.env.BACKEND_URL || '/api/backend';
+    const response = await fetch(`${backendUrl}/api/reports/comments`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -6,7 +6,7 @@ export async function POST(
 ) {
   try {
     const { novelId, tagName } = await params;
-    const backendUrl = process.env.BACKEND_URL;
+    const backendUrl = process.env.BACKEND_URL || '/api/backend';
     
     const response = await fetch(`${backendUrl}/api/tags/novels/${novelId}/common/${encodeURIComponent(tagName)}`, {
       method: 'POST',

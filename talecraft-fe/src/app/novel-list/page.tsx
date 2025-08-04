@@ -90,7 +90,7 @@ const NovelListPage: React.FC = () => {
     setLoadingTags(true);
     try {
       // 백엔드 API를 직접 호출
-      const response = await fetch('http://localhost:8081/api/tags/default', { 
+      const response = await fetch('/api/tags/common', { 
         headers: {
           'Content-Type': 'application/json',
         }
@@ -114,9 +114,9 @@ const NovelListPage: React.FC = () => {
     setLoading(true);
 
     try {
-      let url = 'http://localhost:8081/api/novels';
+      let url = '/api/novels';
       if (tag) {
-        url = `http://localhost:8081/api/tags/search/novels?tagName=${encodeURIComponent(tag)}`;
+        url = `/api/tags/search/novels?tagName=${encodeURIComponent(tag)}`;
       }
 
       const response = await fetch(url);

@@ -162,7 +162,7 @@ export default function HomePage() {
     try {
       setIsLoading(true)
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"}/api/novels`)
+      const response = await fetch(`/api/novels`)
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)

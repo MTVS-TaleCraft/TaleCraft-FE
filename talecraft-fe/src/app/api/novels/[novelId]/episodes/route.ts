@@ -7,7 +7,8 @@ export async function GET(
   try {
     const { novelId } = await params;
     
-    const response = await fetch(`${process.env.BACKEND_URL || 'http://localhost:8081'}/api/novels/${novelId}/episodes`, {
+    const backendUrl = process.env.BACKEND_URL || '/api/backend';
+    const response = await fetch(`${backendUrl}/api/novels/${novelId}/episodes`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
