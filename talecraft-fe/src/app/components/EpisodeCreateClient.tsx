@@ -19,14 +19,21 @@ interface UserInfo {
   email: string;
   authorityId: string;
 }
-
+interface Episode {
+  episodeId: number;
+  title: string;
+  content: string;
+  note: string;
+  createDate: string | null;
+  novelId: number;
+}
 const getSessionKey = (novelId: string | null) => `episode-create-draft-${novelId}`;
 
 const EpisodeCreatePage: React.FC = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const novelId = searchParams.get('novelId');
-
+  const episodeId = searchParams.get('episodeId'); // string | null
   const [novelTitle, setNovelTitle] = useState<string>('');
   const [novelTitleLoading, setNovelTitleLoading] = useState(false);
   const [novelInfo, setNovelInfo] = useState<NovelInfo | null>(null);
@@ -46,6 +53,8 @@ const EpisodeCreatePage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [episode, setEpisode] = useState<Episode | null>(null);
 
   // Fetch novel title from backend
   useEffect(() => {
@@ -56,7 +65,7 @@ const EpisodeCreatePage: React.FC = () => {
   useEffect(() => {
     const fetchNovelInfo = async () => {
       if (!novelId) return;
-      
+
       setNovelTitleLoading(true);
       try {
         const response = await fetch(`/api/novels/${novelId}`, {
@@ -65,7 +74,7 @@ const EpisodeCreatePage: React.FC = () => {
             'Content-Type': 'application/json',
           },
         });
-        
+
         if (response.ok) {
           const novelData = await response.json();
           setNovelTitle(novelData.title);
@@ -73,7 +82,7 @@ const EpisodeCreatePage: React.FC = () => {
             novelId: novelData.novelId,
             title: novelData.title,
             userId: novelData.author,
-            episodeCount: novelData.episodeCount || 0
+            episodeCount: novelData.episodeCount || 0,
           });
         } else {
           console.error('작품 정보를 가져오는데 실패했습니다.');
@@ -88,7 +97,112 @@ const EpisodeCreatePage: React.FC = () => {
     };
 
     fetchNovelInfo();
-  }, [novelId]);
+
+    // ✅ episodeId가 있으면 수정 모드로 전환
+    if (episodeId) {
+      setIsEditMode(true);
+    }
+  }, [novelId, episodeId]);
+
+  useEffect(() => {
+    const fetchEpisode = async () => {
+      if (!isEditMode || !episodeId) return;
+
+      try {
+        const episodeResponse = await fetch(`/api/novels/1/episodes/${episodeId}`, {
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (episodeResponse.ok) {
+          const episodeData = await episodeResponse.json();
+          setEpisodeTitle(episodeData.title || '');
+          setEpisodeContent(episodeData.content || '');
+          setIsNotice(Boolean(episodeData.isNotice));  // isNotice 필드가 boolean이라고 가정
+        } else {
+          console.error('에피소드를 불러오는데 실패했습니다.');
+          setEpisodeTitle('');
+          setEpisodeContent('');
+          setIsNotice(false);
+        }
+      } catch (error) {
+        console.error('에피소드 로딩 중 오류 발생:', error);
+        setEpisodeTitle('');
+        setEpisodeContent('');
+        setIsNotice(false);
+      }
+    };
+
+    fetchEpisode();
+  }, [isEditMode, episodeId, novelId]);
+  const handleUpdate = async () => {
+    if (!novelId || !episodeId) return;
+
+    setSaving(true);
+    try {
+      const response = await fetch(`/api/novels/${novelId}/episodes/${episodeId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          title: episodeTitle,
+          content: episodeContent,
+          isNotice: isNotice,  // isNotice 같은 추가 필드도 같이 보낼 수 있음
+        }),
+      });
+
+      if (response.ok) {
+        alert('수정이 완료되었습니다.');
+        router.push(`/episode-view/${episodeId}`); // 수정 후 읽기 페이지로 이동
+      } else {
+        alert('수정에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('수정 중 오류:', error);
+      alert('수정 중 오류가 발생했습니다.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+
+  const handleCreateEpisode = async () => {
+    if (!novelId) {
+      alert('작품 ID가 없습니다.');
+      return;
+    }
+
+    if (!episodeTitle.trim() || !episodeContent.trim()) {
+      alert('제목과 내용을 모두 입력해주세요.');
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/novels/${novelId}/episodes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: episodeTitle,
+          content: episodeContent,
+        }),
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        alert(`등록 실패: ${error.message || res.status}`);
+        return;
+      }
+
+      router.push('/my-novels');
+    } catch (err) {
+      console.error('에피소드 등록 오류:', err);
+      alert('에피소드 등록 중 오류가 발생했습니다.');
+    }
+  };
 
   const checkLoginStatus = async () => {
     try {
@@ -396,7 +510,9 @@ const EpisodeCreatePage: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <div className="text-sm text-gray-600 mb-2">{novelTitle}</div>
-              <h1 className="text-2xl font-bold text-gray-900">새 회차 작성</h1>
+              <h1 className="text-2xl font-bold text-gray-900">
+                {isEditMode ? episodeTitle || '회차 제목 없음' : '새 회차 작성'}
+              </h1>
             </div>
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2">
@@ -424,13 +540,23 @@ const EpisodeCreatePage: React.FC = () => {
               >
                 미리보기
               </button>
-              <button
-                onClick={handleSave}
-                disabled={saving}
-                className="px-6 py-2 bg-blue-600 text-white rounded text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
-              >
-                공개 저장
-              </button>
+              {isEditMode ? (
+                  <button
+                      onClick={handleUpdate}
+                      disabled={saving}
+                      className="px-6 py-2 bg-green-600 text-white rounded text-sm font-medium hover:bg-green-700 disabled:opacity-50"
+                  >
+                    수정하기
+                  </button>
+              ) : (
+                  <button
+                      onClick={handleSave}
+                      disabled={saving}
+                      className="px-6 py-2 bg-blue-600 text-white rounded text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    공개 저장
+                  </button>
+              )}
             </div>
           </div>
         </div>
@@ -520,24 +646,19 @@ const EpisodeCreatePage: React.FC = () => {
               에피소드 삭제
             </button>
             <button
-              onClick={() => {
-                // 새 에피소드 작성 페이지로 이동
-                if (novelId) {
-                  window.location.href = `/episode-create?novelId=${novelId}`;
-                }
-              }}
-              style={{
-                width: '100%',
-                background: '#fff',
-                border: '1px solid #28a745',
-                borderRadius: 6,
-                padding: '10px 0',
-                fontWeight: 600,
-                color: '#28a745',
-                marginBottom: 10,
-                cursor: 'pointer',
-                fontSize: 15
-              }}
+                onClick={handleCreateEpisode}
+                style={{
+                  width: '100%',
+                  background: '#fff',
+                  border: '1px solid #28a745',
+                  borderRadius: 6,
+                  padding: '10px 0',
+                  fontWeight: 600,
+                  color: '#28a745',
+                  marginBottom: 10,
+                  cursor: 'pointer',
+                  fontSize: 15
+                }}
             >
               새 에피소드 작성
             </button>
