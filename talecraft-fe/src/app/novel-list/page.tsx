@@ -111,7 +111,6 @@ const NovelListPage: React.FC = () => {
 
   const fetchNovels = async (tag?: string) => {
     setLoading(true);
-    setError('');
 
     try {
       let url = 'http://localhost:8081/api/novels';
@@ -129,10 +128,10 @@ const NovelListPage: React.FC = () => {
         setTotalPages(data.totalPages || 0);
         setTotalElements(data.totalElements || 0);
       } else {
-        setError('작품 목록을 불러오는데 실패했습니다.');
+        console.error('작품 목록을 불러오는데 실패했습니다.');
       }
     } catch (error) {
-      setError('네트워크 오류가 발생했습니다.');
+      console.error('네트워크 오류가 발생했습니다.');
     } finally {
       setLoading(false);
     }
@@ -222,36 +221,7 @@ const NovelListPage: React.FC = () => {
     );
   }
 
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <header className="bg-blue-400 text-white p-4 shadow-md">
-          <div className="flex justify-between items-center w-full">
-            <h1 className="text-xl font-bold">TaleCraft</h1>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-white hover:bg-blue-500"
-              onClick={() => router.push('/')}
-            >
-              홈으로
-            </Button>
-          </div>
-        </header>
-        <main className="p-4">
-          <div className="text-center">
-            <div className="text-red-600 mb-4">{error}</div>
-            <button
-              onClick={() => fetchNovels()}
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-            >
-              다시 시도
-            </button>
-          </div>
-        </main>
-      </div>
-    );
-  }
+
 
   return (
     <div className="min-h-screen bg-gray-50">

@@ -191,7 +191,7 @@ export default function HomePage() {
         }
       }, 10000)
     },
-    [isAnimating, novels.length, currentIndex, autoSlideInterval, isDragging],
+    [isAnimating, novels.length, autoSlideInterval, isDragging],
   )
 
   const handleIndicatorClick = (index: number) => {

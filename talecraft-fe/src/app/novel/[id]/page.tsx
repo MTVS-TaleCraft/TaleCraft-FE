@@ -4,11 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Search, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { getAuthToken, removeAuthToken } from '@/utils/cookies';
-import { checkAuthAndRedirect } from '@/utils/auth';
+import { removeAuthToken } from '@/utils/cookies';
 import NovelDetail from '../../components/NovelDetail';
-import EpisodeList from '../../components/EpisodeList';
-import { API_BASE_URL } from '../../../config/api';
 
 interface Novel {
   novelId: number;
@@ -44,7 +41,6 @@ const NovelPage: React.FC = () => {
   const [novel, setNovel] = useState<Novel | null>(null);
   const [episodes, setEpisodes] = useState<Episode[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string>('');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -89,7 +85,6 @@ const NovelPage: React.FC = () => {
   useEffect(() => {
     const fetchNovelDetail = async () => {
       setLoading(true);
-      setError('');
 
       try {
         const novelResponse = await fetch(`/api/novels/${novelId}`, {
@@ -112,13 +107,13 @@ const NovelPage: React.FC = () => {
             setEpisodes([]);
           }
         } else if (novelResponse.status === 401||episodeResponse.status === 401) {
-          setError('로그인이 필요합니다.');
+          console.error('로그인이 필요합니다.');
         } else {
-          setError(novelData.message || '작품 정보를 불러오는데 실패했습니다.');
-          setError(episodeData.message || '에피소드 정보를 불러오는데 실패했습니다.');
+          console.error(novelData.message || '작품 정보를 불러오는데 실패했습니다.');
+          console.error(episodeData.message || '에피소드 정보를 불러오는데 실패했습니다.');
         }
       } catch (error) {
-        setError('네트워크 오류가 발생했습니다.');
+        console.error('네트워크 오류가 발생했습니다.');
       } finally {
         setLoading(false);
       }
@@ -184,36 +179,7 @@ const NovelPage: React.FC = () => {
     );
   }
 
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <header className="bg-blue-400 text-white p-4 shadow-md">
-          <div className="flex justify-between items-center w-full">
-            <h1 className="text-xl font-bold">TaleCraft</h1>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-white hover:bg-blue-500"
-              onClick={() => router.push('/')}
-            >
-              홈으로
-            </Button>
-          </div>
-        </header>
-        <main className="p-4">
-          <div className="text-center">
-            <div className="text-red-600 mb-4">{error}</div>
-            <button
-              onClick={() => window.location.reload()}
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-            >
-              다시 시도
-            </button>
-          </div>
-        </main>
-      </div>
-    );
-  }
+
 
   if (!novel) {
     return (
