@@ -72,9 +72,9 @@ export default function FindPasswordPage() {
         {/* 사이트 로고 버튼 */}
         <div className="mb-6">
           <Link href="/auth/login">
-            <button className="w-full bg-blue-400 text-white py-2 px-4 rounded hover:bg-blue-500 transition-colors">
-              사이트 로고
-            </button>
+            <div className="w-full bg-gradient-to-r from-blue-400 to-purple-500 text-white py-4 px-6 rounded-lg text-center cursor-pointer hover:from-blue-500 hover:to-purple-600 transition-colors">
+              <h2 className="text-2xl font-bold">TaleCraft</h2>
+            </div>
           </Link>
         </div>
 
