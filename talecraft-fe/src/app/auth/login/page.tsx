@@ -37,11 +37,12 @@ function LoginPageContent() {
       if (response.ok) {
         // 백엔드에서 이미 쿠키를 설정했으므로 프론트엔드에서 중복 설정하지 않음
         // 쿠키가 브라우저에 설정되는 데 시간이 걸리므로 잠시 기다린 후 이동
-        console.log('로그인 성공, 인증 상태 확인 중...');
-        
-        // 로그인 성공 후 바로 페이지 이동 (인증 확인 생략)
         console.log('로그인 성공, 페이지 이동');
-        router.push(redirectTo);
+        
+        // 쿠키가 설정될 시간을 주기 위해 잠시 대기
+        setTimeout(() => {
+          router.push(redirectTo);
+        }, 500);
       } else {
         setError(data.error || '로그인에 실패했습니다.');
       }
