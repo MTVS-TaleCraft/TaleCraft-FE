@@ -46,12 +46,16 @@ export async function POST(request: NextRequest) {
     
     // 백엔드에서 받은 JWT 토큰을 쿠키로 설정
     if (data.token) {
+      console.log('JWT 토큰을 쿠키로 설정:', data.token.substring(0, 20) + '...');
       res.cookies.set('JwtToken', data.token, {
         httpOnly: true,
         secure: false, // HTTP 환경에서 쿠키 전송을 위해 false로 설정
         sameSite: 'lax',
         path: '/',
+        maxAge: 3600, // 1시간 유효
       });
+    } else {
+      console.log('백엔드에서 token 필드를 받지 못함');
     }
     
     return res;
