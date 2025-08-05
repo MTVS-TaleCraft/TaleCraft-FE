@@ -39,31 +39,9 @@ function LoginPageContent() {
         // 쿠키가 브라우저에 설정되는 데 시간이 걸리므로 잠시 기다린 후 이동
         console.log('로그인 성공, 인증 상태 확인 중...');
         
-        setTimeout(async () => {
-          // 백엔드 API를 통해 인증 상태 확인
-          try {
-            const authResponse = await fetch('http://localhost:8081/api/auth/profile', {
-              method: 'GET',
-              credentials: 'include',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-            });
-            
-            if (authResponse.ok) {
-              console.log('인증 확인 성공, 페이지 이동');
-              router.push(redirectTo);
-            } else {
-              console.log('인증 확인 실패, 다시 시도');
-              setTimeout(() => {
-                router.push(redirectTo);
-              }, 500);
-            }
-          } catch (error) {
-            console.log('인증 확인 중 에러, 페이지 이동');
-            router.push(redirectTo);
-          }
-        }, 100);
+        // 로그인 성공 후 바로 페이지 이동 (인증 확인 생략)
+        console.log('로그인 성공, 페이지 이동');
+        router.push(redirectTo);
       } else {
         setError(data.error || '로그인에 실패했습니다.');
       }
