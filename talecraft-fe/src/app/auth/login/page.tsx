@@ -39,12 +39,9 @@ function LoginPageContent() {
         // 쿠키가 브라우저에 설정되는 데 시간이 걸리므로 잠시 기다린 후 이동
         console.log('로그인 성공, 인증 상태 확인 중...');
         
-        // 로그인 성공 후 URL 파라미터와 함께 페이지 이동
+        // 로그인 성공 후 바로 페이지 이동 (인증 확인 생략)
         console.log('로그인 성공, 페이지 이동');
-        const redirectUrl = redirectTo.includes('?') 
-          ? `${redirectTo}&loginSuccess=true` 
-          : `${redirectTo}?loginSuccess=true`;
-        router.push(redirectUrl);
+        router.push(redirectTo);
       } else {
         setError(data.error || '로그인에 실패했습니다.');
       }

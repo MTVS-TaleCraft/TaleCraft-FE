@@ -59,19 +59,6 @@ export default function HomePage() {
     fetchNovels()
   }, [])
 
-  // URL 파라미터에서 로그인 성공 여부를 확인하고 상태 업데이트
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const loginSuccess = urlParams.get('loginSuccess');
-    
-    if (loginSuccess === 'true') {
-      // 로그인 성공 후 페이지 이동 시 상태 재확인
-      setTimeout(() => {
-        checkLoginStatus();
-      }, 1000); // 1초 후 재확인
-    }
-  }, [])
-
   // 자동 슬라이드 기능
   useEffect(() => {
     if (novels.length === 0) return
@@ -424,13 +411,7 @@ export default function HomePage() {
               variant="ghost"
               size="icon"
               className="text-white hover:bg-blue-500"
-              onClick={() => {
-                // 사이드바 열 때 로그인 상태 재확인
-                if (!isLoggedIn) {
-                  checkLoginStatus();
-                }
-                setIsSidebarOpen(!isSidebarOpen);
-              }}
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
             >
               <Menu className="w-5 h-5" />
               <span className="sr-only">메뉴</span>
