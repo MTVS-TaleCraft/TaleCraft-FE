@@ -39,10 +39,22 @@ export async function POST(request: NextRequest) {
       console.log('백엔드에서 Set-Cookie 헤더를 받지 못함');
     }
 
-    return NextResponse.json(data, {
+    // Next.js에서 쿠키를 직접 설정
+    const res = NextResponse.json(data, {
       status: response.status,
-      headers: responseHeaders,
     });
+    
+    // 백엔드에서 받은 JWT 토큰을 쿠키로 설정
+    if (data.token) {
+      res.cookies.set('JwtToken', data.token, {
+        httpOnly: true,
+        secure: false, // HTTP 환경에서 쿠키 전송을 위해 false로 설정
+        sameSite: 'lax',
+        path: '/',
+      });
+    }
+    
+    return res;
   } catch (error) {
     console.error('Login API error:', error);
     return NextResponse.json(
