@@ -347,19 +347,18 @@ const EpisodeCreatePage: React.FC = () => {
     setChatMessages(prev => [...prev, { type: 'user', content: userMessage }]);
 
     try {
-      const response = await fetch('/api/chat', {
+      const response = await fetch('/api/ai', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
         body: JSON.stringify({
-          message: userMessage,
-          context: {
-            novelTitle: novelTitle,
+          question: userMessage,
+            novelId: novelId,
             episodeTitle: episodeTitle,
-            episodeContent: episodeContent
-          }
+            episodeContent: episodeContent,
+            episodeId : episodeId,
         }),
       });
 
