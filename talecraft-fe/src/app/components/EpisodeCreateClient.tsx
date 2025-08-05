@@ -104,6 +104,14 @@ const EpisodeCreatePage: React.FC = () => {
       setIsEditMode(true);
     }
   }, [novelId, episodeId]);
+  const fetchDeleteEpisode = async () => {
+    if (!novelId || !episodeId) return;
+    const response = await fetch(`/api/novels/${novelId}/episodes/${episodeId}`, {
+      method: 'DELETE',
+      credentials: 'include',
+    });
+    return response;
+  }
 
   useEffect(() => {
     const fetchEpisode = async () => {
@@ -354,7 +362,9 @@ const EpisodeCreatePage: React.FC = () => {
         formData.append('novelId',novelId.toString());
       }
       formData.append('option',aiOption);
-      formData.append('episodeId', episodeId!.toString());
+      if(episodeId!=null){
+        formData.append('episodeId', episodeId);
+      }
 
       const response = await fetch('/api/ai', {
         method: 'POST',
@@ -615,17 +625,20 @@ const EpisodeCreatePage: React.FC = () => {
         <div style={{ width: 180, minWidth: 140, position: 'fixed', top: 96, right: 'calc(50% - 400px - 220px)', zIndex: 100 }}>
           <div style={{ background: '#fff', borderRadius: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.06)', padding: '24px 16px', marginBottom: 24 }}>
             <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12, color: '#007bff' }}>툴박스</div>
+            
+            {isEditMode &&
             <button
-              onClick={() => {
+              onClick={async () => {
                 if (confirm('정말로 이 에피소드를 삭제하시겠습니까?')) {
                   // 에피소드 삭제 기능 (현재는 새로 작성 중이므로 임시저장 삭제)
                   if (novelId) {
-                    const key = getSessionKey(novelId);
-                    sessionStorage.removeItem(key);
-                    setEpisodeTitle('');
-                    setEpisodeContent('');
-                    setIsNotice(false);
-                    setMessage('임시저장이 삭제되었습니다.');
+                    const response = await fetchDeleteEpisode();
+                    if(response && response.ok){
+                      alert('에피소드가 삭제되었습니다.');
+                      router.push(`/novel/${novelId}`);
+                    }else{
+                      alert('에피소드 삭제에 실패했습니다.');
+                    }
                   }
                 }
               }}
@@ -644,7 +657,8 @@ const EpisodeCreatePage: React.FC = () => {
             >
               에피소드 삭제
             </button>
-            <button
+}
+            {/* <button
                 onClick={handleCreateEpisode}
                 style={{
                   width: '100%',
@@ -660,7 +674,7 @@ const EpisodeCreatePage: React.FC = () => {
                 }}
             >
               새 에피소드 작성
-            </button>
+            </button> */}
             <button
               onClick={toggleChatSidebar}
               style={{
