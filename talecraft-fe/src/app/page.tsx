@@ -209,18 +209,6 @@ export default function HomePage() {
       setCurrentIndex(index)
       setTimeout(() => setIsAnimating(false), 200)
     }, 300)
-
-    // 10초 후 자동 슬라이드 재시작
-    setTimeout(() => {
-      if (novels.length > 0) {
-        const interval = setInterval(() => {
-          if (!isAnimating && !isDragging) {
-            handleNavigation("left")
-          }
-        }, 5000)
-        setAutoSlideInterval(interval)
-      }
-    }, 10000)
   }
 
 
@@ -537,7 +525,10 @@ export default function HomePage() {
                 className={`w-3 h-3 md:w-4 md:h-4 rounded-full transition-all duration-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 ${
                   index === currentIndex ? "bg-purple-500 scale-110" : "bg-gray-300 hover:bg-gray-400"
                 }`}
-                onClick={() => handleIndicatorClick(index)}
+                onClick={() => {
+                  // 클릭 시 해당 인덱스로 캐러셀 이동
+                  handleIndicatorClick(index);
+                }}
                 aria-label={`소설 ${index + 1}로 이동`}
                 disabled={isAnimating}
                 style={{ pointerEvents: isAnimating ? 'none' : 'auto' }}
