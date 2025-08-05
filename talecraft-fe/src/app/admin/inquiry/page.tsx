@@ -64,7 +64,7 @@ export default function AdminInquiryPage() {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch('http://localhost:8081/api/inquiry/send', {
+              const response = await fetch('/api/inquiry/send', {
         method: 'POST',
         credentials: 'include',
         headers: {

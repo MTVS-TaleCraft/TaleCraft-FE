@@ -184,6 +184,7 @@ const EpisodeCreatePage: React.FC = () => {
     try {
       const res = await fetch(`/api/novels/${novelId}/episodes`, {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title: episodeTitle,

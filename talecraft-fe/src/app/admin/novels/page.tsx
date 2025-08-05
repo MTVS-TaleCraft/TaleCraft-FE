@@ -38,7 +38,7 @@ export default function AdminNovelsPage() {
       console.log('신고된 작품 목록을 가져오는 중...');
       // 1. 먼저 신고된 소설 ID 목록을 가져오기
       console.log('신고된 소설 API 호출 시작...');
-      const reportedResponse = await fetch('http://localhost:8081/api/reports/reported-novels', {
+              const reportedResponse = await fetch('/api/reports/reported-novels', {
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
@@ -79,7 +79,12 @@ export default function AdminNovelsPage() {
         reportedNovelIds.map(async (novelId: number) => {
           try {
             // 소설 정보 가져오기
-            const novelResponse = await fetch(`http://localhost:8081/api/novels/${novelId}`);
+            const novelResponse = await fetch(`/api/novels/${novelId}`, {
+              credentials: 'include',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+            });
             let novelData = null;
 
             if (novelResponse.ok) {
@@ -93,7 +98,7 @@ export default function AdminNovelsPage() {
             }
 
             // 신고 수 가져오기
-            const reportResponse = await fetch(`http://localhost:8081/api/reports/novels/${novelId}/count`, {
+            const reportResponse = await fetch(`/api/reports/novels/${novelId}/count`, {
               credentials: 'include',
               headers: {
                 'Content-Type': 'application/json',
@@ -210,7 +215,7 @@ export default function AdminNovelsPage() {
 
       console.log('요청 헤더:', headers);
 
-      const response = await fetch(`http://localhost:8081/api/novels/${novelId}/ban`, {
+              const response = await fetch(`/api/novels/${novelId}/ban`, {
         method: 'PATCH',
         credentials: 'include',
         headers: headers,

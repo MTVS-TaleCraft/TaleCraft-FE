@@ -265,10 +265,10 @@ export default function UserDetailPage() {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:8081/api/novels/${novelId}/ban`, {
+              const response = await fetch(`/api/novels/${novelId}/ban`, {
         method: 'PATCH',
+        credentials: 'include',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });

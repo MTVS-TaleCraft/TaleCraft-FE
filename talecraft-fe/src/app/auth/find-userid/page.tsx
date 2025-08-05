@@ -28,6 +28,7 @@ export default function FindUserIdPage() {
     try {
       const response = await fetch('/api/auth/find-userid', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },

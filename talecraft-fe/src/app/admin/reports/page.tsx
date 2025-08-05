@@ -37,7 +37,7 @@ export default function ReportManagementPage() {
 
   const fetchReports = useCallback(async () => {
     try {
-      const response = await fetch('http://localhost:8081/api/reports/unviewed', {
+              const response = await fetch('/api/reports/unviewed', {
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',

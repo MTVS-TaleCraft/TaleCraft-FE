@@ -37,6 +37,7 @@ export default function FindPasswordPage() {
     try {
       const response = await fetch('/api/auth/find-password', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },

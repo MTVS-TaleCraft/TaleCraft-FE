@@ -91,6 +91,7 @@ const NovelListPage: React.FC = () => {
     try {
       // 백엔드 API를 직접 호출
       const response = await fetch('/api/tags/common', { 
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         }
@@ -119,7 +120,12 @@ const NovelListPage: React.FC = () => {
         url = `/api/tags/search/novels?tagName=${encodeURIComponent(tag)}`;
       }
 
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
       const data: NovelListResponse = await response.json();
 
       if (response.ok) {

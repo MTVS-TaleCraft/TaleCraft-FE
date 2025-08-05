@@ -43,6 +43,7 @@ export default function SignupPage() {
     try {
       const response = await fetch('/api/verification/send', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -75,6 +76,7 @@ export default function SignupPage() {
     try {
       const response = await fetch('/api/verification/verify', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -128,6 +130,7 @@ export default function SignupPage() {
     try {
       const response = await fetch('/api/auth/signup', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },

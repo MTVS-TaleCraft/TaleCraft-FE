@@ -162,7 +162,12 @@ export default function HomePage() {
     try {
       setIsLoading(true)
 
-      const response = await fetch(`/api/novels`)
+      const response = await fetch(`/api/novels`, {
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
