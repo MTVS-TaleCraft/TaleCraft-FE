@@ -26,7 +26,7 @@ export default function AdminInquiryPage() {
 
   const checkAuth = useCallback(async () => {
     try {
-      const response = await fetch('http://localhost:8081/api/auth/profile', {
+      const response = await fetch('/api/auth/profile', {
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',

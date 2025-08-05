@@ -129,7 +129,7 @@ export default function UserDetailPage() {
 
   const checkAuth = async () => {
     try {
-      const response = await fetch('http://localhost:8081/api/auth/profile', {
+      const response = await fetch('/api/auth/profile', {
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
@@ -162,7 +162,7 @@ export default function UserDetailPage() {
 
   const fetchUserDetail = async () => {
     try {
-      const response = await fetch(`http://localhost:8081/api/auth/profile?targetUserId=${userId}`, {
+      const response = await fetch(`/api/auth/profile?targetUserId=${userId}`, {
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
@@ -199,7 +199,7 @@ export default function UserDetailPage() {
   const handleViewWorks = async (userId: string) => {
     try {
       // NovelController의 전체 조회 API를 사용해서 해당 유저의 소설 목록 가져오기
-      const response = await fetch(`http://localhost:8081/api/novels?type=userId&value=${userId}`, {
+      const response = await fetch(`/api/novels?type=userId&value=${userId}`, {
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
@@ -313,7 +313,7 @@ export default function UserDetailPage() {
     }
 
     try {
-      const response = await fetch('http://localhost:8081/api/auth/profile', {
+      const response = await fetch('/api/auth/profile', {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,
