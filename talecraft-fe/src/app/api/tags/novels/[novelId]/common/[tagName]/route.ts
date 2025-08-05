@@ -13,7 +13,6 @@ export async function POST(
       headers: {
         'Cookie': request.headers.get('cookie') || '',
       },
-      credentials: 'include',
     });
 
     const data = await response.json();

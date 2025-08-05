@@ -13,7 +13,6 @@ export async function GET(request: NextRequest) {
       headers: {
         'Cookie': request.headers.get('cookie') || '',
       },
-      credentials: 'include',
     });
 
     console.log('Response status:', response.status);
