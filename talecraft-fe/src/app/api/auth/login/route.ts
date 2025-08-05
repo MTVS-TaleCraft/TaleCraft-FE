@@ -28,7 +28,9 @@ export async function POST(request: NextRequest) {
       console.log('백엔드 응답 헤더:', key, value);
       if (key.toLowerCase() === 'set-cookie') {
         console.log('백엔드에서 받은 쿠키:', value);
-        responseHeaders.append('Set-Cookie', value);
+        // SameSite=Lax 설정 추가 (HTTP 환경에서 크로스 도메인 쿠키 전송을 위해)
+        const modifiedCookie = value.replace(/; Secure/g, '; SameSite=Lax');
+        responseHeaders.append('Set-Cookie', modifiedCookie);
         hasSetCookie = true;
       }
     });
