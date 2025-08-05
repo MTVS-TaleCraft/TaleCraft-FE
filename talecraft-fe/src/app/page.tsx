@@ -59,7 +59,7 @@ export default function HomePage() {
     fetchNovels()
   }, [])
 
-  // 자동 슬라이드 기능
+  // 자동 슬라이드 기능 (사용자 인터랙션 방해 방지를 위해 비활성화)
   useEffect(() => {
     if (novels.length === 0) return
 
@@ -68,22 +68,22 @@ export default function HomePage() {
       clearInterval(autoSlideInterval)
     }
 
-    // 새로운 자동 슬라이드 인터벌 설정 (5초마다)
-    const interval = setInterval(() => {
-      if (!isAnimating && !isDragging) {
-        handleNavigation("left")
-      }
-    }, 5000)
+    // 자동 슬라이드 비활성화 (사용자 인터랙션 방해 방지)
+    // const interval = setInterval(() => {
+    //   if (!isAnimating && !isDragging) {
+    //     handleNavigation("left")
+    //   }
+    // }, 10000)
 
-    setAutoSlideInterval(interval)
+    // setAutoSlideInterval(interval)
 
     // 컴포넌트 언마운트 시 인터벌 정리
     return () => {
-      if (interval) {
-        clearInterval(interval)
+      if (autoSlideInterval) {
+        clearInterval(autoSlideInterval)
       }
     }
-  }, [novels.length, isAnimating, isDragging, autoSlideInterval])
+  }, [novels.length, isAnimating, isDragging])
 
   const handleNavigation = useCallback(
     (direction: "left" | "right") => {
@@ -112,8 +112,8 @@ export default function HomePage() {
         } else {
           setCurrentIndex((prev) => (prev - 1 + novels.length) % novels.length)
         }
-        setTimeout(() => setIsAnimating(false), 100)
-      }, 50)
+        setTimeout(() => setIsAnimating(false), 200)
+      }, 100)
     },
     [isAnimating, novels.length, autoSlideInterval],
   )
@@ -207,8 +207,8 @@ export default function HomePage() {
     // 인덱스 업데이트
     setTimeout(() => {
       setCurrentIndex(index)
-      setTimeout(() => setIsAnimating(false), 100)
-    }, 200)
+      setTimeout(() => setIsAnimating(false), 200)
+    }, 300)
 
     // 10초 후 자동 슬라이드 재시작
     setTimeout(() => {
@@ -465,7 +465,7 @@ export default function HomePage() {
                 return (
                   <div
                     key={item.id}
-                    className={`absolute top-1/2 left-1/2 transition-all duration-500 ease-out cursor-pointer ${
+                    className={`absolute top-1/2 left-1/2 transition-all duration-700 ease-in-out cursor-pointer ${
                       isVisible ? "pointer-events-auto" : "pointer-events-none"
                     }`}
                     style={{
@@ -482,7 +482,10 @@ export default function HomePage() {
                         handleNavigation(position > 0 ? "right" : "left")
                       } else if (isCenter) {
                         // 중앙 아이템 클릭 시 해당 소설의 상세 페이지로 이동
-                        router.push(`/novel/${item.novelId}`)
+                        // 애니메이션 완료 후 페이지 이동
+                        setTimeout(() => {
+                          router.push(`/novel/${item.novelId}`)
+                        }, 300)
                       }
                     }}
                   >
@@ -524,22 +527,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Title Display */}
-          <div className="flex justify-center mt-8 mb-8">
-            <div className="text-center transition-all duration-500 ease-out">
-              {carouselItems.map((item) => {
-                if (item.carouselPosition === 0) {
-                  return (
-                    <div key={`title-${item.id}`} className="transition-opacity duration-500">
-                      <h3 className="font-bold text-xl text-gray-800 mb-2">{item.title}</h3>
-                      <p className="text-sm text-gray-600 max-w-md mx-auto">{item.summary}</p>
-                    </div>
-                  )
-                }
-                return null
-              })}
-            </div>
-          </div>
+
 
           {/* Indicators */}
           <div className="flex justify-center space-x-2 mb-8 mt-8">
