@@ -55,6 +55,7 @@ const EpisodeCreatePage: React.FC = () => {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [episode, setEpisode] = useState<Episode | null>(null);
+  const [aiOption, setAiOption] = useState<'NORMAL' | 'SPELL_CHECK' | 'STORY_EXTENSION' | 'MAKE_NAME'>('NORMAL');
 
   // Fetch novel title from backend
   useEffect(() => {
@@ -347,20 +348,18 @@ const EpisodeCreatePage: React.FC = () => {
     setChatMessages(prev => [...prev, { type: 'user', content: userMessage }]);
 
     try {
-      const response = await fetch('/api/chat', {
+      const formData = new FormData();
+      formData.append('question', userMessage);
+      if(novelId!=null){
+        formData.append('novelId',novelId.toString());
+      }
+      formData.append('option',aiOption);
+      formData.append('episodeId', episodeId!.toString());
+
+      const response = await fetch('/api/ai', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         credentials: 'include',
-        body: JSON.stringify({
-          message: userMessage,
-          context: {
-            novelTitle: novelTitle,
-            episodeTitle: episodeTitle,
-            episodeContent: episodeContent
-          }
-        }),
+        body: formData
       });
 
       if (response.ok) {
@@ -707,6 +706,17 @@ const EpisodeCreatePage: React.FC = () => {
           alignItems: 'center',
         }}>
           <div style={{ fontWeight: 700, fontSize: 18 }}>창작 도우미</div>
+          <select
+              value={aiOption}
+              onChange={(e) => setAiOption(e.target.value as typeof aiOption)}
+              className="border p-2"
+          >
+            <option value="NORMAL">일반 응답</option>
+            <option value="SPELL_CHECK">맞춤법 검사</option>
+            <option value="STORY_EXTENSION">스토리 확장</option>
+            <option value="MAKE_NAME">이름 생성</option>
+          </select>
+
           <button
             onClick={toggleChatSidebar}
             style={{
@@ -719,6 +729,7 @@ const EpisodeCreatePage: React.FC = () => {
           >
             ×
           </button>
+
         </div>
 
         {/* Chat Messages */}
