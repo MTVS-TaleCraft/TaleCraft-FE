@@ -586,7 +586,7 @@ export default function HomePage() {
                       }
                     }}
                   >
-                    <div className="bg-gradient-to-br from-blue-500 to-purple-600 text-white rounded-lg w-full h-full flex flex-col justify-center items-center text-center hover:from-blue-600 hover:to-purple-700 transition-colors shadow-lg border-2 border-white/20 overflow-hidden">
+                    <div className="bg-gradient-to-br from-blue-500 to-purple-600 text-white rounded-lg w-full h-full flex flex-col justify-center items-center text-center hover:from-blue-600 hover:to-purple-700 transition-colors shadow-lg border-2 border-white/20 overflow-hidden relative">
                       {item.titleImage ? (
                         <img
                           src={item.titleImage}
@@ -616,6 +616,11 @@ export default function HomePage() {
                         </div>
                         <h3 className="font-bold text-lg mb-2 text-center">{item.title}</h3>
                         <p className="text-sm opacity-80 text-center line-clamp-3">{item.title}</p>
+                      </div>
+                      
+                      {/* 배너 밑에 항상 보이는 title */}
+                      <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-70 text-white p-3">
+                        <h3 className="font-bold text-sm text-center truncate">{item.title}</h3>
                       </div>
                     </div>
                   </div>
