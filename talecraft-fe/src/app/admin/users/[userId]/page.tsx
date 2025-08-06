@@ -16,6 +16,7 @@ interface User {
   id: string;
   email: string;
   userName: string;
+  authorityId: number;
   isBlocked: boolean;
   isWithdrawn: boolean;
 }
@@ -174,25 +175,11 @@ export default function UserDetailPage() {
         setUser(data);
       } else {
         console.error('사용자 정보 가져오기 실패:', response.status);
-        // 임시 더미 데이터
-        setUser({
-          id: userId,
-          email: "user@example.com",
-          userName: "사용자",
-          isBlocked: false,
-          isWithdrawn: false,
-        });
+        setUser(null);
       }
     } catch (error) {
       console.error('사용자 정보 가져오기 실패:', error);
-      // 임시 더미 데이터
-      setUser({
-        id: userId,
-        email: "user@example.com",
-        userName: "사용자",
-        isBlocked: false,
-        isWithdrawn: false,
-      });
+      setUser(null);
     }
   };
 

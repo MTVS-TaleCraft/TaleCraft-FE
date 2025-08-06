@@ -2,8 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url);
+    const targetUserId = searchParams.get('targetUserId');
+    
     const backendUrl = process.env.BACKEND_URL || '/api/backend';
-    const response = await fetch(`${backendUrl}/api/auth/profile`, {
+    const url = targetUserId 
+      ? `${backendUrl}/api/auth/profile?targetUserId=${targetUserId}`
+      : `${backendUrl}/api/auth/profile`;
+      
+    const response = await fetch(url, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
