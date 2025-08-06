@@ -134,13 +134,13 @@ export default function HomePage() {
 
     setIsAnimating(true)
 
-    // 항상 순차적으로 이동하도록 방향 결정
+    // 항상 순차적으로 이동하되 순환되게 보이도록 방향 결정
     let direction: "left" | "right"
     
     // 직접 거리 계산
     const directDistance = targetIndex - currentIndex
     
-    // 방향 결정 (항상 순차적)
+    // 방향 결정 (항상 순차적이지만 순환 고려)
     if (directDistance > 0) {
       direction = "left" // 오른쪽으로 이동 (캐러셀은 왼쪽으로 회전)
     } else {
@@ -158,12 +158,23 @@ export default function HomePage() {
         return
       }
 
-      // 한 단계씩 이동
+      // 한 단계씩 이동하면서 순환 효과 생성
       setCarouselItems((prev) =>
-        prev.map((item) => ({
-          ...item,
-          carouselPosition: direction === "left" ? item.carouselPosition - 1 : item.carouselPosition + 1,
-        })),
+        prev.map((item) => {
+          let newPosition = direction === "left" ? item.carouselPosition - 1 : item.carouselPosition + 1
+          
+          // 순환 효과: -2 위치에서 왼쪽으로 가면 2 위치로, 2 위치에서 오른쪽으로 가면 -2 위치로
+          if (newPosition < -2) {
+            newPosition = 2
+          } else if (newPosition > 2) {
+            newPosition = -2
+          }
+          
+          return {
+            ...item,
+            carouselPosition: newPosition,
+          }
+        }),
       )
 
       // 다음 단계 애니메이션
