@@ -89,8 +89,8 @@ const NovelListPage: React.FC = () => {
   const fetchDefaultTags = async () => {
     setLoadingTags(true);
     try {
-      // 백엔드 API를 직접 호출
-      const response = await fetch('/api/tags/common', { 
+      // 기본 태그만 가져오기
+      const response = await fetch('/api/tags/default', { 
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
