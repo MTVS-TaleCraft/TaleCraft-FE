@@ -134,36 +134,21 @@ export default function HomePage() {
 
     setIsAnimating(true)
 
-    // 현재 활성화된 위치를 기준으로 상대적 방향 결정
+    // 항상 순차적으로 이동하도록 방향 결정
     let direction: "left" | "right"
     
     // 직접 거리 계산
     const directDistance = targetIndex - currentIndex
     
-    // 순환 거리 계산 (배열 끝을 넘어가는 경우)
-    let wrapAroundDistance: number
+    // 방향 결정 (항상 순차적)
     if (directDistance > 0) {
-      // 오른쪽으로 순환
-      wrapAroundDistance = directDistance - novels.length
-    } else {
-      // 왼쪽으로 순환
-      wrapAroundDistance = directDistance + novels.length
-    }
-    
-    // 더 짧은 경로 선택
-    const finalDistance = Math.abs(directDistance) <= Math.abs(wrapAroundDistance) 
-      ? directDistance 
-      : wrapAroundDistance
-    
-    // 방향 결정
-    if (finalDistance > 0) {
       direction = "left" // 오른쪽으로 이동 (캐러셀은 왼쪽으로 회전)
     } else {
       direction = "right" // 왼쪽으로 이동 (캐러셀은 오른쪽으로 회전)
     }
 
     // 건너뛰는 거리에 따라 단계별 애니메이션
-    const steps = Math.abs(finalDistance)
+    const steps = Math.abs(directDistance)
     
     const animateStep = (step: number) => {
       if (step >= steps) {
