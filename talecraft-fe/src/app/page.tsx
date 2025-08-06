@@ -59,7 +59,7 @@ export default function HomePage() {
     fetchNovels()
   }, [])
 
-  // 자동 슬라이드 기능 (사용자 인터랙션 방해 방지를 위해 비활성화)
+  // 자동 슬라이드 기능 (사용자 인터랙션 방해를 위해 비활성화)
   useEffect(() => {
     if (novels.length === 0) return
 
@@ -68,7 +68,7 @@ export default function HomePage() {
       clearInterval(autoSlideInterval)
     }
 
-    // 자동 슬라이드 비활성화 (사용자 인터랙션 방해 방지)
+    // 자동 슬라이드 비활성화 (사용자 인터랙션 방해)
     // const interval = setInterval(() => {
     //   if (!isAnimating && !isDragging) {
     //     handleNavigation("left")
@@ -90,7 +90,7 @@ export default function HomePage() {
     if (novels.length === 0) return
 
     const items = []
-    for (let i = -1; i <= 1; i++) {
+    for (let i = -2; i <= 2; i++) {
       const novelIndex = (currentIndex + i + novels.length) % novels.length
       items.push({
         ...novels[novelIndex],
@@ -173,8 +173,8 @@ export default function HomePage() {
     // Update the current index directly to the target
     setTimeout(() => {
       setCurrentIndex(targetIndex)
-      setTimeout(() => setIsAnimating(false), 300)
-    }, 200)
+      setTimeout(() => setIsAnimating(false), 400)
+    }, 300)
   }
 
   const checkLoginStatus = async () => {
@@ -473,7 +473,7 @@ export default function HomePage() {
               {carouselItems.map((item) => {
                 const position = item.carouselPosition
                 const isCenter = position === 0
-                const isVisible = Math.abs(position) <= 1
+                const isVisible = Math.abs(position) <= 2 // 더 넓은 범위로 조정
 
                 // Calculate transform based on position
                 const translateX = position * 320
@@ -489,9 +489,13 @@ export default function HomePage() {
                   scale = 0.85
                   zIndex = 5
                   opacity = 0.7
+                } else if (Math.abs(position) === 2) {
+                  scale = 0.7
+                  zIndex = 3
+                  opacity = 0.4
                 } else {
                   opacity = 0
-                  scale = 0.7
+                  scale = 0.6
                 }
 
                 return (
@@ -549,8 +553,8 @@ export default function HomePage() {
                         
                         setTimeout(() => {
                           setCurrentIndex(targetIndex)
-                          setTimeout(() => setIsAnimating(false), 300)
-                        }, 200)
+                          setTimeout(() => setIsAnimating(false), 400)
+                        }, 300)
                       } else if (isCenter) {
                         // 중앙 아이템 클릭 시 해당 소설의 상세 페이지로 이동
                         setTimeout(() => {
@@ -588,7 +592,7 @@ export default function HomePage() {
                           <div className="w-8 h-8 bg-white/40 rounded"></div>
                         </div>
                         <h3 className="font-bold text-lg mb-2 text-center">{item.title}</h3>
-                        <p className="text-sm opacity-80 text-center line-clamp-3">{item.summary}</p>
+                        <p className="text-sm opacity-80 text-center line-clamp-3">{item.title}</p>
                       </div>
                     </div>
                   </div>
