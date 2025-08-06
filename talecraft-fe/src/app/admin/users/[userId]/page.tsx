@@ -27,6 +27,7 @@ interface Novel {
   summary: string;
   availability: string;
   createdAt: string;
+  isBlocked?: boolean;
 }
 
 interface UpdateModalProps {
@@ -185,8 +186,8 @@ export default function UserDetailPage() {
 
   const handleViewWorks = async (userId: string) => {
     try {
-      // NovelController의 전체 조회 API를 사용해서 해당 유저의 소설 목록 가져오기
-      const response = await fetch(`/api/novels?type=userId&value=${userId}`, {
+      // Auth 영역의 관리자용 API를 사용해서 해당 유저의 소설 목록 가져오기 (차단된 소설 포함)
+      const response = await fetch(`/api/auth/admin/novels?type=userId&value=${userId}`, {
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
@@ -247,12 +248,11 @@ export default function UserDetailPage() {
     console.log('탈퇴 처리:', userId);
   };
 
-  const handleBanNovel = async (novelId: number) => {
+  const handleBanNovel = async (novelId: number, isBlocked: boolean) => {
     if (!user) return;
 
     try {
-      const token = localStorage.getItem('token');
-              const response = await fetch(`/api/novels/${novelId}/ban`, {
+      const response = await fetch(`/api/auth/admin/novels/${novelId}/ban`, {
         method: 'PATCH',
         credentials: 'include',
         headers: {
@@ -261,16 +261,23 @@ export default function UserDetailPage() {
       });
 
       if (response.ok) {
-        alert('소설이 차단되었습니다.');
-        // 소설 목록 새로고침
-        await handleViewWorks(user.id);
+        // 현재 목록에서 해당 소설의 차단 상태만 업데이트
+        setNovels(prevNovels => 
+          prevNovels.map(novel => 
+            novel.novelId === novelId 
+              ? { ...novel, isBlocked: !isBlocked }
+              : novel
+          )
+        );
+        
+        alert(isBlocked ? '소설이 차단 해제되었습니다.' : '소설이 차단되었습니다.');
       } else {
         const errorData = await response.json();
-        alert(errorData.error || '소설 차단에 실패했습니다.');
+        alert(errorData.error || '소설 차단 상태 변경에 실패했습니다.');
       }
     } catch (error) {
-      console.error('소설 차단 실패:', error);
-      alert('소설 차단에 실패했습니다.');
+      console.error('소설 차단 상태 변경 실패:', error);
+      alert('소설 차단 상태 변경에 실패했습니다.');
     }
   };
 
@@ -490,10 +497,14 @@ export default function UserDetailPage() {
                           보기
                         </button>
                         <button
-                          className="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600 transition-colors"
-                          onClick={() => handleBanNovel(novel.novelId)}
+                          className={`px-3 py-1 rounded text-sm transition-colors ${
+                            novel.isBlocked 
+                              ? 'bg-green-500 text-white hover:bg-green-600' 
+                              : 'bg-red-500 text-white hover:bg-red-600'
+                          }`}
+                          onClick={() => handleBanNovel(novel.novelId, novel.isBlocked || false)}
                         >
-                          차단
+                          {novel.isBlocked ? '차단 해제' : '차단'}
                         </button>
                       </div>
                     </div>
