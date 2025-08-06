@@ -199,7 +199,14 @@ export default function UserDetailPage() {
         console.log('받은 소설 데이터:', data.novelList);
         
         // 백엔드에서 받은 데이터를 프론트엔드 형식으로 변환
-        const formattedNovels = data.novelList.map((novel: any) => ({
+        const formattedNovels = data.novelList.map((novel: {
+          novelId: number;
+          title: string;
+          summary: string;
+          availability: string;
+          createdAt: string;
+          isBanned?: boolean;
+        }) => ({
           novelId: novel.novelId,
           title: novel.title,
           summary: novel.summary,
