@@ -577,8 +577,9 @@ const MyNovelsPage: React.FC = () => {
                           화 쓰기
                         </button>
                         <button
-                          className="px-4 py-1 bg-black text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
->
+                            className="px-4 py-1 bg-black text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+                            onClick={() => router.push(`/novel/${novel.novelId}`)}
+                        >
                           작품 상세 조회
                         </button>
                       </>

@@ -361,7 +361,7 @@ const EpisodeViewPage = () => {
     }
 
     // 자신의 댓글은 신고할 수 없음
-    if (currentUser.userId === commentUserId) {
+    if (commentUserId === currentUser.userId) {
       alert('자신의 댓글은 신고할 수 없습니다.');
       return;
     }
