@@ -4,8 +4,8 @@ export const checkAuthAndRedirect = async (router: any) => {
   try {
     console.log('인증 상태 확인 시작...');
     
-    // 백엔드 API를 통해 인증 상태 확인
-    const response = await fetch('http://localhost:8081/api/auth/profile', {
+    // Next.js API 라우트를 통해 인증 상태 확인
+    const response = await fetch('/api/auth/profile', {
       method: 'GET',
       credentials: 'include',
       headers: {

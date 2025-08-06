@@ -16,6 +16,7 @@ interface User {
   id: string;
   email: string;
   userName: string;
+  authorityId: number;
   isBlocked: boolean;
   isWithdrawn: boolean;
 }
@@ -26,6 +27,7 @@ interface Novel {
   summary: string;
   availability: string;
   createdAt: string;
+  isBanned?: boolean;
 }
 
 interface UpdateModalProps {
@@ -129,7 +131,7 @@ export default function UserDetailPage() {
 
   const checkAuth = async () => {
     try {
-      const response = await fetch('http://localhost:8081/api/auth/profile', {
+      const response = await fetch('/api/auth/profile', {
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
@@ -162,7 +164,7 @@ export default function UserDetailPage() {
 
   const fetchUserDetail = async () => {
     try {
-      const response = await fetch(`http://localhost:8081/api/auth/profile?targetUserId=${userId}`, {
+      const response = await fetch(`/api/auth/profile?targetUserId=${userId}`, {
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
@@ -174,32 +176,18 @@ export default function UserDetailPage() {
         setUser(data);
       } else {
         console.error('사용자 정보 가져오기 실패:', response.status);
-        // 임시 더미 데이터
-        setUser({
-          id: userId,
-          email: "user@example.com",
-          userName: "사용자",
-          isBlocked: false,
-          isWithdrawn: false,
-        });
+        setUser(null);
       }
     } catch (error) {
       console.error('사용자 정보 가져오기 실패:', error);
-      // 임시 더미 데이터
-      setUser({
-        id: userId,
-        email: "user@example.com",
-        userName: "사용자",
-        isBlocked: false,
-        isWithdrawn: false,
-      });
+      setUser(null);
     }
   };
 
   const handleViewWorks = async (userId: string) => {
     try {
       // NovelController의 전체 조회 API를 사용해서 해당 유저의 소설 목록 가져오기
-      const response = await fetch(`http://localhost:8081/api/novels?type=userId&value=${userId}`, {
+      const response = await fetch(`/api/novels?type=userId&value=${userId}`, {
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
@@ -208,7 +196,27 @@ export default function UserDetailPage() {
 
       if (response.ok) {
         const data = await response.json();
-        setNovels(data.novelList || []);
+        console.log('받은 소설 데이터:', data.novelList);
+        
+        // 백엔드에서 받은 데이터를 프론트엔드 형식으로 변환
+        const formattedNovels = data.novelList.map((novel: {
+          novelId: number;
+          title: string;
+          summary: string;
+          availability: string;
+          createdAt: string;
+          isBanned?: boolean;
+        }) => ({
+          novelId: novel.novelId,
+          title: novel.title,
+          summary: novel.summary,
+          availability: novel.availability,
+          createdAt: novel.createdAt,
+          isBanned: novel.isBanned || false // isBanned 필드 사용
+        }));
+        
+        console.log('변환된 소설 데이터:', formattedNovels);
+        setNovels(formattedNovels);
         setShowNovels(true);
       } else {
         console.error('소설 목록 가져오기 실패:', response.status);
@@ -262,28 +270,33 @@ export default function UserDetailPage() {
 
   const handleBanNovel = async (novelId: number) => {
     if (!user) return;
-    
+
+    // 현재 소설의 상태 확인
+    const currentNovel = novels.find(novel => novel.novelId === novelId);
+    const isCurrentlyBanned = currentNovel?.isBanned || false;
+
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:8081/api/novels/${novelId}/ban`, {
+      const response = await fetch(`/api/novels/${novelId}/ban`, {
         method: 'PATCH',
+        credentials: 'include',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
 
       if (response.ok) {
-        alert('소설이 차단되었습니다.');
+        const data = await response.json();
+        alert(data.message || (isCurrentlyBanned ? '소설이 활성화되었습니다.' : '소설이 차단되었습니다.'));
         // 소설 목록 새로고침
         await handleViewWorks(user.id);
       } else {
         const errorData = await response.json();
-        alert(errorData.error || '소설 차단에 실패했습니다.');
+        alert(errorData.error || '소설 차단/해제에 실패했습니다.');
       }
     } catch (error) {
-      console.error('소설 차단 실패:', error);
-      alert('소설 차단에 실패했습니다.');
+      console.error('소설 차단/해제 실패:', error);
+      alert('소설 차단/해제에 실패했습니다.');
     }
   };
 
@@ -313,7 +326,7 @@ export default function UserDetailPage() {
     }
 
     try {
-      const response = await fetch('http://localhost:8081/api/auth/profile', {
+      const response = await fetch('/api/auth/profile', {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -370,7 +383,7 @@ export default function UserDetailPage() {
       <header className="bg-blue-400 text-white p-4 shadow-md">
         <div className="flex justify-between items-center w-full">
           <div className="flex items-center space-x-4">
-            <button 
+            <button
               onClick={() => router.back()}
               className="flex items-center space-x-2 text-xl font-bold hover:text-blue-200 transition-colors"
             >
@@ -395,7 +408,7 @@ export default function UserDetailPage() {
             <div className="bg-yellow-200 p-4 border-b border-orange-400">
               <div className="flex justify-between items-center">
                 <span className="font-medium">아이디: {user.id}</span>
-                <button 
+                <button
                   onClick={() => handleViewWorks(user.id)}
                   className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition-colors"
                 >
@@ -407,7 +420,7 @@ export default function UserDetailPage() {
             <div className="bg-yellow-200 p-4 border-b border-orange-400">
               <div className="flex justify-between items-center">
                 <span className="font-medium">이메일: {user.email}</span>
-                <button 
+                <button
                   onClick={handleChangeEmail}
                   className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition-colors"
                 >
@@ -419,7 +432,7 @@ export default function UserDetailPage() {
             <div className="bg-yellow-200 p-4 border-b border-orange-400">
               <div className="flex justify-between items-center">
                 <span className="font-medium">닉네임: {user.userName}</span>
-                <button 
+                <button
                   onClick={handleChangeNickname}
                   className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition-colors"
                 >
@@ -431,7 +444,7 @@ export default function UserDetailPage() {
             <div className="bg-yellow-200 p-4 border-b border-orange-400">
               <div className="flex justify-between items-center">
                 <span className="font-medium">비밀번호</span>
-                <button 
+                <button
                   onClick={handleChangePassword}
                   className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition-colors"
                 >
@@ -445,7 +458,7 @@ export default function UserDetailPage() {
                 <span className="font-medium">유저 차단 여부</span>
                 <div className="flex items-center space-x-4">
                   <span className="text-sm">{user.isBlocked ? "차단됨" : "차단 전"}</span>
-                  <button 
+                  <button
                     onClick={() => handleProcessBlock(user.id, user.isBlocked)}
                     className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition-colors"
                   >
@@ -460,7 +473,7 @@ export default function UserDetailPage() {
                 <span className="font-medium">유저 탈퇴 여부</span>
                 <div className="flex items-center space-x-4">
                   <span className="text-sm">{user.isWithdrawn ? "탈퇴됨" : "활성화"}</span>
-                  <button 
+                  <button
                     onClick={() => handleWithdraw(user.id)}
                     className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition-colors"
                   >
@@ -474,14 +487,14 @@ export default function UserDetailPage() {
           <div className="bg-orange-300 border-t-2 border-t-orange-400 border-b-2 border-b-orange-400 p-4">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold text-black">{user.userName}의 작품 목록</h2>
-              <button 
+              <button
                 onClick={() => setShowNovels(false)}
                 className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition-colors"
               >
                 사용자 정보로 돌아가기
               </button>
             </div>
-            
+
             {novels.length > 0 ? (
               <div className="space-y-4">
                 {novels.map((novel) => (
@@ -496,17 +509,21 @@ export default function UserDetailPage() {
                         </div>
                       </div>
                       <div className="flex space-x-2">
-                        <button 
+                        <button
                           className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600 transition-colors"
                           onClick={() => window.open(`/novel/${novel.novelId}`, '_blank')}
                         >
                           보기
                         </button>
-                        <button 
-                          className="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600 transition-colors"
+                        <button
+                          className={`px-3 py-1 rounded text-sm transition-colors ${
+                            novel.isBanned 
+                              ? 'bg-green-500 text-white hover:bg-green-600' 
+                              : 'bg-red-500 text-white hover:bg-red-600'
+                          }`}
                           onClick={() => handleBanNovel(novel.novelId)}
                         >
-                          차단
+                          {novel.isBanned ? '차단 해제' : '차단'}
                         </button>
                       </div>
                     </div>

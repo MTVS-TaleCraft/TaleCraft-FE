@@ -4,8 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { getAuthToken, removeAuthToken } from '@/utils/cookies';
-import { checkAuthAndRedirect } from '@/utils/auth';
+import { removeAuthToken } from '@/utils/cookies';
 import NovelCard from '../components/NovelCard';
 
 interface Novel {
@@ -35,10 +34,10 @@ interface UserInfo {
 
 const NovelListPage: React.FC = () => {
   const router = useRouter();
-  const [selectedGenre, setSelectedGenre] = useState<string>('');
+
   const [novels, setNovels] = useState<Novel[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string>('');
+
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
@@ -48,6 +47,7 @@ const NovelListPage: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [selectedTag, setSelectedTag] = useState<string>('');
+  const [selectedGenre, setSelectedGenre] = useState<string>('');
   const [commonTags, setCommonTags] = useState<string[]>([]);
   const [loadingTags, setLoadingTags] = useState(false);
 
@@ -89,8 +89,9 @@ const NovelListPage: React.FC = () => {
   const fetchDefaultTags = async () => {
     setLoadingTags(true);
     try {
-      // 백엔드 API를 직접 호출
-      const response = await fetch('http://localhost:8081/api/tags/default', { 
+      // 기본 태그만 가져오기
+      const response = await fetch('/api/tags/default', { 
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         }
@@ -110,17 +111,21 @@ const NovelListPage: React.FC = () => {
     }
   };
 
-  const fetchNovels = async (page: number = 0, tag?: string) => {
+  const fetchNovels = async (tag?: string) => {
     setLoading(true);
-    setError('');
 
     try {
-      let url = 'http://localhost:8081/api/novels';
+      let url = '/api/novels';
       if (tag) {
-        url = `http://localhost:8081/api/tags/search/novels?tagName=${encodeURIComponent(tag)}`;
+        url = `/api/tags/search/novels?tagName=${encodeURIComponent(tag)}`;
       }
 
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
       const data: NovelListResponse = await response.json();
 
       if (response.ok) {
@@ -130,10 +135,10 @@ const NovelListPage: React.FC = () => {
         setTotalPages(data.totalPages || 0);
         setTotalElements(data.totalElements || 0);
       } else {
-        setError('작품 목록을 불러오는데 실패했습니다.');
+        console.error('작품 목록을 불러오는데 실패했습니다.');
       }
     } catch (error) {
-      setError('네트워크 오류가 발생했습니다.');
+      console.error('네트워크 오류가 발생했습니다.');
     } finally {
       setLoading(false);
     }
@@ -143,16 +148,16 @@ const NovelListPage: React.FC = () => {
     setSelectedTag(selectedTag === tag ? '' : tag);
     if (selectedTag === tag) {
       // 같은 태그를 다시 클릭하면 전체 목록으로
-      await fetchNovels(0);
+      await fetchNovels();
     } else {
       // 새로운 태그를 클릭하면 해당 태그의 소설들
-      await fetchNovels(0, tag);
+      await fetchNovels(tag);
     }
   };
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-    fetchNovels(page, selectedTag);
+    fetchNovels(selectedTag);
   };
 
   const handleLogout = async () => {
@@ -223,36 +228,7 @@ const NovelListPage: React.FC = () => {
     );
   }
 
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <header className="bg-blue-400 text-white p-4 shadow-md">
-          <div className="flex justify-between items-center w-full">
-            <h1 className="text-xl font-bold">TaleCraft</h1>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-white hover:bg-blue-500"
-              onClick={() => router.push('/')}
-            >
-              홈으로
-            </Button>
-          </div>
-        </header>
-        <main className="p-4">
-          <div className="text-center">
-            <div className="text-red-600 mb-4">{error}</div>
-            <button
-              onClick={() => fetchNovels()}
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-            >
-              다시 시도
-            </button>
-          </div>
-        </main>
-      </div>
-    );
-  }
+
 
   return (
     <div className="min-h-screen bg-gray-50">

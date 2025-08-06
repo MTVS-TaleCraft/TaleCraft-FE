@@ -2,12 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { novelId: string; episodeId: string } }
+  { params }: { params: Promise<{ novelId: string; episodeId: string }> }
 ) {
   try {
-    const { novelId, episodeId } = params;
+    const { novelId, episodeId } = await params;
     
-    const response = await fetch(`${process.env.BACKEND_URL || 'http://localhost:8081'}/api/novels/${novelId}/episodes/${episodeId}`, {
+    const backendUrl = process.env.BACKEND_URL || '/api/backend';
+    const response = await fetch(`${backendUrl}/api/novels/${novelId}/episodes/${episodeId}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

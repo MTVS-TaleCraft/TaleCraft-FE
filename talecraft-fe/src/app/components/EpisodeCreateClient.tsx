@@ -55,7 +55,6 @@ const EpisodeCreatePage: React.FC = () => {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [episode, setEpisode] = useState<Episode | null>(null);
-  const [aiOption, setAiOption] = useState<'NORMAL' | 'SPELL_CHECK' | 'STORY_EXTENSION' | 'MAKE_NAME'>('NORMAL');
 
   // Fetch novel title from backend
   useEffect(() => {
@@ -104,14 +103,6 @@ const EpisodeCreatePage: React.FC = () => {
       setIsEditMode(true);
     }
   }, [novelId, episodeId]);
-  const fetchDeleteEpisode = async () => {
-    if (!novelId || !episodeId) return;
-    const response = await fetch(`/api/novels/${novelId}/episodes/${episodeId}`, {
-      method: 'DELETE',
-      credentials: 'include',
-    });
-    return response;
-  }
 
   useEffect(() => {
     const fetchEpisode = async () => {
@@ -356,25 +347,27 @@ const EpisodeCreatePage: React.FC = () => {
     setChatMessages(prev => [...prev, { type: 'user', content: userMessage }]);
 
     try {
-      const formData = new FormData();
-      formData.append('question', userMessage);
-      if(novelId!=null){
-        formData.append('novelId',novelId.toString());
-      }
-      formData.append('option',aiOption);
-      if(episodeId!=null){
-        formData.append('episodeId', episodeId);
-      }
-
-      const response = await fetch('/api/ai', {
+      const response = await fetch('/api/chat', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         credentials: 'include',
-        body: formData
+        body: JSON.stringify({
+          message: userMessage,
+          context: {
+            novelTitle: novelTitle,
+            episodeTitle: episodeTitle,
+            episodeContent: episodeContent
+          }
+        }),
       });
 
       if (response.ok) {
         const data = await response.json();
-        setChatMessages(prev => [...prev, { type: 'assistant', content: data.response }]);
+        // AI 응답에서 \\를 줄바꿈으로 변환
+        const formattedResponse = data.response.replace(/\\\\/g, '\n');
+        setChatMessages(prev => [...prev, { type: 'assistant', content: formattedResponse }]);
       } else {
         setChatMessages(prev => [...prev, { type: 'assistant', content: '죄송합니다. 응답을 생성할 수 없습니다.' }]);
       }
@@ -622,23 +615,27 @@ const EpisodeCreatePage: React.FC = () => {
         </div>
 
         {/* Right Toolbar */}
-        <div style={{ width: 180, minWidth: 140, position: 'fixed', top: 96, right: 'calc(50% - 400px - 220px)', zIndex: 100 }}>
+        <div style={{ 
+          width: 180, 
+          minWidth: 140, 
+          position: 'fixed', 
+          top: 96, 
+          right: 'calc(50% - 400px - 220px)', 
+          zIndex: isSidebarOpen ? 30 : 100 
+        }}>
           <div style={{ background: '#fff', borderRadius: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.06)', padding: '24px 16px', marginBottom: 24 }}>
             <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12, color: '#007bff' }}>툴박스</div>
-            
-            {isEditMode &&
             <button
-              onClick={async () => {
+              onClick={() => {
                 if (confirm('정말로 이 에피소드를 삭제하시겠습니까?')) {
                   // 에피소드 삭제 기능 (현재는 새로 작성 중이므로 임시저장 삭제)
                   if (novelId) {
-                    const response = await fetchDeleteEpisode();
-                    if(response && response.ok){
-                      alert('에피소드가 삭제되었습니다.');
-                      router.push(`/novel/${novelId}`);
-                    }else{
-                      alert('에피소드 삭제에 실패했습니다.');
-                    }
+                    const key = getSessionKey(novelId);
+                    sessionStorage.removeItem(key);
+                    setEpisodeTitle('');
+                    setEpisodeContent('');
+                    setIsNotice(false);
+                    setMessage('임시저장이 삭제되었습니다.');
                   }
                 }
               }}
@@ -657,8 +654,7 @@ const EpisodeCreatePage: React.FC = () => {
             >
               에피소드 삭제
             </button>
-}
-            {/* <button
+            <button
                 onClick={handleCreateEpisode}
                 style={{
                   width: '100%',
@@ -674,7 +670,7 @@ const EpisodeCreatePage: React.FC = () => {
                 }}
             >
               새 에피소드 작성
-            </button> */}
+            </button>
             <button
               onClick={toggleChatSidebar}
               style={{
@@ -720,17 +716,6 @@ const EpisodeCreatePage: React.FC = () => {
           alignItems: 'center',
         }}>
           <div style={{ fontWeight: 700, fontSize: 18 }}>창작 도우미</div>
-          <select
-              value={aiOption}
-              onChange={(e) => setAiOption(e.target.value as typeof aiOption)}
-              className="border p-2"
-          >
-            <option value="NORMAL">일반 응답</option>
-            <option value="SPELL_CHECK">맞춤법 검사</option>
-            <option value="STORY_EXTENSION">스토리 확장</option>
-            <option value="MAKE_NAME">이름 생성</option>
-          </select>
-
           <button
             onClick={toggleChatSidebar}
             style={{
@@ -743,7 +728,6 @@ const EpisodeCreatePage: React.FC = () => {
           >
             ×
           </button>
-
         </div>
 
         {/* Chat Messages */}
@@ -757,7 +741,7 @@ const EpisodeCreatePage: React.FC = () => {
         }}>
           {chatMessages.length === 0 && (
             <div style={{ textAlign: 'center', color: '#666', fontSize: 14, marginTop: '20px' }}>
-              에피소드를 먼저 저장한 후 AI 채팅을 사용할 수 있습니다.
+              제목과 이전화를 전부 입력하시면 다음화를 작성해 드립니다.
             </div>
           )}
           {chatMessages.map((msg, index) => (
@@ -790,12 +774,11 @@ const EpisodeCreatePage: React.FC = () => {
           display: 'flex',
           gap: '8px',
         }}>
-          <input
-            type="text"
+          <textarea
             value={chatInput}
             onChange={(e) => setChatInput(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleChatSend()}
-            placeholder="메시지를 입력하세요..."
+            onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleChatSend()}
+            placeholder="메시지를 입력하세요... (Shift+Enter로 줄바꿈)"
             style={{
               flex: 1,
               padding: '12px',
@@ -803,6 +786,18 @@ const EpisodeCreatePage: React.FC = () => {
               borderRadius: '20px',
               outline: 'none',
               fontSize: 14,
+              resize: 'none',
+              minHeight: '44px',
+              maxHeight: '120px',
+              overflowY: 'auto',
+              lineHeight: '1.4',
+              fontFamily: 'inherit',
+            }}
+            rows={1}
+            onInput={(e) => {
+              const target = e.target as HTMLTextAreaElement;
+              target.style.height = 'auto';
+              target.style.height = Math.min(target.scrollHeight, 120) + 'px';
             }}
           />
           <button

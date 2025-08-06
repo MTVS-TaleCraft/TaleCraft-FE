@@ -40,9 +40,9 @@ export default function LoginPage() {
         console.log('로그인 성공, 인증 상태 확인 중...');
         
         setTimeout(async () => {
-          // 백엔드 API를 통해 인증 상태 확인
+          // Next.js API 라우트를 통해 인증 상태 확인
           try {
-            const authResponse = await fetch('http://localhost:8081/api/auth/profile', {
+            const authResponse = await fetch('/api/auth/profile', {
               method: 'GET',
               credentials: 'include',
               headers: {

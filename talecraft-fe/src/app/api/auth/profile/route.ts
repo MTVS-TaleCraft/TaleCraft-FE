@@ -2,7 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
   try {
-    const response = await fetch(`${process.env.BACKEND_URL || 'http://localhost:8081'}/api/auth/profile`, {
+    const { searchParams } = new URL(request.url);
+    const targetUserId = searchParams.get('targetUserId');
+    
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:8081';
+    const url = targetUserId 
+      ? `${backendUrl}/api/auth/profile?targetUserId=${targetUserId}`
+      : `${backendUrl}/api/auth/profile`;
+      
+    const response = await fetch(url, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -35,8 +43,8 @@ export async function GET(request: NextRequest) {
     let data;
     try {
       data = JSON.parse(responseText);
-    } catch (parseError) {
-      console.error('Profile API JSON parse error:', parseError);
+    } catch {
+      console.error('Profile API JSON parse error occurred');
       return NextResponse.json(
         { error: '사용자 정보 형식이 올바르지 않습니다.' },
         { status: 500 }
@@ -59,7 +67,8 @@ export async function PATCH(request: NextRequest) {
   try {
     const body = await request.json();
     
-    const response = await fetch(`${process.env.BACKEND_URL || 'http://localhost:8081'}/api/auth/profile`, {
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:8081';
+    const response = await fetch(`${backendUrl}/api/auth/profile`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -93,8 +102,8 @@ export async function PATCH(request: NextRequest) {
     let data;
     try {
       data = JSON.parse(responseText);
-    } catch (parseError) {
-      console.error('Profile update API JSON parse error:', parseError);
+    } catch {
+      console.error('Profile update API JSON parse error occurred');
       return NextResponse.json(
         { error: '사용자 정보 업데이트에 실패했습니다.' },
         { status: 500 }
@@ -115,7 +124,8 @@ export async function PATCH(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const response = await fetch(`${process.env.BACKEND_URL || 'http://localhost:8081'}/api/auth/logout`, {
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:8081';
+    const response = await fetch(`${backendUrl}/api/auth/logout`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -148,8 +158,8 @@ export async function POST(request: NextRequest) {
     let data;
     try {
       data = JSON.parse(responseText);
-    } catch (parseError) {
-      console.error('Logout API JSON parse error:', parseError);
+    } catch {
+      console.error('Logout API JSON parse error occurred');
       return NextResponse.json(
         { message: '로그아웃되었습니다.' },
         { status: 200 }
