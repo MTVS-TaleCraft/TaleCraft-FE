@@ -133,13 +133,14 @@ const MyNovelsPageContent: React.FC = () => {
               title: string;
               titleImage?: string;
               summary: string;
+              episodeCount: number;
             };
           }) => ({
             novelId: bookmark.novelInfo.novelId,
             title: bookmark.novelInfo.title,
             userId: '', // 북마크에서는 저자 정보가 없을 수 있음
             titleImage: bookmark.novelInfo.titleImage,
-            episodeCount: 0, // API에 없으면 0 또는 별도 처리
+            episodeCount: bookmark.novelInfo.episodeCount, // API에 없으면 0 또는 별도 처리
             lastUpdated: '', // API에 없으면 빈 값 또는 별도 처리
             summary: bookmark.novelInfo.summary,
           }));
@@ -155,12 +156,13 @@ const MyNovelsPageContent: React.FC = () => {
             title: string;
             userId: string;
             titleImage?: string;
+            episodeCount: number;
           }) => ({
             novelId: novel.novelId,
             title: novel.title,
             userId: novel.userId,
             titleImage: novel.titleImage,
-            episodeCount: 0, // API에 없으면 0 또는 별도 처리
+            episodeCount: novel.episodeCount, // API에 없으면 0 또는 별도 처리
             lastUpdated: '', // API에 없으면 빈 값 또는 별도 처리
           }));
           console.log('변환된 내 작품:', novels);
@@ -266,13 +268,14 @@ const MyNovelsPageContent: React.FC = () => {
               title: string;
               titleImage?: string;
               summary: string;
+              episodeCount: number;
             };
           }) => ({
             novelId: bookmark.novelInfo.novelId,
             title: bookmark.novelInfo.title,
             userId: '', // 북마크에서는 저자 정보가 없을 수 있음
             titleImage: bookmark.novelInfo.titleImage,
-            episodeCount: 0, // API에 없으면 0 또는 별도 처리
+            episodeCount: bookmark.novelInfo.episodeCount, // API에 없으면 0 또는 별도 처리
             lastUpdated: '', // API에 없으면 빈 값 또는 별도 처리
             summary: bookmark.novelInfo.summary,
           }));
@@ -288,12 +291,13 @@ const MyNovelsPageContent: React.FC = () => {
             title: string;
             userId: string;
             titleImage?: string;
+            episodeCount: number;
           }) => ({
             novelId: novel.novelId,
             title: novel.title,
             userId: novel.userId,
             titleImage: novel.titleImage,
-            episodeCount: 0, // API에 없으면 0 또는 별도 처리
+            episodeCount: novel.episodeCount,
             lastUpdated: '', // API에 없으면 빈 값 또는 별도 처리
           }));
           console.log('변환된 내 작품:', novels);
@@ -562,15 +566,20 @@ const MyNovelsPageContent: React.FC = () => {
                       <>
                         <button
                           onClick={() => handleEditNovel(novel.novelId)}
-                          className="px-4 py-2 bg-black text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+                          className="px-4 py-1 bg-black text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
                         >
                           작품 정보 수정
                         </button>
                         <button
                           onClick={() => handleWriteEpisode(novel.novelId)}
-                          className="px-4 py-2 bg-black text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+                          className="px-4 py-1 bg-black text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
                         >
                           화 쓰기
+                        </button>
+                        <button
+                          className="px-4 py-1 bg-black text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+>
+                          작품 상세 조회
                         </button>
                       </>
                     )}

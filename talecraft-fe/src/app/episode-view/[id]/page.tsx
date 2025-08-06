@@ -4,7 +4,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Search, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { removeAuthToken } from '@/utils/cookies';
+import { getAuthToken, removeAuthToken } from '@/utils/cookies';
+import { checkAuthAndRedirect } from '@/utils/auth';
+import { useSearchParams } from 'next/navigation'
 
 interface Episode {
   episodeId: number;
@@ -35,13 +37,13 @@ const EpisodeViewPage = () => {
   const params = useParams();
   const router = useRouter();
   const episodeId = params.id as string;
-  
+  const searchParams = useSearchParams();
   const [episode, setEpisode] = useState<Episode | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [fontSize, setFontSize] = useState(16);
   const [comment, setComment] = useState('');
-  const [currentUser, setCurrentUser] = useState<UserInfo | null>(null); // 현재 로그인한 사용자 정보
+  const [currentUser, setCurrentUser] = useState<never>(); // 현재 로그인한 사용자 정보
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -55,7 +57,7 @@ const EpisodeViewPage = () => {
   // 추천 상태 가져오기
   const fetchLikeStatus = useCallback(async () => {
     console.log('fetchLikeStatus 호출 - isLoggedIn:', isLoggedIn, 'episodeId:', episodeId);
-    
+
     // 로그인이 되어 있지 않으면 추천 기능 비활성화
     if (!isLoggedIn) {
       console.log('로그인하지 않은 사용자 - 좋아요 상태 초기화');
@@ -74,7 +76,7 @@ const EpisodeViewPage = () => {
       // 특정 에피소드의 좋아요 상태를 확인 - 실제 novelId 사용
       const url = `/api/novels/${episode.novelId}/like?episodeId=${episodeId}`;
       console.log('좋아요 상태 확인 요청 URL:', url);
-      
+
       const response = await fetch(url, {
         credentials: 'include',
         headers: {
@@ -88,19 +90,19 @@ const EpisodeViewPage = () => {
       if (response.ok) {
         const data = await response.json();
         console.log('추천 상태 응답:', data);
-        
+
         // 백엔드 응답 구조: { likes: number[], message: string }
         if (data.likes && Array.isArray(data.likes)) {
           // likes 배열에 likeId가 있으면 해당 에피소드를 좋아요한 상태
           const isCurrentEpisodeLiked = data.likes.length > 0;
-          
+
           console.log('현재 에피소드 좋아요 상태:', isCurrentEpisodeLiked);
           console.log('좋아요 개수:', data.likes.length);
           console.log('상태 업데이트 전 - isLiked:', isLiked);
-          
+
           setIsLiked(isCurrentEpisodeLiked);
           setLikeCount(data.likes.length);
-          
+
           console.log('상태 업데이트 후 - isLiked:', isCurrentEpisodeLiked);
         } else {
           console.log('좋아요하지 않은 상태');
@@ -170,37 +172,21 @@ const EpisodeViewPage = () => {
     const fetchEpisodeData = async () => {
       try {
         setLoading(true);
-        
-        // 먼저 에피소드 정보를 가져와서 novelId를 확인
-        // 임시로 novelId를 1부터 시작해서 찾아보기
-        let episodeData = null;
-        let foundNovelId = null;
-        
-        // novelId를 1부터 100까지 시도하여 에피소드를 찾기
-        for (let novelId = 1; novelId <= 100; novelId++) {
-          try {
-            const episodeResponse = await fetch(`/api/novels/${novelId}/episodes/${episodeId}`, {
-              credentials: 'include',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-            });
+        const novelId = searchParams.get('novelId')
+        // 에피소드 정보 가져오기
+        const episodeResponse = await fetch(`/api/novels/${novelId}/episodes/${episodeId}`, {
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
 
-            if (episodeResponse.ok) {
-              episodeData = await episodeResponse.json();
-              foundNovelId = episodeData.novelId; // 백엔드에서 반환한 실제 novelId 사용
-              break;
-            }
-          } catch (error) {
-            // 에러가 발생하면 다음 novelId로 시도
-            continue;
-          }
-        }
-
-        if (episodeData && foundNovelId) {
+        if (episodeResponse.ok) {
+          const episodeData = await episodeResponse.json();
+          
           // 소설 정보를 가져와서 작가 정보 설정
           try {
-            const novelResponse = await fetch(`/api/novels/${foundNovelId}`, {
+            const novelResponse = await fetch(`/api/novels/${episodeData.novelId}`, {
               credentials: 'include',
               headers: {
                 'Content-Type': 'application/json',
@@ -216,9 +202,6 @@ const EpisodeViewPage = () => {
           }
           
           setEpisode(episodeData);
-          setFoundNovelId(foundNovelId); // foundNovelId 상태 업데이트
-          console.log('에피소드 정보 설정 완료:', episodeData);
-          console.log('찾은 소설 ID:', foundNovelId);
           
           // 에피소드 정보를 가져온 후 좋아요 상태 확인
           if (isLoggedIn) {
@@ -689,16 +672,7 @@ const EpisodeViewPage = () => {
               fontSize: 14,
               cursor: 'pointer'
             }}
-            onClick={() => {
-              console.log('목록으로 버튼 클릭 - foundNovelId:', foundNovelId);
-              if (foundNovelId) {
-                console.log('소설 페이지로 이동:', `/novel/${foundNovelId}`);
-                router.push(`/novel/${foundNovelId}`);
-              } else {
-                console.error('소설 ID를 찾을 수 없습니다.');
-                alert('소설 정보를 찾을 수 없습니다.');
-              }
-            }}
+            onClick={() => router.push(`/novel/${episode.novelId}`)}
             >
               목록으로
             </button>

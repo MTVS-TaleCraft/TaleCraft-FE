@@ -55,6 +55,7 @@ const EpisodeCreatePage: React.FC = () => {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [episode, setEpisode] = useState<Episode | null>(null);
+  const [aiOption, setAiOption] = useState<'NORMAL' | 'SPELL_CHECK' | 'STORY_EXTENSION' | 'MAKE_NAME'>('NORMAL');
 
   // Fetch novel title from backend
   useEffect(() => {
@@ -103,6 +104,14 @@ const EpisodeCreatePage: React.FC = () => {
       setIsEditMode(true);
     }
   }, [novelId, episodeId]);
+  const fetchDeleteEpisode = async () => {
+    if (!novelId || !episodeId) return;
+    const response = await fetch(`/api/novels/${novelId}/episodes/${episodeId}`, {
+      method: 'DELETE',
+      credentials: 'include',
+    });
+    return response;
+  }
 
   useEffect(() => {
     const fetchEpisode = async () => {
@@ -348,20 +357,20 @@ const EpisodeCreatePage: React.FC = () => {
     setChatMessages(prev => [...prev, { type: 'user', content: userMessage }]);
 
     try {
-      const response = await fetch('/api/chat', {
+      const formData = new FormData();
+      formData.append('question', userMessage);
+      if(novelId!=null){
+        formData.append('novelId',novelId.toString());
+      }
+      formData.append('option',aiOption);
+      if(episodeId!=null){
+        formData.append('episodeId', episodeId);
+      }
+
+      const response = await fetch('/api/ai', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         credentials: 'include',
-        body: JSON.stringify({
-          message: userMessage,
-          context: {
-            novelTitle: novelTitle,
-            episodeTitle: episodeTitle,
-            episodeContent: episodeContent
-          }
-        }),
+        body: formData
       });
 
       if (response.ok) {
@@ -617,17 +626,20 @@ const EpisodeCreatePage: React.FC = () => {
         <div style={{ width: 180, minWidth: 140, position: 'fixed', top: 96, right: 'calc(50% - 400px - 220px)', zIndex: 100 }}>
           <div style={{ background: '#fff', borderRadius: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.06)', padding: '24px 16px', marginBottom: 24 }}>
             <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12, color: '#007bff' }}>툴박스</div>
+            
+            {isEditMode &&
             <button
-              onClick={() => {
+              onClick={async () => {
                 if (confirm('정말로 이 에피소드를 삭제하시겠습니까?')) {
                   // 에피소드 삭제 기능 (현재는 새로 작성 중이므로 임시저장 삭제)
                   if (novelId) {
-                    const key = getSessionKey(novelId);
-                    sessionStorage.removeItem(key);
-                    setEpisodeTitle('');
-                    setEpisodeContent('');
-                    setIsNotice(false);
-                    setMessage('임시저장이 삭제되었습니다.');
+                    const response = await fetchDeleteEpisode();
+                    if(response && response.ok){
+                      alert('에피소드가 삭제되었습니다.');
+                      router.push(`/novel/${novelId}`);
+                    }else{
+                      alert('에피소드 삭제에 실패했습니다.');
+                    }
                   }
                 }
               }}
@@ -646,7 +658,8 @@ const EpisodeCreatePage: React.FC = () => {
             >
               에피소드 삭제
             </button>
-            <button
+}
+            {/* <button
                 onClick={handleCreateEpisode}
                 style={{
                   width: '100%',
@@ -662,7 +675,7 @@ const EpisodeCreatePage: React.FC = () => {
                 }}
             >
               새 에피소드 작성
-            </button>
+            </button> */}
             <button
               onClick={toggleChatSidebar}
               style={{
@@ -708,6 +721,17 @@ const EpisodeCreatePage: React.FC = () => {
           alignItems: 'center',
         }}>
           <div style={{ fontWeight: 700, fontSize: 18 }}>창작 도우미</div>
+          <select
+              value={aiOption}
+              onChange={(e) => setAiOption(e.target.value as typeof aiOption)}
+              className="border p-2"
+          >
+            <option value="NORMAL">일반 응답</option>
+            <option value="SPELL_CHECK">맞춤법 검사</option>
+            <option value="STORY_EXTENSION">스토리 확장</option>
+            <option value="MAKE_NAME">이름 생성</option>
+          </select>
+
           <button
             onClick={toggleChatSidebar}
             style={{
@@ -720,6 +744,7 @@ const EpisodeCreatePage: React.FC = () => {
           >
             ×
           </button>
+
         </div>
 
         {/* Chat Messages */}

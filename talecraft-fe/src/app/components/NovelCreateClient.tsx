@@ -241,6 +241,7 @@ const NovelCreatePage: React.FC = () => {
            setTags([]);
            setTagInput('');
            setShowTagInput(false);
+           router.push('/my-novels');
          }
        } else {
          setMessage(data.error || (isEditMode ? '작품 수정에 실패했습니다.' : '작품 생성에 실패했습니다.'));
