@@ -375,7 +375,9 @@ const EpisodeCreatePage: React.FC = () => {
 
       if (response.ok) {
         const data = await response.json();
-        setChatMessages(prev => [...prev, { type: 'assistant', content: data.response }]);
+        // AI 응답에서 \\를 줄바꿈으로 변환
+        const formattedResponse = data.response.replace(/\\\\/g, '\n');
+        setChatMessages(prev => [...prev, { type: 'assistant', content: formattedResponse }]);
       } else {
         setChatMessages(prev => [...prev, { type: 'assistant', content: '죄송합니다. 응답을 생성할 수 없습니다.' }]);
       }
@@ -623,7 +625,14 @@ const EpisodeCreatePage: React.FC = () => {
         </div>
 
         {/* Right Toolbar */}
-        <div style={{ width: 180, minWidth: 140, position: 'fixed', top: 96, right: 'calc(50% - 400px - 220px)', zIndex: 100 }}>
+        <div style={{ 
+          width: 180, 
+          minWidth: 140, 
+          position: 'fixed', 
+          top: 96, 
+          right: 'calc(50% - 400px - 220px)', 
+          zIndex: isSidebarOpen ? 30 : 100 
+        }}>
           <div style={{ background: '#fff', borderRadius: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.06)', padding: '24px 16px', marginBottom: 24 }}>
             <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12, color: '#007bff' }}>툴박스</div>
             
@@ -791,12 +800,11 @@ const EpisodeCreatePage: React.FC = () => {
           display: 'flex',
           gap: '8px',
         }}>
-          <input
-            type="text"
+          <textarea
             value={chatInput}
             onChange={(e) => setChatInput(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleChatSend()}
-            placeholder="메시지를 입력하세요..."
+            onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleChatSend()}
+            placeholder="메시지를 입력하세요... (Shift+Enter로 줄바꿈)"
             style={{
               flex: 1,
               padding: '12px',
@@ -804,6 +812,18 @@ const EpisodeCreatePage: React.FC = () => {
               borderRadius: '20px',
               outline: 'none',
               fontSize: 14,
+              resize: 'none',
+              minHeight: '44px',
+              maxHeight: '120px',
+              overflowY: 'auto',
+              lineHeight: '1.4',
+              fontFamily: 'inherit',
+            }}
+            rows={1}
+            onInput={(e) => {
+              const target = e.target as HTMLTextAreaElement;
+              target.style.height = 'auto';
+              target.style.height = Math.min(target.scrollHeight, 120) + 'px';
             }}
           />
           <button
