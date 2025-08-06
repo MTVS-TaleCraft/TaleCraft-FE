@@ -85,17 +85,27 @@ export default function HomePage() {
     }
   }, [novels.length, isAnimating, isDragging])
 
+  // Initialize carousel items with stable IDs
+  useEffect(() => {
+    if (novels.length === 0) return
+
+    const items = []
+    for (let i = -1; i <= 1; i++) {
+      const novelIndex = (currentIndex + i + novels.length) % novels.length
+      items.push({
+        ...novels[novelIndex],
+        carouselPosition: i,
+        id: `carousel-${novelIndex}-${i}`,
+      })
+    }
+    setCarouselItems(items)
+  }, [novels, currentIndex])
+
   const handleNavigation = useCallback(
     (direction: "left" | "right") => {
       if (isAnimating || novels.length === 0) return
 
       setIsAnimating(true)
-
-      // 자동 슬라이드 일시정지
-      if (autoSlideInterval) {
-        clearInterval(autoSlideInterval)
-        setAutoSlideInterval(null)
-      }
 
       // Update positions immediately for smooth animation
       setCarouselItems((prev) =>
@@ -112,27 +122,49 @@ export default function HomePage() {
         } else {
           setCurrentIndex((prev) => (prev - 1 + novels.length) % novels.length)
         }
-        setTimeout(() => setIsAnimating(false), 200)
-      }, 100)
+        setTimeout(() => setIsAnimating(false), 300)
+      }, 200)
     },
-    [isAnimating, novels.length, autoSlideInterval],
+    [isAnimating, novels.length],
   )
 
-  // Initialize carousel items with stable IDs
-  useEffect(() => {
-    if (novels.length === 0) return
+  // Handle direct button navigation
+  const handleButtonClick = (targetIndex: number) => {
+    if (isAnimating || targetIndex === currentIndex || novels.length === 0) return
 
-    const items = []
-    for (let i = -2; i <= 2; i++) {
-      const novelIndex = (currentIndex + i + novels.length) % novels.length
-      items.push({
-        ...novels[novelIndex],
-        carouselPosition: i,
-        id: `carousel-${novelIndex}-${i}`,
-      })
+    setIsAnimating(true)
+
+    // Determine rotation direction based on button position relative to current
+    let direction: "left" | "right"
+    if (targetIndex < currentIndex) {
+      direction = "left"
+    } else {
+      direction = "right"
     }
-    setCarouselItems(items)
-  }, [novels, currentIndex])
+
+    // Calculate distances for wrap-around logic
+    const directDistance = Math.abs(targetIndex - currentIndex)
+    const wrapAroundDistance = novels.length - directDistance
+
+    // Only use wrap-around if it's significantly shorter
+    if (wrapAroundDistance < directDistance && wrapAroundDistance <= 2) {
+      direction = direction === "left" ? "right" : "left"
+    }
+
+    // Update carousel positions for animation
+    setCarouselItems((prev) =>
+      prev.map((item) => ({
+        ...item,
+        carouselPosition: direction === "left" ? item.carouselPosition - 1 : item.carouselPosition + 1,
+      })),
+    )
+
+    // Update the current index directly to the target
+    setTimeout(() => {
+      setCurrentIndex(targetIndex)
+      setTimeout(() => setIsAnimating(false), 300)
+    }, 200)
+  }
 
   const checkLoginStatus = async () => {
     try {
@@ -440,20 +472,21 @@ export default function HomePage() {
                 let opacity = 1
 
                 if (isCenter) {
-                  scale = 1.25
+                  scale = 1.2
                   zIndex = 10
                 } else if (Math.abs(position) === 1) {
-                  scale = 0.9
+                  scale = 0.85
                   zIndex = 5
+                  opacity = 0.7
                 } else {
                   opacity = 0
-                  scale = 0.8
+                  scale = 0.7
                 }
 
                 return (
                   <div
                     key={item.id}
-                    className={`absolute top-1/2 left-1/2 transition-all duration-700 ease-in-out cursor-pointer ${
+                    className={`absolute top-1/2 left-1/2 transition-all duration-500 ease-out cursor-pointer ${
                       isVisible ? "pointer-events-auto" : "pointer-events-none"
                     }`}
                     style={{
@@ -467,48 +500,48 @@ export default function HomePage() {
                       if (isDragging) return // 드래그 중일 때는 클릭 무시
                       if (!isCenter && isVisible) {
                         // Click on side banner to move it to center
-                        handleNavigation(position > 0 ? "right" : "left")
+                        const targetIndex = novels.findIndex(novel => novel.novelId === item.novelId)
+                        handleButtonClick(targetIndex)
                       } else if (isCenter) {
                         // 중앙 아이템 클릭 시 해당 소설의 상세 페이지로 이동
-                        // 애니메이션 완료 후 페이지 이동
                         setTimeout(() => {
                           router.push(`/novel/${item.novelId}`)
-                        }, 300)
+                        }, 200)
                       }
                     }}
                   >
-                                         <div className="bg-gradient-to-br from-blue-500 to-purple-600 text-white rounded-lg w-full h-full flex flex-col justify-center items-center text-center hover:from-blue-600 hover:to-purple-700 transition-colors shadow-lg border-2 border-white/20 overflow-hidden">
-                       {item.titleImage ? (
-                         <img
-                           src={item.titleImage}
-                           alt={item.title}
-                           className="w-full h-full object-cover"
-                           onError={(e) => {
-                             const target = e.target as HTMLImageElement;
-                             target.style.display = 'none';
-                             target.nextElementSibling?.classList.remove('hidden');
-                           }}
-                         />
-                       ) : (
-                         <img
-                           src="/Default.jpg"
-                           alt="기본 소설 커버"
-                           className="w-full h-full object-cover"
-                           onError={(e) => {
-                             const target = e.target as HTMLImageElement;
-                             target.style.display = 'none';
-                             target.nextElementSibling?.classList.remove('hidden');
-                           }}
-                         />
-                       )}
-                       <div className={`w-full h-full flex flex-col justify-center items-center p-6 ${item.titleImage || true ? 'hidden' : ''}`}>
-                         <div className="w-16 h-16 bg-white/20 rounded-lg mb-4 flex items-center justify-center">
-                           <div className="w-8 h-8 bg-white/40 rounded"></div>
-                         </div>
-                         <h3 className="font-bold text-lg mb-2 text-center">{item.title}</h3>
-                         <p className="text-sm opacity-80 text-center line-clamp-3">{item.summary}</p>
-                       </div>
-                     </div>
+                    <div className="bg-gradient-to-br from-blue-500 to-purple-600 text-white rounded-lg w-full h-full flex flex-col justify-center items-center text-center hover:from-blue-600 hover:to-purple-700 transition-colors shadow-lg border-2 border-white/20 overflow-hidden">
+                      {item.titleImage ? (
+                        <img
+                          src={item.titleImage}
+                          alt={item.title}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                            target.nextElementSibling?.classList.remove('hidden');
+                          }}
+                        />
+                      ) : (
+                        <img
+                          src="/Default.jpg"
+                          alt="기본 소설 커버"
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                            target.nextElementSibling?.classList.remove('hidden');
+                          }}
+                        />
+                      )}
+                      <div className={`w-full h-full flex flex-col justify-center items-center p-6 ${item.titleImage || true ? 'hidden' : ''}`}>
+                        <div className="w-16 h-16 bg-white/20 rounded-lg mb-4 flex items-center justify-center">
+                          <div className="w-8 h-8 bg-white/40 rounded"></div>
+                        </div>
+                        <h3 className="font-bold text-lg mb-2 text-center">{item.title}</h3>
+                        <p className="text-sm opacity-80 text-center line-clamp-3">{item.summary}</p>
+                      </div>
+                    </div>
                   </div>
                 )
               })}
@@ -526,9 +559,8 @@ export default function HomePage() {
                   index === currentIndex ? "bg-purple-500 scale-110" : "bg-gray-300 hover:bg-gray-400"
                 }`}
                 onClick={() => {
-                  // 클릭 시 해당 인덱스로 캐러셀 이동
                   if (index !== currentIndex) {
-                    handleIndicatorClick(index);
+                    handleButtonClick(index);
                   }
                 }}
                 aria-label={`소설 ${index + 1}로 이동`}
