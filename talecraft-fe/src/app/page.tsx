@@ -128,27 +128,38 @@ export default function HomePage() {
     [isAnimating, novels.length],
   )
 
-  // Handle direct button navigation
+  // Handle direct button navigation with direction-based animation
   const handleButtonClick = (targetIndex: number) => {
     if (isAnimating || targetIndex === currentIndex || novels.length === 0) return
 
     setIsAnimating(true)
 
-    // Determine rotation direction based on button position relative to current
+    // 현재 활성화된 위치를 기준으로 상대적 방향 결정
     let direction: "left" | "right"
-    if (targetIndex < currentIndex) {
-      direction = "left"
+    
+    // 직접 거리 계산
+    const directDistance = targetIndex - currentIndex
+    
+    // 순환 거리 계산 (배열 끝을 넘어가는 경우)
+    let wrapAroundDistance: number
+    if (directDistance > 0) {
+      // 오른쪽으로 순환
+      wrapAroundDistance = directDistance - novels.length
     } else {
-      direction = "right"
+      // 왼쪽으로 순환
+      wrapAroundDistance = directDistance + novels.length
     }
-
-    // Calculate distances for wrap-around logic
-    const directDistance = Math.abs(targetIndex - currentIndex)
-    const wrapAroundDistance = novels.length - directDistance
-
-    // Only use wrap-around if it's significantly shorter
-    if (wrapAroundDistance < directDistance && wrapAroundDistance <= 2) {
-      direction = direction === "left" ? "right" : "left"
+    
+    // 더 짧은 경로 선택
+    const finalDistance = Math.abs(directDistance) <= Math.abs(wrapAroundDistance) 
+      ? directDistance 
+      : wrapAroundDistance
+    
+    // 방향 결정
+    if (finalDistance > 0) {
+      direction = "left" // 오른쪽으로 이동 (캐러셀은 왼쪽으로 회전)
+    } else {
+      direction = "right" // 왼쪽으로 이동 (캐러셀은 오른쪽으로 회전)
     }
 
     // Update carousel positions for animation
@@ -501,7 +512,45 @@ export default function HomePage() {
                       if (!isCenter && isVisible) {
                         // Click on side banner to move it to center
                         const targetIndex = novels.findIndex(novel => novel.novelId === item.novelId)
-                        handleButtonClick(targetIndex)
+                        
+                        // 현재 중앙 배너를 기준으로 상대적 방향 결정
+                        const currentCenterIndex = currentIndex
+                        const directDistance = targetIndex - currentCenterIndex
+                        
+                        // 순환 거리 계산
+                        let wrapAroundDistance: number
+                        if (directDistance > 0) {
+                          wrapAroundDistance = directDistance - novels.length
+                        } else {
+                          wrapAroundDistance = directDistance + novels.length
+                        }
+                        
+                        // 더 짧은 경로 선택
+                        const finalDistance = Math.abs(directDistance) <= Math.abs(wrapAroundDistance) 
+                          ? directDistance 
+                          : wrapAroundDistance
+                        
+                        // 방향 결정
+                        let direction: "left" | "right"
+                        if (finalDistance > 0) {
+                          direction = "left" // 오른쪽으로 이동 (캐러셀은 왼쪽으로 회전)
+                        } else {
+                          direction = "right" // 왼쪽으로 이동 (캐러셀은 오른쪽으로 회전)
+                        }
+                        
+                        // 애니메이션 적용
+                        setIsAnimating(true)
+                        setCarouselItems((prev) =>
+                          prev.map((carouselItem) => ({
+                            ...carouselItem,
+                            carouselPosition: direction === "left" ? carouselItem.carouselPosition - 1 : carouselItem.carouselPosition + 1,
+                          })),
+                        )
+                        
+                        setTimeout(() => {
+                          setCurrentIndex(targetIndex)
+                          setTimeout(() => setIsAnimating(false), 300)
+                        }, 200)
                       } else if (isCenter) {
                         // 중앙 아이템 클릭 시 해당 소설의 상세 페이지로 이동
                         setTimeout(() => {
