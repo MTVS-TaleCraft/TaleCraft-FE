@@ -90,7 +90,7 @@ export default function HomePage() {
     if (novels.length === 0) return
 
     const items = []
-    for (let i = -2; i <= 2; i++) {
+    for (let i = -1; i <= 1; i++) {
       const novelIndex = (currentIndex + i + novels.length) % novels.length
       items.push({
         ...novels[novelIndex],
@@ -162,19 +162,33 @@ export default function HomePage() {
       direction = "right" // 왼쪽으로 이동 (캐러셀은 오른쪽으로 회전)
     }
 
-    // Update carousel positions for animation
-    setCarouselItems((prev) =>
-      prev.map((item) => ({
-        ...item,
-        carouselPosition: direction === "left" ? item.carouselPosition - 1 : item.carouselPosition + 1,
-      })),
-    )
+    // 건너뛰는 거리에 따라 단계별 애니메이션
+    const steps = Math.abs(finalDistance)
+    
+    const animateStep = (step: number) => {
+      if (step >= steps) {
+        // 최종 위치로 이동
+        setCurrentIndex(targetIndex)
+        setTimeout(() => setIsAnimating(false), 300)
+        return
+      }
 
-    // Update the current index directly to the target
-    setTimeout(() => {
-      setCurrentIndex(targetIndex)
-      setTimeout(() => setIsAnimating(false), 400)
-    }, 300)
+      // 한 단계씩 이동
+      setCarouselItems((prev) =>
+        prev.map((item) => ({
+          ...item,
+          carouselPosition: direction === "left" ? item.carouselPosition - 1 : item.carouselPosition + 1,
+        })),
+      )
+
+      // 다음 단계 애니메이션
+      setTimeout(() => {
+        animateStep(step + 1)
+      }, 200)
+    }
+
+    // 애니메이션 시작
+    animateStep(0)
   }
 
   const checkLoginStatus = async () => {
@@ -473,7 +487,7 @@ export default function HomePage() {
               {carouselItems.map((item) => {
                 const position = item.carouselPosition
                 const isCenter = position === 0
-                const isVisible = Math.abs(position) <= 2 // 더 넓은 범위로 조정
+                const isVisible = Math.abs(position) <= 1 // 더 넓은 범위로 조정
 
                 // Calculate transform based on position
                 const translateX = position * 320
@@ -489,13 +503,9 @@ export default function HomePage() {
                   scale = 0.85
                   zIndex = 5
                   opacity = 0.7
-                } else if (Math.abs(position) === 2) {
-                  scale = 0.7
-                  zIndex = 3
-                  opacity = 0.4
                 } else {
                   opacity = 0
-                  scale = 0.6
+                  scale = 0.7
                 }
 
                 return (
@@ -542,19 +552,34 @@ export default function HomePage() {
                           direction = "right" // 왼쪽으로 이동 (캐러셀은 오른쪽으로 회전)
                         }
                         
-                        // 애니메이션 적용
-                        setIsAnimating(true)
-                        setCarouselItems((prev) =>
-                          prev.map((carouselItem) => ({
-                            ...carouselItem,
-                            carouselPosition: direction === "left" ? carouselItem.carouselPosition - 1 : carouselItem.carouselPosition + 1,
-                          })),
-                        )
+                        // 건너뛰는 거리에 따라 단계별 애니메이션
+                        const steps = Math.abs(finalDistance)
                         
-                        setTimeout(() => {
-                          setCurrentIndex(targetIndex)
-                          setTimeout(() => setIsAnimating(false), 400)
-                        }, 300)
+                        const animateStep = (step: number) => {
+                          if (step >= steps) {
+                            // 최종 위치로 이동
+                            setCurrentIndex(targetIndex)
+                            setTimeout(() => setIsAnimating(false), 300)
+                            return
+                          }
+
+                          // 한 단계씩 이동
+                          setCarouselItems((prev) =>
+                            prev.map((carouselItem) => ({
+                              ...carouselItem,
+                              carouselPosition: direction === "left" ? carouselItem.carouselPosition - 1 : carouselItem.carouselPosition + 1,
+                            })),
+                          )
+
+                          // 다음 단계 애니메이션
+                          setTimeout(() => {
+                            animateStep(step + 1)
+                          }, 200)
+                        }
+
+                        // 애니메이션 시작
+                        setIsAnimating(true)
+                        animateStep(0)
                       } else if (isCenter) {
                         // 중앙 아이템 클릭 시 해당 소설의 상세 페이지로 이동
                         setTimeout(() => {
