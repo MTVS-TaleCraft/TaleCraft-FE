@@ -50,6 +50,7 @@ const EpisodeViewPage = () => {
   const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
   const [isLikeLoading, setIsLikeLoading] = useState(false);
+  const [foundNovelId, setFoundNovelId] = useState<number | null>(null);
 
   // 추천 상태 가져오기
   const fetchLikeStatus = useCallback(async () => {
@@ -170,20 +171,36 @@ const EpisodeViewPage = () => {
       try {
         setLoading(true);
         
-        // 에피소드 정보 가져오기
-        const episodeResponse = await fetch(`/api/novels/1/episodes/${episodeId}`, {
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
+        // 먼저 에피소드 정보를 가져와서 novelId를 확인
+        // 임시로 novelId를 1부터 시작해서 찾아보기
+        let episodeData = null;
+        let foundNovelId = null;
+        
+        // novelId를 1부터 100까지 시도하여 에피소드를 찾기
+        for (let novelId = 1; novelId <= 100; novelId++) {
+          try {
+            const episodeResponse = await fetch(`/api/novels/${novelId}/episodes/${episodeId}`, {
+              credentials: 'include',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+            });
 
-        if (episodeResponse.ok) {
-          const episodeData = await episodeResponse.json();
-          
+            if (episodeResponse.ok) {
+              episodeData = await episodeResponse.json();
+              foundNovelId = episodeData.novelId; // 백엔드에서 반환한 실제 novelId 사용
+              break;
+            }
+          } catch (error) {
+            // 에러가 발생하면 다음 novelId로 시도
+            continue;
+          }
+        }
+
+        if (episodeData && foundNovelId) {
           // 소설 정보를 가져와서 작가 정보 설정
           try {
-            const novelResponse = await fetch(`/api/novels/${episodeData.novelId}`, {
+            const novelResponse = await fetch(`/api/novels/${foundNovelId}`, {
               credentials: 'include',
               headers: {
                 'Content-Type': 'application/json',
@@ -199,6 +216,7 @@ const EpisodeViewPage = () => {
           }
           
           setEpisode(episodeData);
+          setFoundNovelId(foundNovelId); // foundNovelId 상태 업데이트
           
           // 에피소드 정보를 가져온 후 좋아요 상태 확인
           if (isLoggedIn) {
@@ -210,8 +228,9 @@ const EpisodeViewPage = () => {
           setEpisode(null);
         }
 
-        // 댓글 목록 가져오기
-        const commentsResponse = await fetch(`/api/novels/1/episodes/${episodeId}/comments`, {
+        // 댓글 목록 가져오기 (foundNovelId가 있으면 사용, 없으면 1 사용)
+        const novelIdForComments = foundNovelId || 1;
+        const commentsResponse = await fetch(`/api/novels/${novelIdForComments}/episodes/${episodeId}/comments`, {
           credentials: 'include',
           headers: {
             'Content-Type': 'application/json',
@@ -668,7 +687,7 @@ const EpisodeViewPage = () => {
               fontSize: 14,
               cursor: 'pointer'
             }}
-            onClick={() => router.push(`/novel/${episode.novelId}`)}
+            onClick={() => router.push(`/novel/${foundNovelId}`)}
             >
               목록으로
             </button>

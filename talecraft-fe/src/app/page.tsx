@@ -527,7 +527,9 @@ export default function HomePage() {
                 }`}
                 onClick={() => {
                   // 클릭 시 해당 인덱스로 캐러셀 이동
-                  handleIndicatorClick(index);
+                  if (index !== currentIndex) {
+                    handleIndicatorClick(index);
+                  }
                 }}
                 aria-label={`소설 ${index + 1}로 이동`}
                 disabled={isAnimating}
