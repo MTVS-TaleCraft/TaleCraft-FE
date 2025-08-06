@@ -90,8 +90,8 @@ export default function AdminNovelsPage() {
             if (novelResponse.ok) {
               novelData = await novelResponse.json();
               console.log(`소설 ${novelId} 원본 데이터:`, novelData);
-              console.log(`소설 ${novelId} banned 필드:`, novelData.banned);
-              console.log(`소설 ${novelId} banned 타입:`, typeof novelData.banned);
+              console.log(`소설 ${novelId} isBanned 필드:`, novelData.isBanned);
+              console.log(`소설 ${novelId} isBanned 타입:`, typeof novelData.isBanned);
             } else {
               console.error(`소설 ${novelId} 정보를 가져오는데 실패했습니다.`);
               return null;
@@ -119,7 +119,7 @@ export default function AdminNovelsPage() {
               userId: novelData.author || '작성자 없음',
               availability: novelData.availability || 'PRIVATE',
               reportCount: reportCount,
-              isBanned: novelData.banned || false
+              isBanned: novelData.isBanned || false
             };
           } catch (error) {
             console.error(`소설 ${novelId} 처리 중 오류:`, error);

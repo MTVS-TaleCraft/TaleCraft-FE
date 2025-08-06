@@ -787,7 +787,12 @@ const EpisodeCreatePage: React.FC = () => {
                 fontSize: 14,
                 lineHeight: 1.4,
               }}>
-                {msg.content}
+                {msg.content.split('\n').map((line, i) => (
+                  <React.Fragment key={i}>
+                    {line}
+                    {i < msg.content.split('\n').length - 1 && <br />}
+                  </React.Fragment>
+                ))}
               </div>
             </div>
           ))}
