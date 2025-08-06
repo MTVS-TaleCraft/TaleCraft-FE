@@ -540,7 +540,7 @@ const EpisodeViewPage = () => {
               <h1 className="text-2xl font-bold text-gray-900">{episode.title}</h1>
             </div>
             <div className="flex items-center gap-3">
-              <button 
+              {/*<button
                 onClick={() => handleFontSizeChange(false)}
                 className="px-3 py-1 bg-gray-100 border border-gray-300 rounded text-sm hover:bg-gray-200"
               >
@@ -552,7 +552,7 @@ const EpisodeViewPage = () => {
                 className="px-3 py-1 bg-gray-100 border border-gray-300 rounded text-sm hover:bg-gray-200"
               >
                 A+
-              </button>
+              </button>*/}
             </div>
           </div>
         </div>
@@ -603,21 +603,7 @@ const EpisodeViewPage = () => {
             borderTop: '1px solid #e9ecef'
           }}>
             <div style={{ display: 'flex', gap: 10 }}>
-              <button style={{ 
-                background: '#007bff', 
-                color: '#fff', 
-                border: 'none', 
-                borderRadius: 6, 
-                padding: '8px 16px',
-                fontSize: 14,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6
-              }}>
-                <span>←</span>
-                이전화
-              </button>
+
               
               {/* 추천 버튼 */}
               <button 
@@ -646,21 +632,7 @@ const EpisodeViewPage = () => {
                 추천 {likeCount > 0 && `(${likeCount})`}
               </button>
               
-              <button style={{ 
-                background: '#007bff', 
-                color: '#fff', 
-                border: 'none', 
-                borderRadius: 6, 
-                padding: '8px 16px',
-                fontSize: 14,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6
-              }}>
-                다음화
-                <span>→</span>
-              </button>
+
             </div>
             
             <button style={{ 
