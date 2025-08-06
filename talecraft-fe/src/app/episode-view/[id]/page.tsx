@@ -217,6 +217,8 @@ const EpisodeViewPage = () => {
           
           setEpisode(episodeData);
           setFoundNovelId(foundNovelId); // foundNovelId 상태 업데이트
+          console.log('에피소드 정보 설정 완료:', episodeData);
+          console.log('찾은 소설 ID:', foundNovelId);
           
           // 에피소드 정보를 가져온 후 좋아요 상태 확인
           if (isLoggedIn) {
@@ -687,7 +689,16 @@ const EpisodeViewPage = () => {
               fontSize: 14,
               cursor: 'pointer'
             }}
-            onClick={() => router.push(`/novel/${foundNovelId}`)}
+            onClick={() => {
+              console.log('목록으로 버튼 클릭 - foundNovelId:', foundNovelId);
+              if (foundNovelId) {
+                console.log('소설 페이지로 이동:', `/novel/${foundNovelId}`);
+                router.push(`/novel/${foundNovelId}`);
+              } else {
+                console.error('소설 ID를 찾을 수 없습니다.');
+                alert('소설 정보를 찾을 수 없습니다.');
+              }
+            }}
             >
               목록으로
             </button>
