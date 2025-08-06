@@ -90,7 +90,7 @@ export default function HomePage() {
     if (novels.length === 0) return
 
     const items = []
-    for (let i = -1; i <= 1; i++) {
+    for (let i = -2; i <= 2; i++) {
       const novelIndex = (currentIndex + i + novels.length) % novels.length
       items.push({
         ...novels[novelIndex],
@@ -487,7 +487,7 @@ export default function HomePage() {
               {carouselItems.map((item) => {
                 const position = item.carouselPosition
                 const isCenter = position === 0
-                const isVisible = Math.abs(position) <= 1 // 더 넓은 범위로 조정
+                const isVisible = Math.abs(position) <= 1 // 3개만 보이도록
 
                 // Calculate transform based on position
                 const translateX = position * 320
@@ -504,8 +504,10 @@ export default function HomePage() {
                   zIndex = 5
                   opacity = 0.7
                 } else {
+                  // 4, 5번째 아이템은 완전히 가림
                   opacity = 0
                   scale = 0.7
+                  zIndex = 0
                 }
 
                 return (
