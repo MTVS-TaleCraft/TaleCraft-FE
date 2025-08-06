@@ -6,6 +6,7 @@ import { Search, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getAuthToken, removeAuthToken } from '@/utils/cookies';
 import { checkAuthAndRedirect } from '@/utils/auth';
+import { useSearchParams } from 'next/navigation'
 
 interface Episode {
   episodeId: number;
@@ -36,13 +37,13 @@ const EpisodeViewPage = () => {
   const params = useParams();
   const router = useRouter();
   const episodeId = params.id as string;
-  
+  const searchParams = useSearchParams();
   const [episode, setEpisode] = useState<Episode | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [fontSize, setFontSize] = useState(16);
   const [comment, setComment] = useState('');
-  const [currentUser, setCurrentUser] = useState<any>(null); // 현재 로그인한 사용자 정보
+  const [currentUser, setCurrentUser] = useState<never>(); // 현재 로그인한 사용자 정보
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -67,9 +68,9 @@ const EpisodeViewPage = () => {
     const fetchEpisodeData = async () => {
       try {
         setLoading(true);
-        
+        const novelId = searchParams.get('novelId')
         // 에피소드 정보 가져오기
-        const episodeResponse = await fetch(`/api/novels/1/episodes/${episodeId}`, {
+        const episodeResponse = await fetch(`/api/novels/${novelId}/episodes/${episodeId}`, {
           credentials: 'include',
           headers: {
             'Content-Type': 'application/json',
