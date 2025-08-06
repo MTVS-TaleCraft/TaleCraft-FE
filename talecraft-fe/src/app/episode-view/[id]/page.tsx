@@ -43,7 +43,7 @@ const EpisodeViewPage = () => {
   const [loading, setLoading] = useState(true);
   const [fontSize, setFontSize] = useState(16);
   const [comment, setComment] = useState('');
-  const [currentUser, setCurrentUser] = useState<never>(); // 현재 로그인한 사용자 정보
+  const [currentUser, setCurrentUser] = useState<UserInfo | null>(null); // 현재 로그인한 사용자 정보
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -363,7 +363,7 @@ const EpisodeViewPage = () => {
     }
 
     // 자신의 댓글은 신고할 수 없음
-    if (currentUser.userId === commentUserId) {
+    if (currentUser?.userId === commentUserId) {
       alert('자신의 댓글은 신고할 수 없습니다.');
       return;
     }
