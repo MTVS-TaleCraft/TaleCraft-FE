@@ -196,7 +196,20 @@ export default function UserDetailPage() {
 
       if (response.ok) {
         const data = await response.json();
-        setNovels(data.novelList || []);
+        console.log('받은 소설 데이터:', data.novelList);
+        
+        // 백엔드에서 받은 데이터를 프론트엔드 형식으로 변환
+        const formattedNovels = data.novelList.map((novel: any) => ({
+          novelId: novel.novelId,
+          title: novel.title,
+          summary: novel.summary,
+          availability: novel.availability,
+          createdAt: novel.createdAt,
+          isBanned: novel.isBanned || false // isBanned 필드 사용
+        }));
+        
+        console.log('변환된 소설 데이터:', formattedNovels);
+        setNovels(formattedNovels);
         setShowNovels(true);
       } else {
         console.error('소설 목록 가져오기 실패:', response.status);

@@ -48,56 +48,10 @@ export default function ReportManagementPage() {
         const data = await response.json();
         console.log('백엔드에서 받은 신고 데이터:', data);
         
-        // 백엔드에서 빈 배열이 오거나 데이터가 없으면 더미 데이터 사용
+        // 백엔드에서 빈 배열이 오거나 데이터가 없으면 빈 배열 설정
         if (!data || data.length === 0) {
-          console.log('백엔드에서 빈 데이터가 와서 더미 데이터를 사용합니다.');
-          setReports([
-            {
-              id: "report1",
-              reportTag: "부적절한 언어",
-              reportingUser: "user1",
-              reportedUser: "user2",
-              reportDate: "2024-01-15",
-              reportContent: "부적절한 언어를 사용했습니다.",
-              processingStatus: "처리 전",
-            },
-            {
-              id: "report2",
-              reportTag: "스팸",
-              reportingUser: "user3",
-              reportedUser: "user4",
-              reportDate: "2024-01-14",
-              reportContent: "스팸성 댓글을 반복적으로 작성했습니다.",
-              processingStatus: "처리 전",
-            },
-            {
-              id: "report3",
-              reportTag: "저작권 침해",
-              reportingUser: "user5",
-              reportedUser: "user6",
-              reportDate: "2024-01-13",
-              reportContent: "타인의 저작물을 무단으로 사용했습니다.",
-              processingStatus: "처리 완료",
-            },
-            {
-              id: "report4",
-              reportTag: "폭력적 내용",
-              reportingUser: "user7",
-              reportedUser: "user8",
-              reportDate: "2024-01-12",
-              reportContent: "폭력적인 내용을 포함한 게시물을 작성했습니다.",
-              processingStatus: "처리 전",
-            },
-            {
-              id: "report5",
-              reportTag: "개인정보 유출",
-              reportingUser: "user9",
-              reportedUser: "user10",
-              reportDate: "2024-01-11",
-              reportContent: "타인의 개인정보를 무단으로 공개했습니다.",
-              processingStatus: "처리 전",
-            },
-          ]);
+          console.log('백엔드에서 빈 데이터가 와서 빈 배열을 설정합니다.');
+          setReports([]);
         } else {
           // 백엔드 데이터를 프론트엔드 형식으로 변환
           const formattedReports = data.map((report: {
