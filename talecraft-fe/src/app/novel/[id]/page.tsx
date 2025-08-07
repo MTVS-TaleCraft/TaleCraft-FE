@@ -95,11 +95,21 @@ const NovelPage: React.FC = () => {
         const novelResponse = await fetch(`/api/novels/${novelId}`, {
           credentials: 'include'
         });
+        
+        if (novelResponse.status === 403) {
+          // 차단된 소설인 경우 메인 페이지로 리다이렉트
+          console.log('차단된 소설에 접근 시도됨:', novelId);
+          alert('차단된 소설입니다.');
+          router.push('/');
+          return;
+        }
+        
         const novelData = await novelResponse.json();
         const episodeResponse = await fetch(`/api/novels/${novelId}/episodes`, {
           credentials: 'include'
         });
         const episodeData = await episodeResponse.json();
+        
         if (novelResponse.ok) {
           setNovel(novelData);
           console.log('소설 상세 정보:', novelData);
@@ -112,7 +122,7 @@ const NovelPage: React.FC = () => {
             setEpisodes([]);
           }
         } else {
-          // 401, 403 에러는 정상적인 상황 (로그인하지 않은 상태)
+          // 401 에러는 정상적인 상황 (로그인하지 않은 상태)
           setError(novelData.message || '작품 정보를 불러오는데 실패했습니다.');
         }
       } catch (error) {

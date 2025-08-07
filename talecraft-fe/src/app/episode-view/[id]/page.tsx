@@ -193,6 +193,14 @@ const EpisodeViewPage = () => {
               },
             });
             
+            if (novelResponse.status === 403) {
+              // 차단된 소설인 경우 메인 페이지로 리다이렉트
+              console.log('차단된 소설의 에피소드에 접근 시도됨:', episodeData.novelId);
+              alert('차단된 소설입니다.');
+              router.push('/');
+              return;
+            }
+            
             if (novelResponse.ok) {
               const novelData = await novelResponse.json();
               episodeData.author = novelData.author; // 작가 정보 추가

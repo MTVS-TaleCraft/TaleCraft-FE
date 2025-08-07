@@ -147,6 +147,15 @@ export default function AdminNovelsPage() {
               reportCount = reportData.reportCount || 0;
             }
             
+            console.log(`소설 ${novelId} 원본 데이터:`, novelData);
+            console.log(`소설 ${novelId} banned 필드:`, novelData.banned);
+            console.log(`소설 ${novelId} isBanned 필드:`, novelData.isBanned);
+            console.log(`소설 ${novelId} banned 타입:`, typeof novelData.banned);
+            console.log(`소설 ${novelId} isBanned 타입:`, typeof novelData.isBanned);
+            
+            // banned 또는 isBanned 필드 중 하나를 사용
+            const isBanned = novelData.isBanned !== undefined ? novelData.isBanned : (novelData.banned || false);
+            
             return {
               novelId: novelId,
               title: novelData.title || '제목 없음',
@@ -155,7 +164,7 @@ export default function AdminNovelsPage() {
               userId: novelData.author || '작성자 없음',
               availability: novelData.availability || 'PRIVATE',
               reportCount: reportCount,
-              isBanned: novelData.banned || false
+              isBanned: isBanned
             };
           } catch (error) {
             console.error(`소설 ${novelId} 처리 중 오류:`, error);

@@ -198,22 +198,32 @@ export default function UserDetailPage() {
         const data = await response.json();
         console.log('받은 소설 데이터:', data.novelList);
         
-        // 백엔드에서 받은 데이터를 프론트엔드 형식으로 변환
-        const formattedNovels = data.novelList.map((novel: {
-          novelId: number;
-          title: string;
-          summary: string;
-          availability: string;
-          createdAt: string;
-          isBanned?: boolean;
-        }) => ({
-          novelId: novel.novelId,
-          title: novel.title,
-          summary: novel.summary,
-          availability: novel.availability,
-          createdAt: novel.createdAt,
-          isBanned: novel.isBanned || false // isBanned 필드 사용
-        }));
+                 // 백엔드에서 받은 데이터를 프론트엔드 형식으로 변환
+         const formattedNovels = data.novelList.map((novel: {
+           novelId: number;
+           title: string;
+           summary: string;
+           availability: string;
+           createdAt: string;
+           isBanned?: boolean;
+           banned?: boolean;
+         }) => {
+           console.log(`소설 ${novel.novelId} (${novel.title}) - 전체 데이터:`, novel);
+           console.log(`소설 ${novel.novelId} (${novel.title}) - isBanned:`, novel.isBanned, '타입:', typeof novel.isBanned);
+           console.log(`소설 ${novel.novelId} (${novel.title}) - banned:`, novel.banned, '타입:', typeof novel.banned);
+           
+           // isBanned 또는 banned 필드 중 하나를 사용
+           const isBanned = novel.isBanned !== undefined ? novel.isBanned : (novel.banned || false);
+           
+           return {
+             novelId: novel.novelId,
+             title: novel.title,
+             summary: novel.summary,
+             availability: novel.availability,
+             createdAt: novel.createdAt,
+             isBanned: isBanned
+           };
+         });
         
         console.log('변환된 소설 데이터:', formattedNovels);
         setNovels(formattedNovels);
@@ -505,9 +515,11 @@ export default function UserDetailPage() {
                         <div className="flex items-center space-x-4 mt-2 text-sm text-black">
                           <span>상태: {novel.availability}</span>
                           <span>작성일: {new Date(novel.createdAt).toLocaleDateString()}</span>
-                          <span className={`font-medium ${novel.isBanned ? 'text-red-600' : 'text-green-600'}`}>
-                            {novel.isBanned ? '차단됨' : '활성'}
-                          </span>
+                          {novel.isBanned && (
+                            <span className="font-medium text-red-600">
+                              차단됨
+                            </span>
+                          )}
                         </div>
                       </div>
                       <div className="flex space-x-2">
