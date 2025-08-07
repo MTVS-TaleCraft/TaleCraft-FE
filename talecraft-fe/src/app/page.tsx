@@ -205,7 +205,6 @@ export default function HomePage() {
         setUserInfo(null);
       }
     } catch (error) {
-      console.error('로그인 상태 확인 오류:', error);
       setIsLoggedIn(false);
       setUserInfo(null);
     }
@@ -231,7 +230,6 @@ export default function HomePage() {
       const randomNovels = shuffled.slice(0, 5)
       setNovels(randomNovels)
     } catch (error) {
-      console.error("Failed to fetch novels:", error)
       setNovels([])
     } finally {
       setIsLoading(false)
@@ -278,12 +276,12 @@ export default function HomePage() {
       });
 
       if (response.ok) {
-        console.log('로그아웃 성공');
+        // 로그아웃 성공
       } else {
-        console.error('로그아웃 실패');
+        // 로그아웃 실패
       }
     } catch (error) {
-      console.error('로그아웃 중 오류:', error);
+      // 로그아웃 중 오류
     } finally {
       // 프론트엔드 상태 정리
       removeAuthToken();
@@ -295,7 +293,7 @@ export default function HomePage() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     if (searchQuery.trim()) {
-      console.log("Searching for:", searchQuery)
+      // 검색 기능 구현 예정
     }
   }
 
