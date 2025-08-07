@@ -7,7 +7,7 @@ export async function GET(
   try {
     const { novelId, episodeId } = params;
     
-    const response = await fetch(`${process.env.BACKEND_URL || 'http://localhost:8081'}/api/novels/${novelId}/episodes/${episodeId}/comments`, {
+    const response = await fetch(`${process.env.BACKEND_URL || 'http://localhost:8080'}/api/novels/${novelId}/episodes/${episodeId}/comments`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -44,7 +44,7 @@ export async function POST(
     const { novelId, episodeId } = params;
     const body = await request.json();
     
-    const response = await fetch(`${process.env.BACKEND_URL || 'http://localhost:8081'}/api/novels/${novelId}/episodes/${episodeId}/comments`, {
+    const response = await fetch(`${process.env.BACKEND_URL || 'http://localhost:8080'}/api/novels/${novelId}/episodes/${episodeId}/comments`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

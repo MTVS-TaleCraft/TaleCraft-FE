@@ -273,8 +273,31 @@ const NovelCreatePage: React.FC = () => {
   };
 
   // 태그 삭제 함수
-  const handleRemoveTag = (tagToRemove: string) => {
-    setTags(tags.filter(tag => tag !== tagToRemove));
+  const handleRemoveTag = async (tagToRemove: string) => {
+    if (isEditMode && novelId && userInfo) {
+      try {
+        // 백엔드에서 태그 삭제
+        const requesterType = userInfo.authorityId === '3' ? 'ADMIN' : 'AUTHOR';
+        const response = await fetch(`/api/tags/novels/${novelId}?tagName=${encodeURIComponent(tagToRemove)}&requesterType=${requesterType}&requesterId=${userInfo.userId}`, {
+          method: 'DELETE',
+          credentials: 'include'
+        });
+
+        if (response.ok) {
+          console.log('태그 삭제 성공:', tagToRemove);
+          setTags(tags.filter(tag => tag !== tagToRemove));
+        } else {
+          console.error('태그 삭제 실패:', response.status);
+          alert('태그 삭제에 실패했습니다.');
+        }
+      } catch (error) {
+        console.error('태그 삭제 중 오류:', error);
+        alert('태그 삭제 중 오류가 발생했습니다.');
+      }
+    } else {
+      // 생성 모드 또는 사용자 정보가 없는 경우: 로컬 상태만 업데이트
+      setTags(tags.filter(tag => tag !== tagToRemove));
+    }
   };
 
   // 태그 입력 키 이벤트 처리

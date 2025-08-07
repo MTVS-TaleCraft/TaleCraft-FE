@@ -12,7 +12,7 @@ export async function GET(
     console.log('쿠키:', cookies);
     console.log('모든 헤더:', Object.fromEntries(request.headers.entries()));
     
-    const backendUrl = `${process.env.BACKEND_URL || 'http://localhost:8081'}/api/novels/bookmarks/check/${novelId}`;
+    const backendUrl = `${process.env.BACKEND_URL || 'http://localhost:8080'}/api/novels/bookmarks/check/${novelId}`;
     console.log('백엔드 URL:', backendUrl);
     
     const response = await fetch(backendUrl, {

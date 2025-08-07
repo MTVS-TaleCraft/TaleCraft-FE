@@ -1,18 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { novelId: string } }
-) {
+export async function POST(request: NextRequest) {
   try {
-    const novelId = params.novelId;
+    const body = await request.json();
     
-    const response = await fetch(`${process.env.BACKEND_URL || 'http://localhost:8080'}/api/novels/${novelId}/episodes`, {
-      method: 'GET',
+    const response = await fetch(`${process.env.BACKEND_URL || 'http://localhost:8080'}/api/inquiry/send`, {
+      method: 'POST',
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
         'Cookie': request.headers.get('cookie') || '',
       },
+      body: JSON.stringify(body),
     });
 
     if (!response.ok) {
@@ -25,11 +24,10 @@ export async function GET(
       status: response.status,
     });
   } catch (error) {
-    console.error('Episodes API error:', error);
+    console.error('Inquiry send API error:', error);
     return NextResponse.json(
       { 
-        error: '에피소드 목록을 불러올 수 없습니다.',
-        episodesList: [] 
+        error: '문의 전송에 실패했습니다.'
       },
       { status: 500 }
     );

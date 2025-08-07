@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
     console.log('북마크 목록 API 호출');
     console.log('쿠키:', cookies);
     
-    const backendUrl = `${process.env.BACKEND_URL || 'http://localhost:8081'}/api/novels/bookmarks`;
+    const backendUrl = `${process.env.BACKEND_URL || 'http://localhost:8080'}/api/novels/bookmarks`;
     console.log('백엔드 URL:', backendUrl);
     
     const response = await fetch(backendUrl, {

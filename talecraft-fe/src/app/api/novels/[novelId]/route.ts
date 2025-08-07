@@ -5,29 +5,36 @@ export async function GET(
   { params }: { params: { novelId: string } }
 ) {
   try {
-    const novelId = params.novelId;
+    const { novelId } = params;
     
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/novels/${novelId}`, {
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:8080';
+    const url = `${backendUrl}/api/novels/${novelId}`;
+    
+    const response = await fetch(url, {
       method: 'GET',
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
+        'Cookie': request.headers.get('cookie') || '',
+        'Accept': 'application/json',
       },
-      credentials: 'include',
     });
 
     if (!response.ok) {
       return NextResponse.json(
-        { error: '작품 정보를 가져오는데 실패했습니다.' },
+        { error: '소설을 불러올 수 없습니다.' },
         { status: response.status }
       );
     }
 
     const data = await response.json();
-    return NextResponse.json(data);
+    return NextResponse.json(data, {
+      status: response.status,
+    });
   } catch (error) {
-    console.error('작품 정보 가져오기 오류:', error);
+    console.error('Novel detail API error:', error);
     return NextResponse.json(
-      { error: '서버 오류가 발생했습니다.' },
+      { error: '소설을 불러올 수 없습니다.' },
       { status: 500 }
     );
   }

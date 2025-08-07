@@ -3,7 +3,7 @@
 export const setCookie = (name: string, value: string, days: number = 7) => {
   const expires = new Date();
   expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
-  document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/;SameSite=Lax;domain=localhost`;
+  document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/;SameSite=Lax`;
   console.log('쿠키 설정됨:', name, value);
 };
 
@@ -31,7 +31,7 @@ export const getCookie = (name: string): string | null => {
 };
 
 export const removeCookie = (name: string) => {
-  document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;domain=localhost`;
+  document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/`;
   console.log('쿠키 제거됨:', name);
 };
 

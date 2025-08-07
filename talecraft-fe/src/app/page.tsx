@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { Search, Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { removeAuthToken } from "@/utils/cookies"
+import { removeAuthToken, getAuthToken } from "@/utils/cookies"
 
 interface Novel {
   novelId: number
@@ -201,11 +201,12 @@ export default function HomePage() {
         setUserInfo(data);
         setIsLoggedIn(true);
       } else {
+        // 401, 403 에러는 정상적인 상황 (로그인하지 않은 상태)
         setIsLoggedIn(false);
         setUserInfo(null);
       }
     } catch (error) {
-      console.error('로그인 상태 확인 오류:', error);
+      // 네트워크 에러 등은 로그인하지 않은 상태로 처리
       setIsLoggedIn(false);
       setUserInfo(null);
     }

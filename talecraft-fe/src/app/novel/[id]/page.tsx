@@ -80,7 +80,7 @@ const NovelPage: React.FC = () => {
         setUserInfo(null);
       }
     } catch (error) {
-      console.error('로그인 상태 확인 오류:', error);
+      // 네트워크 에러 등은 로그인하지 않은 상태로 처리
       setIsLoggedIn(false);
       setUserInfo(null);
     }
@@ -111,11 +111,9 @@ const NovelPage: React.FC = () => {
           } else {
             setEpisodes([]);
           }
-        } else if (novelResponse.status === 401||episodeResponse.status === 401) {
-          setError('로그인이 필요합니다.');
         } else {
+          // 401, 403 에러는 정상적인 상황 (로그인하지 않은 상태)
           setError(novelData.message || '작품 정보를 불러오는데 실패했습니다.');
-          setError(episodeData.message || '에피소드 정보를 불러오는데 실패했습니다.');
         }
       } catch (error) {
         setError('네트워크 오류가 발생했습니다.');

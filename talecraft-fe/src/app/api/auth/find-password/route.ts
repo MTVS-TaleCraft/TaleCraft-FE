@@ -6,7 +6,7 @@ export async function POST(request: NextRequest) {
     const { email, userId } = body;
 
     // 백엔드 API 호출
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081'}/api/auth/find-password`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/auth/find-password`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

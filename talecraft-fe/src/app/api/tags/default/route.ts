@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
   try {
-    const backendUrl = process.env.BACKEND_URL || '/api/backend';
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:8080';
     console.log('Backend URL:', backendUrl);
     
     const url = `${backendUrl}/api/tags/default`;
@@ -10,6 +10,7 @@ export async function GET(request: NextRequest) {
     
     const response = await fetch(url, {
       method: 'GET',
+      credentials: 'include',
       headers: {
         'Cookie': request.headers.get('cookie') || '',
       },

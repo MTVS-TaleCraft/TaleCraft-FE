@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
   try {
-    const backendUrl = process.env.BACKEND_URL || 'http://localhost:8081';
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:8080';
     console.log('Backend URL:', backendUrl);
     
     const url = `${backendUrl}/api/tags/common`;

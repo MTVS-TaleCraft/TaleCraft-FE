@@ -1,14 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { novelId: string } }
-) {
+export async function GET(request: NextRequest) {
   try {
-    const novelId = params.novelId;
-    
-    const response = await fetch(`${process.env.BACKEND_URL || 'http://localhost:8080'}/api/novels/${novelId}/episodes`, {
+    const response = await fetch(`${process.env.BACKEND_URL || 'http://localhost:8080'}/api/reports/reported-novels`, {
       method: 'GET',
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
         'Cookie': request.headers.get('cookie') || '',
@@ -25,11 +21,11 @@ export async function GET(
       status: response.status,
     });
   } catch (error) {
-    console.error('Episodes API error:', error);
+    console.error('Reported novels API error:', error);
     return NextResponse.json(
       { 
-        error: '에피소드 목록을 불러올 수 없습니다.',
-        episodesList: [] 
+        error: '신고된 소설 목록을 불러올 수 없습니다.',
+        novelIds: []
       },
       { status: 500 }
     );

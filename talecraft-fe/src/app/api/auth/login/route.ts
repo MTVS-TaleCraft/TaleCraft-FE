@@ -6,11 +6,12 @@ export async function POST(request: NextRequest) {
     
     console.log('로그인 API 호출 - 백엔드로 요청 전송');
     
-    const response = await fetch(`${process.env.BACKEND_URL || 'http://localhost:8081'}/api/auth/login`, {
+    const response = await fetch(`${process.env.BACKEND_URL || 'http://localhost:8080'}/api/auth/login`, {
       method: 'POST',
       credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
+        'Cookie': request.headers.get('cookie') || '',
       },
       body: JSON.stringify(body),
     });

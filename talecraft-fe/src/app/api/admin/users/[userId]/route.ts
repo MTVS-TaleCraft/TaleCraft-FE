@@ -2,13 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { novelId: string } }
+  { params }: { params: { userId: string } }
 ) {
   try {
-    const novelId = params.novelId;
+    const { userId } = params;
     
-    const response = await fetch(`${process.env.BACKEND_URL || 'http://localhost:8080'}/api/novels/${novelId}/episodes`, {
+    const response = await fetch(`${process.env.BACKEND_URL || 'http://localhost:8080'}/api/admin/users/${userId}`, {
       method: 'GET',
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
         'Cookie': request.headers.get('cookie') || '',
@@ -25,11 +26,10 @@ export async function GET(
       status: response.status,
     });
   } catch (error) {
-    console.error('Episodes API error:', error);
+    console.error('Admin user detail API error:', error);
     return NextResponse.json(
       { 
-        error: '에피소드 목록을 불러올 수 없습니다.',
-        episodesList: [] 
+        error: '사용자 정보를 불러올 수 없습니다.'
       },
       { status: 500 }
     );

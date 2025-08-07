@@ -36,7 +36,7 @@ export default function ReportDetailPage() {
 
   const checkAuth = async () => {
     try {
-      const response = await fetch('http://localhost:8081/api/auth/profile', {
+      const response = await fetch('/api/auth/profile', {
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
@@ -72,7 +72,7 @@ export default function ReportDetailPage() {
       // reportId에서 comment_ 접두사 제거하여 실제 ID 추출
       const actualReportId = reportId.replace('comment_', '');
       
-      const response = await fetch(`http://localhost:8081/api/reports/comments/${actualReportId}`, {
+              const response = await fetch(`/api/reports/comments/${actualReportId}`, {
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
@@ -141,7 +141,7 @@ export default function ReportDetailPage() {
       // reportId에서 comment_ 접두사 제거하여 실제 ID 추출
       const actualReportId = reportId.replace('comment_', '');
       
-      const response = await fetch(`http://localhost:8081/api/reports/${actualReportId}/view`, {
+              const response = await fetch(`/api/reports/${actualReportId}/view`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,

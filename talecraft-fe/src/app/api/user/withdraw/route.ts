@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function DELETE(request: NextRequest) {
   try {
-    const response = await fetch(`${process.env.BACKEND_URL || 'http://localhost:8081'}/api/user/withdraw`, {
+    const response = await fetch(`${process.env.BACKEND_URL || 'http://localhost:8080'}/api/user/withdraw`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',

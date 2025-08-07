@@ -7,7 +7,7 @@ export async function POST(
   try {
     const novelId = params.novelId;
     
-    const response = await fetch(`${process.env.BACKEND_URL || 'http://localhost:8081'}/api/novels/bookmarks/${novelId}`, {
+    const response = await fetch(`${process.env.BACKEND_URL || 'http://localhost:8080'}/api/novels/bookmarks/${novelId}`, {
       method: 'POST',
       headers: {
         'Cookie': request.headers.get('cookie') || '',
@@ -41,7 +41,7 @@ export async function DELETE(
   try {
     const novelId = params.novelId;
     
-    const response = await fetch(`${process.env.BACKEND_URL || 'http://localhost:8081'}/api/novels/bookmarks/${novelId}`, {
+    const response = await fetch(`${process.env.BACKEND_URL || 'http://localhost:8080'}/api/novels/bookmarks/${novelId}`, {
       method: 'DELETE',
       headers: {
         'Cookie': request.headers.get('cookie') || '',

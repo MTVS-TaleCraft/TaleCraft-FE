@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-export async function GET(
+export async function PATCH(
   request: NextRequest,
   { params }: { params: { novelId: string } }
 ) {
   try {
-    const novelId = params.novelId;
+    const { novelId } = params;
     
-    const response = await fetch(`${process.env.BACKEND_URL || 'http://localhost:8080'}/api/novels/${novelId}/episodes`, {
-      method: 'GET',
+    const response = await fetch(`${process.env.BACKEND_URL || 'http://localhost:8080'}/api/novels/${novelId}/ban`, {
+      method: 'PATCH',
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
         'Cookie': request.headers.get('cookie') || '',
@@ -25,11 +26,10 @@ export async function GET(
       status: response.status,
     });
   } catch (error) {
-    console.error('Episodes API error:', error);
+    console.error('Novel ban API error:', error);
     return NextResponse.json(
       { 
-        error: '에피소드 목록을 불러올 수 없습니다.',
-        episodesList: [] 
+        error: '소설 차단/해제에 실패했습니다.'
       },
       { status: 500 }
     );
