@@ -164,7 +164,7 @@ export default function UserDetailPage() {
 
   const fetchUserDetail = async () => {
     try {
-      const response = await fetch(`/api/auth/profile?targetUserId=${userId}`, {
+      const response = await fetch(`/api/admin/users/${userId}`, {
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
@@ -186,8 +186,8 @@ export default function UserDetailPage() {
 
   const handleViewWorks = async (userId: string) => {
     try {
-      // NovelController의 전체 조회 API를 사용해서 해당 유저의 소설 목록 가져오기
-      const response = await fetch(`/api/novels?type=userId&value=${userId}`, {
+      // 관리자용 API를 사용해서 해당 유저의 모든 소설 목록 가져오기 (차단된 소설 포함)
+      const response = await fetch(`/api/admin/users/${userId}/novels`, {
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
@@ -276,7 +276,6 @@ export default function UserDetailPage() {
     const isCurrentlyBanned = currentNovel?.isBanned || false;
 
     try {
-      const token = localStorage.getItem('token');
       const response = await fetch(`/api/novels/${novelId}/ban`, {
         method: 'PATCH',
         credentials: 'include',
@@ -506,6 +505,9 @@ export default function UserDetailPage() {
                         <div className="flex items-center space-x-4 mt-2 text-sm text-black">
                           <span>상태: {novel.availability}</span>
                           <span>작성일: {new Date(novel.createdAt).toLocaleDateString()}</span>
+                          <span className={`font-medium ${novel.isBanned ? 'text-red-600' : 'text-green-600'}`}>
+                            {novel.isBanned ? '차단됨' : '활성'}
+                          </span>
                         </div>
                       </div>
                       <div className="flex space-x-2">
