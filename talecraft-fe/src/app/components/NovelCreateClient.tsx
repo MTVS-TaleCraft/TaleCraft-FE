@@ -232,7 +232,7 @@ const NovelCreatePage: React.FC = () => {
              router.push('/my-novels');
            }, 1500);
          } else {
-           // 생성 모드인 경우 폼 초기화만 하고 페이지 이동하지 않음
+           // 생성 모드인 경우 폼 초기화만 하고 목록 페이지 이동
            setTitle('');
            setTitleImage(null);
            setSummary('');
@@ -241,7 +241,7 @@ const NovelCreatePage: React.FC = () => {
            setTags([]);
            setTagInput('');
            setShowTagInput(false);
-           // router.push('/my-novels'); // 페이지 이동 제거
+            router.push('/novel-list'); //
          }
        } else {
          setMessage(data.error || (isEditMode ? '작품 수정에 실패했습니다.' : '작품 생성에 실패했습니다.'));
