@@ -5,7 +5,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const targetUserId = searchParams.get('targetUserId');
     
-    const backendUrl = process.env.BACKEND_URL || '/api/backend';
+    const backendUrl = 'http://localhost:8080';
     const url = targetUserId 
       ? `${backendUrl}/api/auth/profile?targetUserId=${targetUserId}`
       : `${backendUrl}/api/auth/profile`;
@@ -67,7 +67,7 @@ export async function PATCH(request: NextRequest) {
   try {
     const body = await request.json();
     
-    const backendUrl = process.env.BACKEND_URL || '/api/backend';
+    const backendUrl = 'http://localhost:8080';
     const response = await fetch(`${backendUrl}/api/auth/profile`, {
       method: 'PATCH',
       headers: {
@@ -124,7 +124,7 @@ export async function PATCH(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const backendUrl = process.env.BACKEND_URL || '/api/backend';
+    const backendUrl = 'http://localhost:8080';
     const response = await fetch(`${backendUrl}/api/auth/logout`, {
       method: 'POST',
       headers: {

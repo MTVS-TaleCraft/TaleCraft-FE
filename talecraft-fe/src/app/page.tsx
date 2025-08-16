@@ -200,11 +200,18 @@ export default function HomePage() {
         const data = await response.json();
         setUserInfo(data);
         setIsLoggedIn(true);
+      } else if (response.status === 401) {
+        // 토큰 만료 또는 인증 실패 시 자동 로그아웃
+        console.log('토큰이 만료되었습니다. 자동 로그아웃 처리합니다.');
+        removeAuthToken();
+        setIsLoggedIn(false);
+        setUserInfo(null);
       } else {
         setIsLoggedIn(false);
         setUserInfo(null);
       }
     } catch (error) {
+      console.error('로그인 상태 확인 중 오류:', error);
       setIsLoggedIn(false);
       setUserInfo(null);
     }
