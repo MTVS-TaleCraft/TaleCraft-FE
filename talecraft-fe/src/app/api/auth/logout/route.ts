@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
   try {
-    // 백엔드에 로그아웃 요청
-    const backendUrl = process.env.BACKEND_URL || '/api/backend';
+    const backendUrl = 'http://localhost:8080';
     const response = await fetch(`${backendUrl}/api/auth/logout`, {
       method: 'POST',
       headers: {

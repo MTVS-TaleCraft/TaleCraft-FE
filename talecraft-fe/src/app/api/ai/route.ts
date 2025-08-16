@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
   try {
-    const backendUrl = process.env.BACKEND_URL || '/api/backend';
+    const backendUrl = 'http://localhost:8080';
     const url = `${backendUrl}/api/ai`;
     
     // FormData를 백엔드로 전달
@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
       );
     }
     
-    const backendUrl = process.env.BACKEND_URL || '/api/backend';
+    const backendUrl = 'http://localhost:8080';
     const url = `${backendUrl}/api/ai/${episodeId}?chatListId=${chatListId || ''}`;
     
     const response = await fetch(url, {

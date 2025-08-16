@@ -2,18 +2,18 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
   try {
-    const cookies = request.headers.get('cookie');
+    const backendUrl = 'http://localhost:8080';
+    const url = `${backendUrl}/api/novels/bookmarks`;
     
     console.log('북마크 목록 API 호출');
-    console.log('쿠키:', cookies);
+    console.log('쿠키:', request.headers.get('cookie'));
     
-    const backendUrl = `${process.env.BACKEND_URL || '/api/backend'}/api/novels/bookmarks`;
-    console.log('백엔드 URL:', backendUrl);
+    console.log('백엔드 URL:', url);
     
-    const response = await fetch(backendUrl, {
+    const response = await fetch(url, {
       method: 'GET',
       headers: {
-        'Cookie': cookies || '',
+        'Cookie': request.headers.get('cookie') || '',
         'Content-Type': 'application/json',
       },
     });

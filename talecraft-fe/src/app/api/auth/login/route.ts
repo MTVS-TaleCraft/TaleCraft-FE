@@ -6,7 +6,7 @@ export async function POST(request: NextRequest) {
     
 
     
-    const backendUrl = process.env.BACKEND_URL || '/api/backend';
+    const backendUrl = 'http://localhost:8080';
     const response = await fetch(`${backendUrl}/api/auth/login`, {
       method: 'POST',
       headers: {

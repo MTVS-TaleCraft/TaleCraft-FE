@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
   try {
-    const backendUrl = process.env.BACKEND_URL || '/api/backend';
+    const backendUrl = 'http://localhost:8080';
     const response = await fetch(`${backendUrl}/api/novels/my`, {
       method: 'GET',
       headers: {
