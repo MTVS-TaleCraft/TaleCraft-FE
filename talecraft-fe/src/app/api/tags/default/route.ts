@@ -2,10 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
   try {
-    const backendUrl = process.env.BACKEND_URL || '/api/backend';
-    console.log('Backend URL:', backendUrl);
-    
-    const url = `${backendUrl}/api/tags/default`;
+    // 서버 사이드에서는 절대 URL 사용
+    const url = 'http://localhost:8080/api/tags/default';
     console.log('Requesting URL:', url);
     
     const response = await fetch(url, {

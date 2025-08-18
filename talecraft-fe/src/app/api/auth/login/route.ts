@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
     // 백엔드에서 받은 JWT 토큰을 쿠키로 설정
     if (data.token) {
       res.cookies.set('JwtToken', data.token, {
-        httpOnly: true,
+        httpOnly: false, // JavaScript에서 접근 가능하도록 false로 설정
         secure: false, // HTTP 환경에서 쿠키 전송을 위해 false로 설정
         sameSite: 'lax',
         path: '/',

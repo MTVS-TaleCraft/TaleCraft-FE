@@ -35,7 +35,6 @@ export default function HomePage() {
   const [novels, setNovels] = useState<Novel[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
-  const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null)
@@ -46,6 +45,9 @@ export default function HomePage() {
   const [dragStartX, setDragStartX] = useState(0)
   const [dragCurrentX, setDragCurrentX] = useState(0)
   const [autoSlideInterval, setAutoSlideInterval] = useState<NodeJS.Timeout | null>(null)
+  const [selectedTag, setSelectedTag] = useState<string>('')
+  const [commonTags, setCommonTags] = useState<string[]>([])
+  const [loadingTags, setLoadingTags] = useState(false)
 
   const navigationItems = [
     { label: "베스트", value: "best" },
@@ -57,6 +59,7 @@ export default function HomePage() {
   useEffect(() => {
     checkLoginStatus()
     fetchNovels()
+    fetchDefaultTags()
   }, [])
 
   // 자동 슬라이드 기능 (사용자 인터랙션 방해를 위해 비활성화)
@@ -201,11 +204,11 @@ export default function HomePage() {
         setUserInfo(data);
         setIsLoggedIn(true);
       } else if (response.status === 401) {
-        // 토큰 만료 또는 인증 실패 시 자동 로그아웃
-        console.log('토큰이 만료되었습니다. 자동 로그아웃 처리합니다.');
-        removeAuthToken();
-        setIsLoggedIn(false);
-        setUserInfo(null);
+        // 토큰 만료 또는 인증 실패 시에도 로그인 상태 유지
+        console.log('토큰이 만료되었지만 로그인 상태를 유지합니다.');
+        // removeAuthToken(); // 자동 로그아웃 방지
+        // setIsLoggedIn(false); // 로그인 상태 유지
+        // setUserInfo(null); // 사용자 정보 유지
       } else {
         setIsLoggedIn(false);
         setUserInfo(null);
@@ -217,11 +220,41 @@ export default function HomePage() {
     }
   };
 
-  const fetchNovels = async () => {
+  const fetchDefaultTags = async () => {
+    setLoadingTags(true);
+    try {
+      // 기본 태그만 가져오기
+      const response = await fetch('/api/tags/default', { 
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setCommonTags(data.tagNames || []);
+      } else {
+        console.error('기본 태그 로드 실패:', response.status);
+        setCommonTags([]);
+      }
+    } catch (error) {
+      console.error('기본 태그 로드 실패:', error);
+      setCommonTags([]);
+    } finally {
+      setLoadingTags(false);
+    }
+  };
+
+  const fetchNovels = async (tag?: string) => {
     try {
       setIsLoading(true)
 
-      const response = await fetch(`/api/novels`, {
+      let url = '/api/novels';
+      if (tag) {
+        url = `/api/tags/search/novels?tagName=${encodeURIComponent(tag)}`;
+      }
+
+      const response = await fetch(url, {
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
@@ -229,19 +262,43 @@ export default function HomePage() {
       })
 
       if (!response.ok) {
+        console.error(`HTTP error! status: ${response.status}`);
+        if (tag) {
+          // 태그 검색 실패 시 기본 소설들로 폴백
+          await fetchNovels();
+          return;
+        }
         throw new Error(`HTTP error! status: ${response.status}`)
       }
 
       const data = await response.json()
-      const shuffled = [...data.novelList].sort(() => 0.5 - Math.random())
-      const randomNovels = shuffled.slice(0, 5)
-      setNovels(randomNovels)
+      if (tag) {
+        // 태그 검색 결과
+        setNovels(data.novelList || [])
+      } else {
+        // 기본 랜덤 소설들
+        const shuffled = [...data.novelList].sort(() => 0.5 - Math.random())
+        const randomNovels = shuffled.slice(0, 5)
+        setNovels(randomNovels)
+      }
     } catch (error) {
+      console.error('소설 목록 로드 실패:', error);
       setNovels([])
     } finally {
       setIsLoading(false)
     }
   }
+
+  const handleTagClick = async (tag: string) => {
+    setSelectedTag(selectedTag === tag ? '' : tag);
+    if (selectedTag === tag) {
+      // 같은 태그를 다시 클릭하면 전체 목록으로
+      await fetchNovels();
+    } else {
+      // 새로운 태그를 클릭하면 해당 태그의 소설들
+      await fetchNovels(tag);
+    }
+  };
 
   const handleIndicatorClick = (index: number) => {
     if (isAnimating || index === currentIndex || novels.length === 0) return
@@ -409,45 +466,65 @@ export default function HomePage() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-blue-400 text-white p-4 shadow-md">
-        <div className="flex justify-between items-center w-full">
+        <div className="grid grid-cols-3 items-center w-full gap-4">
+          {/* Left: Logo */}
           <h1 className="text-xl font-bold">TaleCraft</h1>
 
-          <div className="flex items-center space-x-2">
-            {isSearchOpen ? (
-              <form onSubmit={handleSearch} className="flex items-center space-x-2">
-                <input
-                  type="text"
-                  placeholder="검색어를 입력하세요..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="px-3 py-1 rounded text-black text-sm w-48 focus:outline-none focus:ring-2 focus:ring-white"
-                  autoFocus
-                />
+          {/* Center: Navigation Buttons - Perfectly centered */}
+          <div className="flex justify-center">
+            <div className="flex space-x-4">
+              {navigationItems.map((item) => (
                 <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="text-white hover:bg-blue-500"
+                  key={item.value}
+                  variant={activeTab === item.value ? "default" : "outline"}
+                  className={`px-4 py-2 ${
+                    activeTab === item.value ? "bg-white text-blue-600" : "bg-transparent text-white border-white hover:bg-white hover:text-blue-600"
+                  }`}
                   onClick={() => {
-                    setIsSearchOpen(false)
-                    setSearchQuery("")
+                    if (item.value === 'library') {
+                      // 보관함 버튼 클릭 시 북마크 필터가 활성화된 상태로 my-novels 페이지로 이동
+                      router.push('/my-novels?filter=bookmarked');
+                    } else if (item.value === 'best') {
+                      // 베스트 버튼 클릭 시 novel-list 페이지로 이동
+                      router.push('/novel-list');
+                    } else if (item.value === 'latest') {
+                      // 최신 버튼 클릭 시 novel-list 페이지로 이동
+                      router.push('/novel-list');
+                    } else if (item.value === 'completed') {
+                      // 완결 버튼 클릭 시 novel-list 페이지로 이동
+                      router.push('/novel-list');
+                    } else {
+                      setActiveTab(item.value);
+                    }
                   }}
                 >
-                  <X className="w-5 h-5" />
-                  <span className="sr-only">검색 닫기</span>
+                  {item.label}
                 </Button>
-              </form>
-            ) : (
+              ))}
+            </div>
+          </div>
+
+          {/* Right: Search, User Info, Menu */}
+          <div className="flex items-center justify-end space-x-2">
+            {/* Search Input - Always Visible with white background */}
+            <form onSubmit={handleSearch} className="flex items-center space-x-2">
+              <input
+                type="text"
+                placeholder="검색어를 입력하세요..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="px-3 py-1 rounded text-black text-sm w-48 focus:outline-none focus:ring-2 focus:ring-white bg-white"
+              />
               <Button
+                type="submit"
                 variant="ghost"
                 size="icon"
                 className="text-white hover:bg-blue-500"
-                onClick={() => setIsSearchOpen(true)}
               >
                 <Search className="w-5 h-5" />
                 <span className="sr-only">검색</span>
               </Button>
-            )}
+            </form>
 
             {isLoggedIn && userInfo && (
               <span className="text-sm font-medium hidden sm:inline">안녕하세요, {userInfo.userName}님!</span>
@@ -661,41 +738,102 @@ export default function HomePage() {
             <p className="text-sm">드래그하거나 사이드 배너를 클릭하거나 하단 점을 클릭하여 작품을 확인하세요</p>
           </div>
         </div>
+
+        {/* 태그 필터와 소설 목록을 자연스럽게 통합 */}
+        <div className="mt-16">
+          {/* 태그 필터 */}
+          <div className="mb-8">
+            <h3 className="text-lg font-semibold text-gray-700 mb-4 text-center">태그별 필터</h3>
+            
+            {/* 기본 태그 섹션 */}
+            {!loadingTags && commonTags.length > 0 && (
+              <div className="mb-4">
+                <h4 className="text-sm font-medium text-gray-600 mb-2 flex items-center justify-center">
+                  <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+                  기본 태그
+                </h4>
+                <div className="flex flex-wrap gap-2 justify-center">
+                  {commonTags.map((tag) => (
+                    <button
+                      key={tag}
+                      onClick={() => handleTagClick(tag)}
+                      className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                        selectedTag === tag
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                      }`}
+                    >
+                      {tag}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {loadingTags && (
+              <div className="flex items-center justify-center w-full py-4">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+                <span className="ml-2 text-gray-600">태그 로딩 중...</span>
+              </div>
+            )}
+            
+            {!loadingTags && commonTags.length === 0 && (
+              <div className="text-gray-500 text-sm text-center">사용 가능한 태그가 없습니다.</div>
+            )}
+            
+            {selectedTag && (
+              <div className="mt-4 text-center">
+                <span className="text-blue-600 font-medium">선택된 태그: {selectedTag}</span>
+                <button
+                  onClick={() => handleTagClick(selectedTag)}
+                  className="ml-2 text-gray-500 hover:text-gray-700 text-sm"
+                >
+                  필터 해제
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* 소설 목록 */}
+          {novels.length > 0 && (
+            <div className="mb-8">
+              <h3 className="text-lg font-semibold text-gray-700 mb-4 text-center">
+                {selectedTag ? `"${selectedTag}" 태그의 소설들` : '추천 소설들'}
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {novels.map((novel) => (
+                  <div
+                    key={novel.novelId}
+                    className="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
+                    onClick={() => router.push(`/novel/${novel.novelId}`)}
+                  >
+                    <div className="h-48 bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                      {novel.titleImage ? (
+                        <img
+                          src={novel.titleImage}
+                          alt={novel.title}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="text-white text-center p-4">
+                          <div className="w-16 h-16 bg-white/20 rounded-lg mb-2 mx-auto"></div>
+                          <h4 className="font-semibold">{novel.title}</h4>
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-4">
+                      <h4 className="font-semibold text-gray-800 mb-2 line-clamp-2">{novel.title}</h4>
+                      <p className="text-sm text-gray-600 line-clamp-3">{novel.summary}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       </main>
 
-      {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-40">
-        <div className="flex justify-around items-center max-w-4xl mx-auto">
-          {navigationItems.map((item) => (
-            <Button
-              key={item.value}
-              variant={activeTab === item.value ? "default" : "outline"}
-              className={`px-4 py-2 ${
-                activeTab === item.value ? "bg-black text-white" : "bg-white text-black border-black hover:bg-gray-100"
-              }`}
-              onClick={() => {
-                if (item.value === 'library') {
-                  // 보관함 버튼 클릭 시 북마크 필터가 활성화된 상태로 my-novels 페이지로 이동
-                  router.push('/my-novels?filter=bookmarked');
-                } else if (item.value === 'best') {
-                  // 베스트 버튼 클릭 시 novel-list 페이지로 이동
-                  router.push('/novel-list');
-                } else if (item.value === 'latest') {
-                  // 최신 버튼 클릭 시 novel-list 페이지로 이동
-                  router.push('/novel-list');
-                } else if (item.value === 'completed') {
-                  // 완결 버튼 클릭 시 novel-list 페이지로 이동
-                  router.push('/novel-list');
-                } else {
-                  setActiveTab(item.value);
-                }
-              }}
-            >
-              {item.label}
-            </Button>
-          ))}
-        </div>
-      </nav>
+
 
       {/* Sidebar */}
       <div
