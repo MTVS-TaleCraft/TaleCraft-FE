@@ -36,7 +36,7 @@ const MyNovelsPageContent: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterType, setFilterType] = useState<'all' | 'bookmarked' | 'my'>('bookmarked');
+  const [filterType, setFilterType] = useState<'all' | 'bookmarked' | 'my'>('my');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -48,6 +48,11 @@ const MyNovelsPageContent: React.FC = () => {
     const filter = searchParams.get('filter');
     if (filter === 'bookmarked') {
       setFilterType('bookmarked');
+    } else if (filter === 'my') {
+      setFilterType('my');
+    } else {
+      // 기본값은 'my' (내 작품)
+      setFilterType('my');
     }
   }, [searchParams]);
 
@@ -422,19 +427,31 @@ const MyNovelsPageContent: React.FC = () => {
               </Button>
             )}
 
-            {isLoggedIn && userInfo && (
-              <span className="text-sm font-medium hidden sm:inline">안녕하세요, {userInfo.userName}님!</span>
+            {isLoggedIn && userInfo ? (
+              // 로그인한 경우: 프로필 아이콘 (사이드바 열기)
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-white hover:bg-blue-500"
+                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              >
+                <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
+                  <span className="text-blue-600 font-semibold text-sm">
+                    {userInfo.userName.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+                <span className="sr-only">프로필 메뉴</span>
+              </Button>
+            ) : (
+              // 로그인하지 않은 경우: 로그인 버튼
+              <Button
+                variant="outline"
+                className="bg-white text-blue-600 border-white hover:bg-blue-50 px-4 py-2 text-sm"
+                onClick={() => router.push("/auth/login")}
+              >
+                로그인
+              </Button>
             )}
-
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-white hover:bg-blue-500"
-              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            >
-              <Menu className="w-5 h-5" />
-              <span className="sr-only">메뉴</span>
-            </Button>
           </div>
         </div>
       </header>
@@ -631,12 +648,6 @@ const MyNovelsPageContent: React.FC = () => {
           <div className="space-y-4">
             {isLoggedIn ? (
               <>
-                <button
-                  className="w-full bg-black text-white py-3 px-4 rounded-lg hover:bg-gray-800 transition-colors"
-                  onClick={() => handleNavigation2("/novel-create")}
-                >
-                  작품등록
-                </button>
                 <button
                   className="w-full bg-black text-white py-3 px-4 rounded-lg hover:bg-gray-800 transition-colors"
                   onClick={() => handleNavigation2("/my-novels")}

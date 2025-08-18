@@ -42,12 +42,9 @@ const NovelPage: React.FC = () => {
   const [episodes, setEpisodes] = useState<Episode[]>([]);
   const [loading, setLoading] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
-
-
 
   useEffect(() => {
     const initPage = async () => {
@@ -179,8 +176,6 @@ const NovelPage: React.FC = () => {
     );
   }
 
-
-
   if (!novel) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -210,61 +205,80 @@ const NovelPage: React.FC = () => {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-blue-400 text-white p-4 shadow-md">
-        <div className="flex justify-between items-center w-full">
+        <div className="grid grid-cols-3 items-center w-full gap-4">
+          {/* Left: Logo */}
           <h1 className="text-xl font-bold cursor-pointer hover:text-blue-200 transition-colors" onClick={() => router.push('/')}>
             TaleCraft
           </h1>
-
-          <div className="flex items-center space-x-2">
-            {isSearchOpen ? (
-              <form onSubmit={handleSearch} className="flex items-center space-x-2">
-                <input
-                  type="text"
-                  placeholder="검색어를 입력하세요..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="px-3 py-1 rounded text-black text-sm w-48 focus:outline-none focus:ring-2 focus:ring-white"
-                  autoFocus
-                />
+          {/* Center: Navigation Buttons - Perfectly centered */}
+          <div className="flex justify-center">
+            <div className="flex space-x-4">
+              {/* 작품등록하기 버튼 */}
+              {isLoggedIn && (
                 <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="text-white hover:bg-blue-500"
-                  onClick={() => {
-                    setIsSearchOpen(false);
-                    setSearchQuery("");
-                  }}
+                  variant="outline"
+                  className="px-4 py-2 bg-transparent text-white border-white hover:bg-white hover:text-blue-600"
+                  onClick={() => router.push('/novel-create')}
                 >
-                  <X className="w-5 h-5" />
-                  <span className="sr-only">검색 닫기</span>
+                  작품등록하기
                 </Button>
-              </form>
-            ) : (
+              )}
+              {/* 보관함 버튼 */}
               <Button
+                variant="outline"
+                className="px-4 py-2 bg-transparent text-white border-white hover:bg-white hover:text-blue-600"
+                onClick={() => router.push('/my-novels?filter=bookmarked')}
+              >
+                보관함
+              </Button>
+            </div>
+          </div>
+          {/* Right: Search, User Info, Menu */}
+          <div className="flex items-center justify-end space-x-2">
+            {/* Search Input - Always Visible with white background */}
+            <form onSubmit={handleSearch} className="flex items-center space-x-2">
+              <input
+                type="text"
+                placeholder="검색어를 입력하세요..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="px-3 py-1 rounded text-black text-sm w-48 focus:outline-none focus:ring-2 focus:ring-white bg-white"
+              />
+              <Button
+                type="submit"
                 variant="ghost"
                 size="icon"
                 className="text-white hover:bg-blue-500"
-                onClick={() => setIsSearchOpen(true)}
               >
                 <Search className="w-5 h-5" />
                 <span className="sr-only">검색</span>
               </Button>
+            </form>
+            {isLoggedIn && userInfo ? (
+              // 로그인한 경우: 프로필 아이콘 (사이드바 열기)
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-white hover:bg-blue-500"
+                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              >
+                <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
+                  <span className="text-blue-600 font-semibold text-sm">
+                    {userInfo.userName.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+                <span className="sr-only">프로필 메뉴</span>
+              </Button>
+            ) : (
+              // 로그인하지 않은 경우: 로그인 버튼
+              <Button
+                variant="outline"
+                className="bg-white text-blue-600 border-white hover:bg-blue-50 px-4 py-2 text-sm"
+                onClick={() => router.push("/auth/login")}
+              >
+                로그인
+              </Button>
             )}
-
-            {isLoggedIn && userInfo && (
-              <span className="text-sm font-medium hidden sm:inline">안녕하세요, {userInfo.userName}님!</span>
-            )}
-
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-white hover:bg-blue-500"
-              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            >
-              <Menu className="w-5 h-5" />
-              <span className="sr-only">메뉴</span>
-            </Button>
           </div>
         </div>
       </header>
@@ -362,12 +376,6 @@ const NovelPage: React.FC = () => {
           <div className="space-y-4">
             {isLoggedIn ? (
               <>
-                <button
-                  className="w-full bg-black text-white py-3 px-4 rounded-lg hover:bg-gray-800 transition-colors"
-                  onClick={() => handleNavigation2("/novel-create")}
-                >
-                  작품등록
-                </button>
                 <button
                   className="w-full bg-black text-white py-3 px-4 rounded-lg hover:bg-gray-800 transition-colors"
                   onClick={() => handleNavigation2("/my-novels")}

@@ -151,12 +151,41 @@ export default function MessagesPage() {
               TaleCraft
             </Button>
           </div>
-                                                                                       <button
-               className="bg-transparent border border-white text-white px-4 py-2 rounded-md hover:bg-white hover:text-blue-500 transition-colors"
-               onClick={() => router.push("/messages/compose")}
-             >
-               쪽지 쓰기
-             </button>
+          
+          <div className="flex items-center space-x-4">
+            <button
+              className="bg-transparent border border-white text-white px-4 py-2 rounded-md hover:bg-white hover:text-blue-500 transition-colors"
+              onClick={() => router.push("/messages/compose")}
+            >
+              쪽지 쓰기
+            </button>
+            
+            {isLoggedIn && userInfo ? (
+              // 로그인한 경우: 프로필 아이콘 (사이드바 열기)
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-white hover:bg-blue-500"
+                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              >
+                <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
+                  <span className="text-blue-600 font-semibold text-sm">
+                    {userInfo.userName.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+                <span className="sr-only">프로필 메뉴</span>
+              </Button>
+            ) : (
+              // 로그인하지 않은 경우: 로그인 버튼
+              <Button
+                variant="outline"
+                className="bg-white text-blue-600 border-white hover:bg-blue-50 px-4 py-2 text-sm"
+                onClick={() => router.push("/auth/login")}
+              >
+                로그인
+              </Button>
+            )}
+          </div>
         </div>
       </header>
 
@@ -293,6 +322,122 @@ export default function MessagesPage() {
           )}
         </div>
       </main>
+
+      {/* Sidebar */}
+      <div
+        className={`fixed right-0 top-0 h-full w-80 z-50 transition-transform duration-300 ease-in-out ${
+          isSidebarOpen ? "translate-x-0" : "translate-x-full"
+        }`}
+      >
+        <div className="absolute right-0 top-0 h-full w-full bg-gradient-to-b from-purple-400 to-pink-400 p-6 shadow-lg">
+          {/* User Section */}
+          <div className="flex flex-col items-center mb-8">
+            <div className="w-16 h-16 bg-gray-300 rounded-full mb-4 flex items-center justify-center">
+              <div className="w-12 h-12 bg-gray-600 rounded-full"></div>
+            </div>
+            {isLoggedIn && userInfo ? (
+              <div className="text-center">
+                <p className="text-black font-semibold text-lg">{userInfo.userName}</p>
+                <p className="text-black text-sm">{userInfo.email}</p>
+              </div>
+            ) : (
+              <button
+                className="text-black font-semibold text-lg"
+                onClick={() => {
+                  setIsSidebarOpen(false);
+                  router.push("/auth/login");
+                }}
+              >
+                로그인
+              </button>
+            )}
+          </div>
+
+          {/* Menu Buttons */}
+          <div className="space-y-4">
+            {isLoggedIn ? (
+              <>
+                <button
+                  className="w-full bg-black text-white py-3 px-4 rounded-lg hover:bg-gray-800 transition-colors"
+                  onClick={() => {
+                    setIsSidebarOpen(false);
+                    router.push("/my-novels");
+                  }}
+                >
+                  내 작품 목록
+                </button>
+                <button
+                  className="w-full bg-black text-white py-3 px-4 rounded-lg hover:bg-gray-800 transition-colors"
+                  onClick={() => {
+                    setIsSidebarOpen(false);
+                    router.push("/mypage");
+                  }}
+                >
+                  마이페이지
+                </button>
+                <button
+                  className="w-full bg-black text-white py-3 px-4 rounded-lg hover:bg-gray-800 transition-colors"
+                  onClick={() => {
+                    setIsSidebarOpen(false);
+                    router.push("/messages");
+                  }}
+                >
+                  쪽지함
+                </button>
+                {userInfo?.authorityId === "3" && (
+                  <button
+                    className="w-full bg-black text-white py-3 px-4 rounded-lg hover:bg-gray-800 transition-colors"
+                    onClick={() => {
+                      setIsSidebarOpen(false);
+                      router.push("/admin");
+                    }}
+                  >
+                    관리자 페이지
+                  </button>
+                )}
+                {userInfo?.authorityId === "1" && (
+                  <button
+                    className="w-full bg-purple-500 text-white py-3 px-4 rounded-lg hover:bg-purple-600 transition-colors"
+                    onClick={() => {
+                      setIsSidebarOpen(false);
+                      router.push("/admin/inquiry");
+                    }}
+                  >
+                    관리자 문의
+                  </button>
+                )}
+                <button
+                  className="w-full bg-red-500 text-white py-3 px-4 rounded-lg hover:bg-red-600 transition-colors"
+                  onClick={() => {
+                    setIsSidebarOpen(false);
+                    router.push("/");
+                  }}
+                >
+                  로그아웃
+                </button>
+              </>
+            ) : (
+              <button
+                className="w-full bg-black text-white py-3 px-4 rounded-lg hover:bg-gray-800 transition-colors"
+                onClick={() => {
+                  setIsSidebarOpen(false);
+                  router.push("/auth/login");
+                }}
+              >
+                로그인
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Overlay */}
+      <div
+        className={`fixed inset-0 z-40 transition-opacity duration-300 ${
+          isSidebarOpen ? "opacity-100" : "pointer-events-none"
+        }`}
+        onClick={() => setIsSidebarOpen(false)}
+      />
     </div>
   )
 } 
